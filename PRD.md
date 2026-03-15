@@ -1,0 +1,839 @@
+**PAWPATH PRO**
+
+Dog Walking Business Platform
+
+**Product Requirements Document**
+
+Version 2.0 • Confidential
+
+  ---------------------------- ------------------------------------------
+  **Document Owner**           Geffrey Klein
+
+  **Product Name**             PawPath Pro
+
+  **Version**                  2.0 (SaaS Architecture)
+
+  **Status**                   Draft --- For Development
+
+  **Target Platform**          Web (PWA, mobile-responsive)
+
+  **Primary User**             Independent Dog Walker / Sole Proprietor
+  ---------------------------- ------------------------------------------
+
+**1. Executive Summary**
+
+PawPath Pro is a full-stack web application purpose-built for an independent professional dog walker. It replaces the need for platforms like Wag or Rover---which charge listing fees and take commissions---with a private, branded platform the owner controls entirely. The system has two primary surfaces: a professional public-facing website that converts visitors into clients, and a private operational hub consisting of a Walker Dashboard and a Client Portal.
+
+The platform enables a solo dog walker to operate a scalable, professional business from her phone or laptop---scheduling walks, collecting payments, sending walk reports with GPS maps and photos, managing waivers and client profiles, and communicating with clients---all in one place.
+
+This PRD defines all features, user roles, data entities, technical architecture, and a phased development plan for building PawPath Pro using Claude Code.
+
+**1.1 The Problem**
+
+-   Third-party platforms (Wag, Rover) charge walkers fees to list and take 20--40% of revenue
+
+-   Current employer situation: walker is underpaid and lacks independence
+
+-   Clients have no professional portal to schedule, pay, or communicate
+
+-   No digital trail for walk reports, incident notes, photos, or billing history
+
+-   No signed liability waivers stored digitally
+
+**1.2 The Solution**
+
+-   Owned domain, branded experience, zero platform fees after build
+
+-   Professional front-end website to attract and convert new clients
+
+-   Client accounts: scheduling, billing, payments, communication, waivers
+
+-   Walker dashboard: full business operations in one interface
+
+-   Walk report system: GPS tracking, photo upload, notes, client delivery
+
+-   Integrated billing and payment collection via Stripe
+
+**1.3 Business Impact**
+
+With PawPath Pro, the walker owns her customer relationships, keeps 100% of revenue (minus payment processing fees \~2.9%), presents a professional brand, and has the tools to grow from a one-person operation to a multi-walker agency over time.
+
+---
+
+## 1.4 SaaS Architecture Strategy
+
+PawPath Pro is built from day one as a **multi-tenant SaaS platform**. The initial deployment serves a single tenant (the founder's daughter), but the architecture supports unlimited independent walker businesses on a single codebase.
+
+### Core Principle: Tenant Isolation from Day One
+
+Every database table includes a `tenant_id` foreign key. Every query filters by `tenant_id`. This is the single most important architectural decision — retrofitting multi-tenancy later is expensive. Building it in from the start costs almost nothing.
+
+### Tenant Model
+
+Each tenant is an independent dog walking business with:
+- Their own branded subdomain (e.g., `sarahswalks.pawpathpro.com`)
+- Optional custom domain support (e.g., `sarahswalks.com` → CNAME to Vercel)
+- Their own walker accounts, clients, pets, walks, billing, and branding
+- Complete data isolation — tenants cannot see each other's data
+- Their own Stripe Connect account for client payment collection
+
+### Tenant Onboarding Flow
+
+1. Walker visits `pawpathpro.com` and clicks "Start Free Trial"
+2. Creates account: name, email, business name, subdomain slug
+3. Selects subscription plan
+4. Stripe subscription created for the walker's monthly fee
+5. Supabase tenant row created; subdomain provisioned
+6. Walker completes onboarding wizard: services, pricing, availability, branding colors/logo
+7. Shareable client portal link generated: `[slug].pawpathpro.com`
+
+### Subscription Tiers
+
+| Plan | Price | Features |
+|------|-------|----------|
+| **Starter** | $29/month | 1 walker, up to 30 clients, all core features |
+| **Pro** | $59/month | 1 walker, unlimited clients, custom domain, earnings CSV export |
+| **Agency** | $99/month | Up to 5 walkers, all Pro features, multi-walker assignment |
+
+> Pricing rationale: A walker doing 3 walks/day at $25 earns ~$2,250/month. Rover takes 20-40% (~$450-$900). PawPath Pro costs $29-$59/month. Value proposition is overwhelming.
+
+### Platform-Level Roles
+
+| Role | Description |
+|------|-------------|
+| **Platform Admin** | Geffrey Klein — manages all tenants, billing, support |
+| **Tenant Owner (Walker)** | Business owner — full control of their tenant |
+| **Tenant Staff Walker** | Employee walker under a tenant (Agency tier) |
+| **Client** | Pet owner — scoped entirely to their tenant |
+
+### Multi-Tenant Database Schema Addition
+
+All existing entities in Section 5 gain a `tenant_id UUID NOT NULL REFERENCES tenants(id)` column. Additional tables:
+
+```
+tenants
+  id, slug, business_name, owner_user_id, plan_tier,
+  stripe_customer_id, stripe_subscription_id,
+  custom_domain, branding_primary_color, logo_url,
+  created_at, trial_ends_at, is_active
+
+tenant_walkers
+  id, tenant_id, user_id, role (owner/staff), created_at
+```
+
+### Row-Level Security (Supabase RLS)
+
+Every table policy enforces:
+```sql
+USING (tenant_id = auth.jwt() ->> 'tenant_id')
+```
+
+The `tenant_id` is embedded in the Supabase JWT at login. No application-level filtering required — the database enforces isolation automatically.
+
+### Subdomain Routing (Next.js)
+
+```
+pawpathpro.com          → Marketing site + signup
+app.pawpathpro.com      → Platform admin dashboard
+[slug].pawpathpro.com   → Walker's branded client portal + dashboard
+```
+
+Next.js middleware reads the subdomain from the request host, looks up the tenant, and injects tenant context into every page render. Custom domains are handled via Vercel's programmatic domain API.
+
+### Revenue Model
+
+- Walker subscription fees (Stripe Billing, recurring monthly)
+- Platform takes **0% of client payments** — walkers keep 100% (minus Stripe's 2.9%)
+- This is the core value proposition vs. Rover/Wag
+
+### Launch Strategy
+
+1. **Phase 0:** Build and deploy for the founder's daughter (Tenant #1)
+2. **Phase 1 post-launch:** Onboard 5 beta walkers free for 3 months; collect feedback
+3. **Phase 2:** Activate paid subscriptions; launch marketing site
+4. **Phase 3:** Paid acquisition targeting Rover/Wag walkers via social ads
+
+---
+
+**2. User Roles & Personas**
+
+**2.1 Role Overview**
+
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------
+  **Role**                   **Access Level**          **Description**
+  -------------------------- ------------------------- ----------------------------------------------------------------------------------------------------
+  **Super Admin / Walker**   Full access               The dog walker / business owner. Manages all operations, schedule, billing, reports, and settings.
+
+  **Client**                 Limited personal access   Pet owner who books and pays for services. Sees only their own data.
+
+  **Visitor (Public)**       Unauthenticated           Prospective client browsing the public site. Can view services and submit an inquiry form.
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+**2.2 Persona: The Walker**
+
+Name: Independent Walker \| Goal: Run a professional solo business, keep all revenue, grow clientele without Wag/Rover
+
+-   Needs a mobile-friendly dashboard she can use from her phone during walks
+
+-   Wants to look more professional than handwritten notes and Venmo payments
+
+-   Needs to generate walk reports clients love, building loyalty and referrals
+
+-   Wants billing and payment handled automatically, not chased manually
+
+**2.3 Persona: The Client**
+
+Name: Pet Owner \| Goal: Easy booking, trust that their dog is safe, cute updates during/after walks
+
+-   Wants to create an account once and not repeat info every time
+
+-   Wants to schedule a walk online without texting back and forth
+
+-   Wants walk reports with photos and a map delivered automatically
+
+-   Wants to pay easily and see billing history in one place
+
+**3. Feature Overview & Prioritization**
+
+Features are prioritized using a P0--P3 scale:
+
+-   P0 --- Launch blocker. App cannot go live without this.
+
+-   P1 --- Core value. Must ship in Phase 1 or 2.
+
+-   P2 --- Important enhancement. Phase 3--4.
+
+-   P3 --- Future / nice to have. Post-launch backlog.
+
+**3.1 Public Website Features**
+
+  --------------------------------------------------------------------------------------------------------------------------------
+  **Feature**                   **Description**                                                                     **Priority**
+  ----------------------------- ----------------------------------------------------------------------------------- --------------
+  **Hero / Landing Page**       Branded landing with tagline, CTA to book/inquire, professional photography         **P0**
+
+  **Services & Pricing Page**   Cards for each service type with pricing, duration, and description                 **P0**
+
+  **About Page**                Walker bio, certifications, philosophy, pet first aid training, photos              **P0**
+
+  **Service Area Map**          Google Maps embed showing coverage area (Houston neighborhoods)                     **P0**
+
+  **Contact / Inquiry Form**    Lead capture form --- name, email, pet details, message; delivers to walker inbox   **P0**
+
+  **Client Account CTA**        Prominent \'Sign In / Create Account\' button linking to client portal              **P0**
+
+  **Testimonials Section**      Rotating or grid-style client reviews                                               **P1**
+
+  **FAQ Page**                  Answers to common questions (cancellation, insurance, multiple dogs, etc.)          **P1**
+
+  **Blog / Tips Section**       Optional SEO content about dog care, Houston pet resources                          **P3**
+
+  **SEO & Metadata**            Title tags, Open Graph, sitemap.xml, robots.txt for Google discoverability          **P1**
+  --------------------------------------------------------------------------------------------------------------------------------
+
+**3.2 Client Portal Features**
+
+  ----------------------------------------------------------------------------------------------------------------------------------------
+  **Feature**                    **Description**                                                                            **Priority**
+  ------------------------------ ------------------------------------------------------------------------------------------ --------------
+  **Account Registration**       Email/password signup with email verification                                              **P0**
+
+  **Profile Management**         Client contact info, emergency contact, address, payment method on file                    **P0**
+
+  **Pet Profiles**               Add multiple pets: name, breed, age, weight, vet info, vaccine records, special notes      **P0**
+
+  **Digital Waiver**             Liability waiver displayed and signed electronically at onboarding; stored on account      **P0**
+
+  **Walk Scheduling**            Calendar view to request upcoming walks with date, time, service type, and pet selection   **P0**
+
+  **Walk History**               List of all past walks with date, service, duration, walker notes                          **P0**
+
+  **Walk Report Viewer**         Full walk report: photos, route map, notes, health check, rating                           **P0**
+
+  **Invoice View**               Itemized list of charges per walk with status (paid / pending)                             **P0**
+
+  **Online Payment**             Pay outstanding invoices via Stripe (card); show payment history                           **P0**
+
+  **Messaging / Chat**           In-app messaging thread with walker; notifications by email or SMS                         **P1**
+
+  **Notification Preferences**   Toggle email, SMS, push notifications for reports, invoices, schedule updates              **P1**
+
+  **Booking Cancellation**       Client can cancel or reschedule with configurable notice window                            **P1**
+
+  **Photo Gallery**              Personal gallery of all photos taken of their pets across all walks                        **P2**
+
+  **Referral Feature**           Generate referral link; walker may offer discount for referrals                            **P3**
+  ----------------------------------------------------------------------------------------------------------------------------------------
+
+**3.3 Walker Dashboard Features**
+
+  --------------------------------------------------------------------------------------------------------------------------------------
+  **Feature**                      **Description**                                                                        **Priority**
+  -------------------------------- -------------------------------------------------------------------------------------- --------------
+  **Dashboard Home**               Day-at-a-glance: today\'s walks, upcoming schedule, unread messages, unpaid invoices   **P0**
+
+  **Schedule / Calendar View**     Week/month calendar of all booked walks; color-coded by status                         **P0**
+
+  **Walk Request Management**      Review, approve, or decline incoming booking requests from clients                     **P0**
+
+  **Walk Execution Mode**          Mobile-optimized \'active walk\' screen: start timer, GPS tracking, photo capture      **P0**
+
+  **Walk Report Builder**          Post-walk form: notes, health check, potty report, mood/behavior, photo upload         **P0**
+
+  **Report Delivery**              One-tap delivery of completed walk report to client via portal + email notification    **P0**
+
+  **Client Management**            Directory of all clients with contact info, pets, notes, booking history               **P0**
+
+  **Invoice Generation**           Auto-generate invoice from completed walk; manual adjustments supported                **P0**
+
+  **Payment Tracking**             View all invoices: paid, pending, overdue; send payment reminders                      **P0**
+
+  **Messaging Center**             Unified inbox for all client conversations; quick reply templates                      **P1**
+
+  **Service & Pricing Config**     Set service types, prices, duration, add-ons (e.g., extra dog, holiday surcharge)      **P1**
+
+  **Availability Settings**        Set working days/hours; mark dates as unavailable; vacation blocking                   **P1**
+
+  **Waiver Management**            View which clients have signed; resend unsigned waiver requests                        **P1**
+
+  **Earnings Dashboard**           Revenue totals by day/week/month; charts; export to CSV for taxes                      **P2**
+
+  **GPS Route History**            View map replay of any completed walk route                                            **P2**
+
+  **Recurring Walk Setup**         Set up auto-recurring weekly walks for a client without repeated scheduling            **P2**
+
+  **Multi-Walker Mode**            Add employee walkers under the account; assign walks; track earnings per walker        **P3**
+
+  **Client Onboarding Workflow**   Automated email sequence guiding new clients through profile/waiver/first booking      **P2**
+  --------------------------------------------------------------------------------------------------------------------------------------
+
+**4. Detailed Feature Specifications**
+
+**4.1 Active Walk Execution Module**
+
+This is the crown jewel feature that separates PawPath Pro from a simple booking site. When a walk begins, the walker enters \'Walk Mode\' on her phone.
+
+**4.1.1 Walk Mode Flow**
+
+1.  Walker taps \'Start Walk\' from the dashboard or schedule for the booked appointment
+
+2.  GPS tracking begins silently in background (browser geolocation API)
+
+3.  Timer starts and displays elapsed time
+
+4.  Walker can take photos directly from the walk screen (camera access)
+
+5.  Walker can leave quick voice-to-text or typed notes mid-walk
+
+6.  Walker taps \'End Walk\' --- GPS tracking stops, route is saved
+
+7.  Walk Report form auto-populates with walk duration, distance, route map
+
+8.  Walker completes the report fields and taps \'Send to Client\'
+
+9.  Client receives push notification and email: \'Your walk report is ready!\'
+
+**4.1.2 Walk Report Contents**
+
+-   Date, time, duration, distance
+
+-   GPS route displayed on interactive map (Leaflet.js or Google Maps)
+
+-   Photos taken during walk (gallery with captions)
+
+-   Potty report (pee ✔, poo ✔ with optional count)
+
+-   Behavior & mood notes (from dropdown + free text)
+
+-   Health observations (any concerning notes)
+
+-   Walker\'s personal note to the client (warm, personalized message)
+
+-   Star rating the walker assigns to the walk (for internal record)
+
+**4.2 Digital Waiver System**
+
+Liability waivers are legally important for a dog walking business. PawPath Pro handles this digitally.
+
+**4.2.1 Waiver Flow**
+
+10. Client creates an account and is immediately prompted to sign the service waiver
+
+11. Waiver text is configurable by the walker from Settings
+
+12. Client reads the full waiver text in a scrollable modal
+
+13. Client types their full name as electronic signature and checks an acknowledgment box
+
+14. Timestamp, IP address, and user ID are recorded and stored with the signature
+
+15. Client receives PDF copy via email; walker can download signed copies
+
+16. Walker dashboard flags any client who has not completed their waiver
+
+Note: Consult a Texas attorney to ensure waiver language is enforceable. PawPath Pro provides the infrastructure; legal language is the walker\'s responsibility.
+
+**4.3 Billing & Payment System**
+
+**4.3.1 Invoice Generation**
+
+-   Invoices auto-generate when a walk is marked \'Completed\' by the walker
+
+-   Default price pulls from the service type selected at booking
+
+-   Walker can apply discounts, add line items (extra dog, holiday rate), or waive fees
+
+-   Invoices show: client name, pet(s), service, date, unit price, total, due date
+
+-   Invoice status states: Draft, Sent, Viewed, Paid, Overdue, Voided
+
+**4.3.2 Payment Collection**
+
+-   Stripe integration for card-on-file (saved during account setup) or one-time payment
+
+-   Clients can pay via the portal invoice page with one tap
+
+-   Walker receives funds in Stripe dashboard (deposited to bank in 2 business days)
+
+-   Automatic payment reminder emails at: due date, 3 days overdue, 7 days overdue
+
+-   Walker can record cash/Venmo payments manually to mark invoice as paid
+
+**4.4 Messaging System**
+
+-   Threaded conversation per client-walker pair
+
+-   Rich text messages with photo attachment support
+
+-   Email notification for new messages with \'Reply in App\' CTA
+
+-   Walker can create Quick Reply Templates (e.g., \'On my way!\', \'Walk complete!\')
+
+-   Unread message count badge on walker dashboard nav
+
+-   Optional SMS notifications via Twilio integration (Phase 2)
+
+**4.5 Pet Profiles**
+
+**4.5.1 Required Fields**
+
+-   Pet name, species (dog/cat), breed, color/markings
+
+-   Date of birth / age
+
+-   Weight
+
+-   Spayed/neutered status
+
+-   Veterinarian name, clinic name, phone number
+
+-   Vaccination records (rabies, Bordetella) --- file upload or date entry
+
+-   Emergency contact (separate from account owner if needed)
+
+**4.5.2 Optional / Enhanced Fields**
+
+-   Known allergies or dietary restrictions
+
+-   Behavioral notes (leash reactivity, fear triggers, commands known)
+
+-   Medical conditions or medications
+
+-   Favorite treats, toys, or rewards
+
+-   \'Do Not Enter\' gates or lock codes for home access
+
+-   Microchip number
+
+**4.6 Schedule & Booking System**
+
+**4.6.1 Booking Request Flow (Client)**
+
+17. Client selects service type (e.g., 30-min walk, 60-min walk, drop-in)
+
+18. Client picks pet(s) for the walk
+
+19. Client selects desired date from availability calendar
+
+20. Client selects preferred time from available slots
+
+21. Client adds any special notes
+
+22. Client submits request --- status: \'Pending Approval\'
+
+23. Walker receives notification; reviews and approves or declines with note
+
+24. Client receives confirmation notification; walk appears on both calendars
+
+**4.6.2 Walker Availability Engine**
+
+-   Walker sets default working hours per day of week
+
+-   Walker sets walk duration and buffer time between walks
+
+-   Walker can block individual dates or date ranges (vacation, personal)
+
+-   System enforces maximum concurrent walks = 1 (solo walker mode)
+
+-   Calendar shows availability in client timezone (or always Houston local time)
+
+**5. Data Model**
+
+The following entities form the core relational data model for PawPath Pro. Recommended database: PostgreSQL via Supabase (provides auth, realtime, storage, and REST API out of the box).
+
+> **SaaS Note:** Every table below includes `tenant_id UUID NOT NULL REFERENCES tenants(id)`. Supabase Row-Level Security policies enforce tenant isolation at the database layer — no application code can accidentally leak cross-tenant data. The `tenants` and `tenant_walkers` tables are defined in Section 1.4.
+
+**5.1 Core Entities**
+
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------
+  **Feature**              **Description**                                                                                                   **Priority**
+  ------------------------ ----------------------------------------------------------------------------------------------------------------- --------------
+  **users**                Auth table: id, email, password_hash, role (walker/client), created_at, verified                                  **---**
+
+  **client_profiles**      id, user_id, full_name, phone, address, emergency_contact_name, emergency_contact_phone                           **---**
+
+  **pets**                 id, client_id, name, breed, species, dob, weight, vet_name, vet_phone, notes, photo_url, microchip, medications   **---**
+
+  **pet_vaccines**         id, pet_id, vaccine_type, administered_date, expiry_date, file_url                                                **---**
+
+  **services**             id, name, description, duration_minutes, base_price, is_active                                                    **---**
+
+  **availability**         id, walker_id, day_of_week, start_time, end_time, is_active                                                       **---**
+
+  **blocked_dates**        id, walker_id, start_date, end_date, reason                                                                       **---**
+
+  **bookings**             id, client_id, walker_id, service_id, scheduled_at, status, notes, created_at                                     **---**
+
+  **walks**                id, booking_id, started_at, ended_at, distance_km, route_geojson, status                                          **---**
+
+  **walk_photos**          id, walk_id, url, caption, taken_at                                                                               **---**
+
+  **walk_reports**         id, walk_id, potty_pee, potty_poo, mood, behavior_notes, health_notes, walker_message, delivered_at               **---**
+
+  **waivers**              id, walker_id, version, title, body_text, is_active, created_at                                                   **---**
+
+  **waiver_signatures**    id, waiver_id, client_id, signed_at, ip_address, signature_name, pdf_url                                          **---**
+
+  **invoices**             id, client_id, walk_id, amount, status, due_date, paid_at, stripe_payment_intent_id                               **---**
+
+  **invoice_line_items**   id, invoice_id, description, quantity, unit_price, total                                                          **---**
+
+  **messages**             id, sender_id, recipient_id, body, attachment_url, sent_at, read_at                                               **---**
+
+  **notifications**        id, user_id, type, title, body, is_read, created_at                                                               **---**
+
+  **inquiry_leads**        id, name, email, phone, pet_info, message, created_at, contacted                                                  **---**
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------
+
+**6. Recommended Technology Stack**
+
+This stack is selected for rapid development, low infrastructure overhead, excellent Claude Code compatibility, and strong free-tier options.
+
+  -------------------------------------------------------------------------------------------------------------------------------------------------------
+  **Layer**            **Technology**               **Rationale**
+  -------------------- ---------------------------- -----------------------------------------------------------------------------------------------------
+  **Frontend**         Next.js 14 (App Router)      React-based full-stack framework; SSR for SEO; single codebase for public site + portal + dashboard
+
+  **Styling**          Tailwind CSS                 Utility-first CSS; fast to prototype; responsive by default; pairs well with shadcn/ui components
+
+  **UI Components**    shadcn/ui                    Accessible, beautiful pre-built components; no runtime CSS-in-JS overhead
+
+  **Auth**             Supabase Auth                Built-in email/password + magic link + session management; free tier generous
+
+  **Database**         Supabase (PostgreSQL)        Managed Postgres with row-level security; realtime subscriptions; REST API auto-generated
+
+  **File Storage**     Supabase Storage             S3-compatible; store photos, waiver PDFs, vaccine records; free tier 1GB
+
+  **Payments**         Stripe                       Industry standard; card-on-file via Stripe Customer object; webhooks for payment events
+
+  **Maps / GPS**       Leaflet.js + OpenStreetMap   Free tile provider; route display; no API key billing surprises
+
+  **SMS (Phase 2)**    Twilio                       SMS walk notifications and alerts; pay-per-message
+
+  **Email**            Resend                       Transactional email (reports, invoices, confirmations); generous free tier; React Email templates
+
+  **PDF Generation**   React-PDF or Puppeteer       Generate waiver PDFs and invoice PDFs client-side or server-side
+
+  **Hosting**          Vercel                       Zero-config Next.js deployment; free tier for solo projects; custom domain support
+
+  **Domain**           Custom (e.g., Namecheap)     Professional branded domain; Vercel handles SSL automatically
+
+  **Analytics**        Vercel Analytics             Privacy-friendly page views and performance monitoring; built into Vercel platform
+  -------------------------------------------------------------------------------------------------------------------------------------------------------
+
+**7. Development Phases & Timeline**
+
+Estimated timeline assumes Claude Code as the primary development tool with you as the technical lead. Adjust based on available hours per week.
+
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+  **Phase**     **Name**                   **Duration**   **Key Deliverables**
+  ------------- -------------------------- -------------- -------------------------------------------------------------------------------------------------------------------------------------------------
+  **Phase 0**   SaaS Foundation            1--2 weeks     Multi-tenant schema (tenants + tenant_id on all tables), RLS policies, subdomain routing middleware, tenant signup + onboarding wizard, Stripe Billing for subscriptions, platform admin dashboard
+
+ **Phase 1**   Foundation & Auth          2--3 weeks     Project scaffold, Next.js setup, Supabase config, user auth (register/login/verify), basic DB schema, deployment to Vercel with custom domain, first tenant (founder's daughter) provisioned
+
+  **Phase 2**   Public Website             2--3 weeks     Home page, About, Services/Pricing, Service Area, FAQ, Contact form, SEO metadata, mobile responsiveness, Google Analytics
+
+  **Phase 3**   Client Portal Core         3--4 weeks     Client account dashboard, pet profile creation, digital waiver signing, booking request flow, schedule calendar view, basic notification emails
+
+  **Phase 4**   Walker Dashboard Core      3--4 weeks     Walker dashboard home, schedule management, booking approval/decline, client directory, availability & service configuration
+
+  **Phase 5**   Walk Execution & Reports   2--3 weeks     Walk Mode screen (GPS, timer, photos), walk report builder, report delivery to client, client walk report viewer, photo gallery
+
+  **Phase 6**   Billing & Payments         2--3 weeks     Stripe integration, auto-invoice generation, client invoice portal, payment collection, overdue reminders, manual payment recording
+
+  **Phase 7**   Messaging & Polish         2--3 weeks     In-app messaging, notification preferences, earnings dashboard, walk GPS history playback, CSV export, UI polish & QA
+
+  **Phase 8**   Launch & Marketing         1--2 weeks     Load testing, security audit, Google Business Profile, social media setup, referral cards, soft launch to first 5 clients
+  ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+**8. Walk Report --- Detailed UX Design**
+
+The walk report is the primary client-delight feature. It must feel warm, professional, and fun---something clients look forward to receiving.
+
+**8.1 Walker Report Form (Post-Walk)**
+
+  -------------------------------------------------------------------------------------------------------------------------------------------
+  **Field**                  **UI Element & Options**
+  -------------------------- ----------------------------------------------------------------------------------------------------------------
+  **Walk Duration**          Auto-filled from GPS timer (editable)
+
+  **Distance**               Auto-filled from GPS trace (editable)
+
+  **Route Map**              Auto-generated from GPS data; displayed inline
+
+  **Photos**                 Upload from camera roll or capture in-app; up to 20 photos per walk
+
+  **Potty Report --- Pee**   Toggle: Yes / No + optional count
+
+  **Potty Report --- Poo**   Toggle: Yes / No + optional count (with 💩 emoji for fun)
+
+  **Mood**                   Emoji selector: 😄 Happy / 😐 Calm / 😢 Anxious / 😄 Excited / 😴 Tired
+
+  **Behavior Notes**         Multi-select tags: Pulled on leash / Played well / Barked at dogs / Listened great / Sniffed everything / etc.
+
+  **Health Observation**     Free text: \'Everything looked great\' or note any concerns
+
+  **Personal Message**       Free text note to the client from the walker (pre-filled with warm template)
+
+  **Eating/Drinking**        Did you provide water? Yes / No (if drop-in service)
+
+  **Rating**                 Internal 1--5 star rating for walker\'s records only (not shown to client)
+  -------------------------------------------------------------------------------------------------------------------------------------------
+
+**8.2 Client-Facing Report Card Design**
+
+The report delivered to the client should look like a beautiful \'report card\' for their dog --- shareable, delightful, branded.
+
+-   Header: PawPath Pro logo + walker name + date
+
+-   Hero photo: largest/best photo from the walk at the top
+
+-   Quick stats bar: Duration \| Distance \| Potty ✔ \| Mood emoji
+
+-   Photo gallery: grid of remaining photos
+
+-   Route map: embedded interactive map showing the walk path
+
+-   Walker\'s note: displayed as a handwritten-style callout card
+
+-   Call to action: \'Book Next Walk\' button linking back to portal
+
+-   Footer: contact info + social links
+
+**9. Public Website --- Content & Copy Guide**
+
+**9.1 Suggested Brand Name Options**
+
+-   PawPath Pro
+
+-   Happy Tails \[City\] (e.g., Happy Tails Houston)
+
+-   The Dog Walker Co.
+
+-   \[Her First Name\]\'s Dog Walking (personal brand)
+
+-   Stride & Sniff
+
+Recommendation: Use her actual name for a personal brand if she is the sole walker. Clients trust individual people, not generic company names, for pet care.
+
+**9.2 Services to Offer (Configure in Dashboard)**
+
+  ---------------------------------------------------------------------------------------------------------------------------------
+  **Service**                  **Suggested Price**   **Description**
+  ---------------------------- --------------------- ------------------------------------------------------------------------------
+  **30-Minute Walk**           \$20--\$25            Solo walk; GPS tracked; walk report with photos delivered after
+
+  **60-Minute Walk**           \$30--\$40            Extended walk for high-energy dogs; full report with photo gallery
+
+  **Group Walk (2--3 dogs)**   \$15--\$18 per dog    Walk with 2--3 neighborhood dogs (consider carefully for solo ops)
+
+  **Drop-In Visit**            \$15--\$20            30-min home check-in: potty break, feeding, playtime; ideal for cats too
+
+  **Puppy Visit**              \$20--\$25            Midday visit for puppies; feeding, playtime, bathroom training reinforcement
+
+  **Holiday Walk**             Base + \$5--\$10      Surcharge for walks on major holidays
+
+  **Extra Dog Surcharge**      +\$5--\$10            Additional dog from same household on same walk
+  ---------------------------------------------------------------------------------------------------------------------------------
+
+**10. Security, Privacy & Legal Considerations**
+
+**10.1 Authentication & Data Security**
+
+-   All passwords hashed via Supabase Auth (bcrypt)
+
+-   HTTPS enforced site-wide (Vercel auto-provisions SSL)
+
+-   Row-Level Security (RLS) in Supabase: clients can only read their own data
+
+-   Stripe handles all card data --- PawPath Pro never stores raw card numbers (PCI compliance via Stripe)
+
+-   Photo uploads validated (type, size) before storage; served via signed URLs
+
+-   Waiver signatures stored with IP + timestamp for legal defensibility
+
+-   Environment variables for all secrets (Stripe keys, Supabase keys) --- never committed to git
+
+**10.2 Client Data Privacy**
+
+-   Privacy Policy page required: disclose what data is collected, how it\'s used, how to delete account
+
+-   Terms of Service page: covers booking, cancellation, liability, payment terms
+
+-   Cookie consent banner (minimal cookies; Supabase session cookies only)
+
+-   Clients can request account deletion; data purged from all tables per request
+
+**10.3 Legal Notes for the Walker**
+
+-   Consult a Texas attorney for: waiver enforceability, business entity (LLC recommended), insurance
+
+-   Dog walker liability insurance strongly recommended (e.g., Pet Sitters Associates)
+
+-   Business license may be required in Harris County; check with city of Houston
+
+-   Stripe requires a valid SSN or EIN for payouts --- set up a business bank account
+
+-   Walk photos shared with clients: ensure no third-party dogs or people are identifiable in shared photos
+
+**11. Success Metrics (KPIs)**
+
+**11.1 Business Metrics**
+
+-   Monthly Revenue: track via Stripe dashboard + PawPath earnings report
+
+-   Active Clients: number of clients with at least 1 walk in last 30 days
+
+-   Walk Completion Rate: % of booked walks marked \'Completed\' (target: \>95%)
+
+-   Client Retention Rate: % of clients booking again within 60 days
+
+-   Average Revenue Per Client Per Month
+
+-   Invoice Collection Rate: % of invoices paid within 7 days of issue (target: \>90%)
+
+**11.2 Product Quality Metrics**
+
+-   Walk Report Delivery Rate: % of walks with a report sent within 2 hours of completion (target: 100%)
+
+-   Client Portal Adoption: % of active clients who have logged in at least once
+
+-   Waiver Completion Rate: % of clients with signed waivers before first walk (target: 100%)
+
+-   Mobile Usage: % of walker dashboard sessions on mobile (optimize for this)
+
+**12. Future Roadmap (Post-Launch)**
+
+**SaaS Growth**
+
+-   Affiliate / Referral Program: Walker refers another walker → credit on subscription
+-   White-Label Custom Domains: Each tenant maps their own domain via Vercel CNAME
+-   Walker Marketplace Directory: Optional public listing of PawPath Pro walkers for SEO/discovery
+-   Mobile App (React Native): Native iOS/Android app for walkers — better GPS tracking, push notifications
+-   Usage-Based Billing: Charge per completed walk above a threshold instead of flat monthly
+
+**Per-Tenant Features**
+
+-   Multi-Walker Support: Already included in Agency tier; add payroll splitting and sub-walker scheduling
+-   Subscription Packages: Offer discounted walk bundles (e.g., 10-pack for \$180)
+
+-   AI Walk Summary: Use Claude API to auto-generate a personalized, warm walk note from structured report data
+
+-   Photo AI: Auto-select best photo from the walk to use as the hero image in the report
+
+-   Client App (iOS/PWA): Prompt clients to install the PWA on their home screen for push notifications
+
+-   Vet Integration: Share walk notes and health observations to veterinary portals
+
+-   Dog Park / Route Library: Save favorite walk routes and share them with clients
+
+-   Waitlist Management: Auto-manage waitlist when calendar is fully booked
+
+-   Review Collection: Post-walk email asking client to leave a Google review (link to Google Business Profile)
+
+-   QR Code Key Tags: Generate QR code pet tags linking to the pet profile emergency card (great upsell!)
+
+**13. Appendix: Suggested Folder Structure**
+
+Recommended Next.js project structure for Claude Code build:
+
+pawpath-pro/
+
+├── app/ \# Next.js App Router
+
+│ ├── (public)/ \# Public site routes
+
+│ │ ├── page.tsx \# Home / Landing
+
+│ │ ├── services/ \# Services & Pricing
+
+│ │ ├── about/ \# About page
+
+│ │ ├── contact/ \# Contact/Lead form
+
+│ ├── (client)/ \# Client portal (auth required)
+
+│ │ ├── dashboard/ \# Client home
+
+│ │ ├── pets/ \# Pet profiles
+
+│ │ ├── schedule/ \# Booking calendar
+
+│ │ ├── walks/ \# Walk history + reports
+
+│ │ ├── billing/ \# Invoices + payments
+
+│ │ ├── messages/ \# Client messaging
+
+│ │ └── settings/ \# Account settings + waiver
+
+│ ├── (walker)/ \# Walker dashboard (auth + role required)
+
+│ │ ├── dashboard/ \# Walker home / day view
+
+│ │ ├── schedule/ \# Calendar + booking approvals
+
+│ │ ├── walk/\[id\]/ \# Active walk mode
+
+│ │ ├── clients/ \# Client directory
+
+│ │ ├── billing/ \# Invoices + earnings
+
+│ │ ├── messages/ \# Walker messaging center
+
+│ │ └── settings/ \# Services, pricing, availability, waivers
+
+├── components/ \# Shared UI components
+
+├── lib/ \# Supabase client, Stripe, utils, email
+
+├── emails/ \# React Email templates
+
+└── public/ \# Static assets, logo, og-image
+
+**PawPath Pro**
+
+Built with love for a dog walker who deserves to own her business.
+
+Document prepared by Geffrey Klein • v1.0
