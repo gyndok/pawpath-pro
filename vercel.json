@@ -1,0 +1,29 @@
+{
+  "rewrites": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?<subdomain>[^.]+)\\.pawpathpro\\.com"
+        }
+      ],
+      "destination": "/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "https://pawpathpro.com" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization" }
+      ]
+    }
+  ],
+  "functions": {
+    "app/api/webhooks/stripe/route.ts": {
+      "maxDuration": 30
+    }
+  }
+}
