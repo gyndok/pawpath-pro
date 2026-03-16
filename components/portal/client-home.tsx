@@ -2,6 +2,7 @@
 
 import { useActionState } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import { CalendarDays, CheckCircle2, CreditCard, FileText, Loader2, PawPrint, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -76,7 +77,8 @@ export function ClientPortalHome({
       </div>
 
       <div className="mb-8 grid gap-4 md:grid-cols-3">
-        <Card className="border-stone-200 bg-[#fcfaf7]">
+        <Link href={`/${tenantSlug}/portal/pets`}>
+          <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             <PawPrint className="h-10 w-10 rounded-xl bg-white p-2 text-[#c66a2b]" />
             <div>
@@ -84,8 +86,10 @@ export function ClientPortalHome({
               <p className="text-xs text-stone-500">{pets.length} profile{pets.length === 1 ? '' : 's'} saved</p>
             </div>
           </CardContent>
-        </Card>
-        <Card className="border-stone-200 bg-[#fcfaf7]">
+          </Card>
+        </Link>
+        <Link href={`/${tenantSlug}/portal/waiver`}>
+          <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             {hasSignedWaiver ? (
               <CheckCircle2 className="h-10 w-10 rounded-xl bg-white p-2 text-green-600" />
@@ -97,8 +101,10 @@ export function ClientPortalHome({
               <p className="text-xs text-stone-500">{hasSignedWaiver ? 'Signed and on file' : 'Needs attention before first walk'}</p>
             </div>
           </CardContent>
-        </Card>
-        <Card className="border-stone-200 bg-[#fcfaf7]">
+          </Card>
+        </Link>
+        <Link href={`/${tenantSlug}/portal/schedule`}>
+          <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             <CalendarDays className="h-10 w-10 rounded-xl bg-white p-2 text-sky-600" />
             <div>
@@ -106,7 +112,8 @@ export function ClientPortalHome({
               <p className="text-xs text-stone-500">{bookings.length} pending or scheduled</p>
             </div>
           </CardContent>
-        </Card>
+          </Card>
+        </Link>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
@@ -169,6 +176,11 @@ export function ClientPortalHome({
                     ? 'Your signed acknowledgment is on file.'
                     : 'Your account exists, but the active waiver is not yet signed. Booking should remain limited until this is completed.'}
                 </p>
+                <div className="mt-4">
+                  <Link href={`/${tenantSlug}/portal/waiver`}>
+                    <Button variant="outline" size="sm">{hasSignedWaiver ? 'Review waiver' : 'Review and sign waiver'}</Button>
+                  </Link>
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -266,6 +278,16 @@ export function ClientPortalHome({
                   </div>
                 ))
               )}
+              <div className="pt-2">
+                <div className="flex flex-wrap gap-2">
+                  <Link href={`/${tenantSlug}/portal/walks`}>
+                    <Button variant="outline" size="sm">View walk reports</Button>
+                  </Link>
+                  <Link href={`/${tenantSlug}/portal/billing`}>
+                    <Button variant="outline" size="sm">View billing</Button>
+                  </Link>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </div>

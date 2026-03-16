@@ -6,9 +6,6 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Calendar,
-  Users,
-  DollarSign,
-  MessageSquare,
   Settings,
   LogOut,
 } from 'lucide-react'
@@ -19,9 +16,6 @@ import { cn } from '@/lib/utils'
 const NAV_ITEMS = [
   { href: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
   { href: 'schedule',   label: 'Schedule',   icon: Calendar },
-  { href: 'clients',    label: 'Clients',    icon: Users },
-  { href: 'billing',    label: 'Billing',    icon: DollarSign },
-  { href: 'messages',   label: 'Messages',   icon: MessageSquare },
   { href: 'settings',   label: 'Settings',   icon: Settings },
 ]
 

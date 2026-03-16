@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils'
 const NAV_LINKS = [
   { href: 'portal',          label: 'Home' },
   { href: 'portal/pets',     label: 'My Pets' },
+  { href: 'portal/waiver',   label: 'Waiver' },
   { href: 'portal/schedule', label: 'Schedule a Walk' },
   { href: 'portal/walks',    label: 'Walk Reports' },
   { href: 'portal/billing',  label: 'Billing' },

@@ -38,7 +38,16 @@ export default async function PortalHomePage({
     return <PortalPublicHome />
   }
 
-  const [{ data: pets }, { data: services }, { data: activeWaiver }, { data: waiverSignature }, { data: bookings }] = await Promise.all([
+  const { data: activeWaiver } = await supabase
+    .from('waivers')
+    .select('id, title')
+    .eq('tenant_id', tenant.id)
+    .eq('is_active', true)
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  const [{ data: pets }, { data: services }, { data: waiverSignature }, { data: bookings }] = await Promise.all([
     supabase
       .from('pets')
       .select('id, name, breed, behavior_notes, special_notes, allergies')
@@ -51,21 +60,16 @@ export default async function PortalHomePage({
       .eq('tenant_id', tenant.id)
       .eq('is_active', true)
       .order('base_price', { ascending: true }),
-    supabase
-      .from('waivers')
-      .select('id, title')
-      .eq('tenant_id', tenant.id)
-      .eq('is_active', true)
-      .order('version', { ascending: false })
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from('waiver_signatures')
-      .select('id')
-      .eq('tenant_id', tenant.id)
-      .eq('client_id', clientProfile.id)
-      .limit(1)
-      .maybeSingle(),
+    activeWaiver
+      ? supabase
+          .from('waiver_signatures')
+          .select('id')
+          .eq('tenant_id', tenant.id)
+          .eq('client_id', clientProfile.id)
+          .eq('waiver_id', activeWaiver.id)
+          .limit(1)
+          .maybeSingle()
+      : Promise.resolve({ data: null }),
     supabase
       .from('bookings')
       .select('id, scheduled_at, status, service_id')
