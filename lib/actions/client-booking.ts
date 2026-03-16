@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isDemoTenantSlug } from '@/lib/demo'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 export type ClientBookingState = {
@@ -29,6 +30,10 @@ export async function requestBookingAction(
 
   if (!serviceId || !petIds.length || !date || !time) {
     return { error: 'Service, at least one pet, date, and time are required.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    return { success: true }
   }
 
   const authClient = await createServerClient()

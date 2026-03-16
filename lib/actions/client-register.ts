@@ -1,7 +1,9 @@
 'use server'
 
 import { headers } from 'next/headers'
+import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
+import { DEMO_ROLE_COOKIE, isDemoTenantSlug } from '@/lib/demo'
 import { createServiceClient } from '@/lib/supabase/server'
 
 export type ClientRegisterState = {
@@ -56,6 +58,18 @@ export async function registerClientAction(
 
   if (!acceptsWaiver || !authorizesEmergencyCare || !disclosedBehavior) {
     return { error: 'You must complete the waiver acknowledgements before creating an account.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    const cookieStore = await cookies()
+    cookieStore.set(DEMO_ROLE_COOKIE, 'client', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 8,
+      path: '/',
+    })
+    redirect(`/${tenantSlug}/portal?demo=registered`)
   }
 
   const supabase = createServiceClient()

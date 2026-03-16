@@ -34,6 +34,12 @@ export default function ClientRegisterPage() {
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-8">
+            {params.tenant === 'demo' && (
+              <section className="rounded-xl border border-[#f2d2b5] bg-[#fff6ed] p-4 text-sm text-stone-700">
+                This demo onboarding flow signs you into the seeded client account after submission so you can explore the portal immediately.
+              </section>
+            )}
+
             <section className="space-y-4">
               <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">Owner Details</h2>
               <div className="grid gap-4 md:grid-cols-2">
@@ -129,6 +135,31 @@ export default function ClientRegisterPage() {
                 </div>
               </div>
             </section>
+
+            {params.tenant === 'demo' && (
+              <section className="space-y-4">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">Payment Setup</h2>
+                <div className="grid gap-4 md:grid-cols-3">
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label htmlFor="card_number">Card number</Label>
+                    <Input id="card_number" name="card_number" placeholder="4242 4242 4242 4242" defaultValue="4242 4242 4242 4242" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="card_zip">Billing ZIP</Label>
+                    <Input id="card_zip" name="card_zip" placeholder="77007" defaultValue="77007" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="card_expiry">Expiry</Label>
+                    <Input id="card_expiry" name="card_expiry" placeholder="08/28" defaultValue="08/28" />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="card_cvc">CVC</Label>
+                    <Input id="card_cvc" name="card_cvc" placeholder="424" defaultValue="424" />
+                  </div>
+                </div>
+                <p className="text-xs text-stone-500">Demo only: this simulates storing a card on file for invoicing and autopay.</p>
+              </section>
+            )}
 
             <section className="space-y-4 rounded-xl border border-stone-200 bg-stone-50 p-4">
               <div className="flex items-center gap-2">

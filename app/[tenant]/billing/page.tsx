@@ -1,6 +1,7 @@
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { demoBookings, demoClients, demoInvoices, demoServices, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { sendInvoiceReminderAction, updateInvoiceStatusAction } from '@/lib/actions/walker-invoices'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
@@ -21,40 +22,75 @@ export default async function WalkerBillingPage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = await params
-  const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+  type InvoiceRow = {
+    id: string
+    client_id: string
+    walk_id: string | null
+    amount: number
+    status: string
+    due_date: string | null
+    paid_at: string | null
+    notes: string | null
+    created_at: string
+  }
+  type ClientRow = { id: string; full_name: string }
+  type WalkRow = { id: string; booking_id: string }
+  type BookingRow = { id: string; service_id: string; scheduled_at: string }
+  type ServiceRow = { id: string; name: string }
 
-  const [{ data: invoices }, { data: clients }, { data: walks }, { data: bookings }, { data: services }] = await Promise.all([
-    supabase
-      .from('invoices')
-      .select('id, client_id, walk_id, amount, status, due_date, paid_at, notes, created_at')
-      .eq('tenant_id', tenant.id)
-      .order('created_at', { ascending: false }),
-    supabase
-      .from('client_profiles')
-      .select('id, full_name')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('walks')
-      .select('id, booking_id')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('bookings')
-      .select('id, service_id, scheduled_at')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('services')
-      .select('id, name')
-      .eq('tenant_id', tenant.id),
-  ])
+  let businessName = 'PawPath Pro'
+  let invoices: InvoiceRow[] = demoInvoices
+  let clients: ClientRow[] = demoClients.map((client) => ({ id: client.id, full_name: client.full_name }))
+  let walks: WalkRow[] = demoWalks.map((walk) => ({ id: walk.id, booking_id: walk.booking_id }))
+  let bookings: BookingRow[] = demoBookings.map((booking) => ({ id: booking.id, service_id: booking.service_id, scheduled_at: booking.scheduled_at }))
+  let services: ServiceRow[] = demoServices.map((service) => ({ id: service.id, name: service.name }))
 
-  const clientById = new Map((clients ?? []).map((client) => [client.id, client.full_name]))
-  const bookingById = new Map((bookings ?? []).map((booking) => [booking.id, booking]))
-  const walkById = new Map((walks ?? []).map((walk) => [walk.id, walk]))
-  const serviceById = new Map((services ?? []).map((service) => [service.id, service.name]))
+  if (isDemoTenantSlug(tenantSlug)) {
+    await requireDemoRole('walker', tenantSlug)
+    businessName = 'Maple & Main Dog Walking'
+  } else {
+    const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+    businessName = tenant.business_name
 
-  const unpaidInvoices = (invoices ?? []).filter((invoice) => !['paid', 'voided'].includes(invoice.status))
-  const overdueInvoices = (invoices ?? []).filter((invoice) => invoice.status === 'overdue')
-  const paidInvoices = (invoices ?? []).filter((invoice) => invoice.status === 'paid')
+    const results = await Promise.all([
+      supabase
+        .from('invoices')
+        .select('id, client_id, walk_id, amount, status, due_date, paid_at, notes, created_at')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: false }),
+      supabase
+        .from('client_profiles')
+        .select('id, full_name')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('walks')
+        .select('id, booking_id')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('bookings')
+        .select('id, service_id, scheduled_at')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('services')
+        .select('id, name')
+        .eq('tenant_id', tenant.id),
+    ])
+
+    invoices = (results[0].data ?? []).map((invoice) => ({ ...invoice, amount: Number(invoice.amount) }))
+    clients = results[1].data ?? []
+    walks = results[2].data ?? []
+    bookings = results[3].data ?? []
+    services = results[4].data ?? []
+  }
+
+  const clientById = new Map(clients.map((client) => [client.id, client.full_name]))
+  const bookingById = new Map(bookings.map((booking) => [booking.id, booking]))
+  const walkById = new Map(walks.map((walk) => [walk.id, walk]))
+  const serviceById = new Map(services.map((service) => [service.id, service.name]))
+
+  const unpaidInvoices = invoices.filter((invoice) => !['paid', 'voided'].includes(invoice.status))
+  const overdueInvoices = invoices.filter((invoice) => invoice.status === 'overdue')
+  const paidInvoices = invoices.filter((invoice) => invoice.status === 'paid')
 
   return (
     <div className="max-w-6xl p-6">
@@ -93,10 +129,31 @@ export default async function WalkerBillingPage({
         </Card>
       </div>
 
+      <div className="mb-6 grid gap-4 md:grid-cols-2">
+        <Card className="border-stone-200">
+          <CardHeader className="pb-2">
+            <CardDescription>Collected revenue</CardDescription>
+            <CardTitle>{currency(paidInvoices.reduce((sum, invoice) => sum + Number(invoice.amount), 0))}</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-stone-500">
+            Total paid invoices currently visible in the dashboard
+          </CardContent>
+        </Card>
+        <Card className="border-stone-200">
+          <CardHeader className="pb-2">
+            <CardDescription>Accounts receivable</CardDescription>
+            <CardTitle>{currency(unpaidInvoices.reduce((sum, invoice) => sum + Number(invoice.amount), 0))}</CardTitle>
+          </CardHeader>
+          <CardContent className="text-sm text-stone-500">
+            Open balance across sent and overdue invoices
+          </CardContent>
+        </Card>
+      </div>
+
       <Card className="border-stone-200">
         <CardHeader>
           <CardTitle>Invoices</CardTitle>
-          <CardDescription>Operational billing view for {tenant.business_name}.</CardDescription>
+          <CardDescription>Operational billing view for {businessName}.</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           {!invoices?.length ? (

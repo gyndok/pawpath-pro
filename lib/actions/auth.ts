@@ -1,5 +1,6 @@
 'use server'
 
+import { DEMO_ROLE_COOKIE, isDemoTenantSlug } from '@/lib/demo'
 import { createServiceClient } from '@/lib/supabase/server'
 import { createClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
@@ -14,6 +15,20 @@ export async function loginAction(
   _prevState: AuthState,
   formData: FormData
 ): Promise<AuthState> {
+  if (isDemoTenantSlug(tenantSlug)) {
+    const role = ((formData.get('role') as string) || 'walker') === 'client' ? 'client' : 'walker'
+    const cookieStore = await cookies()
+    cookieStore.set(DEMO_ROLE_COOKIE, role, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 8,
+      path: '/',
+    })
+
+    redirect(role === 'walker' ? `/${tenantSlug}/dashboard` : `/${tenantSlug}/portal`)
+  }
+
   const email    = formData.get('email') as string
   const password = formData.get('password') as string
   const role     = (formData.get('role') as string) || 'walker'
@@ -108,9 +123,28 @@ export async function loginAction(
   redirect(destination)
 }
 
+export async function startDemoSessionAction(tenantSlug: string, formData: FormData) {
+  if (!isDemoTenantSlug(tenantSlug)) {
+    redirect(`/${tenantSlug}`)
+  }
+
+  const role = ((formData.get('role') as string) || 'client') === 'walker' ? 'walker' : 'client'
+  const cookieStore = await cookies()
+  cookieStore.set(DEMO_ROLE_COOKIE, role, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 8,
+    path: '/',
+  })
+
+  redirect(role === 'walker' ? `/${tenantSlug}/dashboard` : `/${tenantSlug}/portal`)
+}
+
 export async function logoutAction(tenantSlug: string) {
   const cookieStore = await cookies()
   cookieStore.delete('sb-access-token')
   cookieStore.delete('sb-refresh-token')
+  cookieStore.delete(DEMO_ROLE_COOKIE)
   redirect(`/${tenantSlug}/login`)
 }

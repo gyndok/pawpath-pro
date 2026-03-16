@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isDemoTenantSlug } from '@/lib/demo'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function value(formData: FormData, key: string) {
@@ -98,6 +99,8 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
   const waterProvided = checkbox(formData, 'water_provided')
 
   if (!bookingId) return
+
+  if (isDemoTenantSlug(tenantSlug)) return
 
   const { tenant, user, supabase } = await requireTenantWalker(tenantSlug)
 
@@ -234,6 +237,8 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
 export async function generateInvoiceAction(tenantSlug: string, formData: FormData) {
   const bookingId = value(formData, 'booking_id')
   if (!bookingId) return
+
+  if (isDemoTenantSlug(tenantSlug)) return
 
   const { tenant, user, supabase } = await requireTenantWalker(tenantSlug)
 

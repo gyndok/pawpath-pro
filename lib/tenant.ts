@@ -1,4 +1,5 @@
 import { createServiceClient } from './supabase/server'
+import { demoTenant, isDemoTenantSlug } from './demo'
 import type { Tenant } from '@/types/tenant'
 
 export const APP_DOMAIN = process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'
@@ -35,6 +36,10 @@ export function extractSubdomain(host: string): string | null {
  * Look up a tenant by slug. Returns null if not found or inactive.
  */
 export async function getTenantBySlug(slug: string): Promise<Tenant | null> {
+  if (isDemoTenantSlug(slug)) {
+    return demoTenant
+  }
+
   const supabase = createServiceClient()
   const { data, error } = await supabase
     .from('tenants')

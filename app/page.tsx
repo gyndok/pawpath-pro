@@ -47,6 +47,9 @@ export default function HomePage() {
           />
         </div>
         <div className="flex items-center gap-4">
+          <Link href="/demo">
+            <Button size="sm" variant="outline" className="border-stone-300 bg-white/70">Explore Demo</Button>
+          </Link>
           <Link href="/#pricing" className="text-sm text-gray-600 hover:text-gray-900">Pricing</Link>
           <Link href="/signup">
             <Button size="sm" className="bg-[#c66a2b] hover:bg-[#ad5821]">Start Free Trial</Button>

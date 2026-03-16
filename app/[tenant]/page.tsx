@@ -44,6 +44,7 @@ const TRUST_POINTS = [
 
 export default function TenantPublicPage() {
   const { tenant } = useTenant()
+  const isDemo = tenant.slug === 'demo'
 
   return (
     <div className="min-h-screen bg-stone-50 text-stone-900">
@@ -84,6 +85,11 @@ export default function TenantPublicPage() {
             <Link href={`/${tenant.slug}/portal`}>
               <Button variant="outline" size="lg">View client portal</Button>
             </Link>
+            {isDemo && (
+              <Link href={`/${tenant.slug}/login`}>
+                <Button variant="outline" size="lg">Open walker demo</Button>
+              </Link>
+            )}
           </div>
           <div className="mt-8 flex flex-wrap gap-6 text-sm text-stone-600">
             <div className="flex items-center gap-2">

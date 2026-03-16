@@ -1,3 +1,4 @@
+import { getDemoRole, isDemoTenantSlug, demoClientProfile, demoPets, demoServices, demoWaiver, demoBookings } from '@/lib/demo'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { PortalPublicHome } from '@/components/portal/public-home'
 import { ClientPortalHome } from '@/components/portal/client-home'
@@ -8,6 +9,36 @@ export default async function PortalHomePage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = await params
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    const role = await getDemoRole()
+
+    if (role !== 'client') {
+      return <PortalPublicHome />
+    }
+
+    const serviceNameById = new Map(demoServices.map((service) => [service.id, service.name]))
+
+    return (
+      <ClientPortalHome
+        tenantSlug={tenantSlug}
+        clientName={demoClientProfile.full_name}
+        pets={demoPets.filter((pet) => pet.client_id === demoClientProfile.id)}
+        services={demoServices}
+        hasSignedWaiver
+        activeWaiverTitle={demoWaiver.title}
+        bookings={demoBookings
+          .filter((booking) => booking.client_id === demoClientProfile.id)
+          .map((booking) => ({
+            id: booking.id,
+            scheduled_at: booking.scheduled_at,
+            status: booking.status,
+            service_name: serviceNameById.get(booking.service_id) ?? 'Walk service',
+          }))}
+      />
+    )
+  }
+
   const authClient = await createServerClient()
   const { data: { user } } = await authClient.auth.getUser()
 

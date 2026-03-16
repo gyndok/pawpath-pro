@@ -2,6 +2,7 @@
 
 import { headers } from 'next/headers'
 import { revalidatePath } from 'next/cache'
+import { isDemoTenantSlug } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 export type ClientWaiverState = {
@@ -19,6 +20,10 @@ export async function signActiveWaiverAction(
 
   if (!signatureName) {
     return { error: 'Signature name is required.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    return { success: true }
   }
 
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)

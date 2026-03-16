@@ -1,4 +1,5 @@
 import { PortalScheduleHome } from '@/components/portal/schedule-home'
+import { demoBookings, demoClientProfile, demoPets, demoServices, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 export default async function PortalSchedulePage({
@@ -7,6 +8,27 @@ export default async function PortalSchedulePage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = await params
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    await requireDemoRole('client', tenantSlug)
+    const serviceNameById = new Map(demoServices.map((service) => [service.id, service.name]))
+
+    return (
+      <PortalScheduleHome
+        pets={demoPets.filter((pet) => pet.client_id === demoClientProfile.id).map((pet) => ({ id: pet.id, name: pet.name }))}
+        services={demoServices}
+        bookings={demoBookings
+          .filter((booking) => booking.client_id === demoClientProfile.id)
+          .map((booking) => ({
+            id: booking.id,
+            scheduled_at: booking.scheduled_at,
+            status: booking.status,
+            service_name: serviceNameById.get(booking.service_id) ?? 'Walk service',
+          }))}
+      />
+    )
+  }
+
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)
 
   const [{ data: pets }, { data: services }, { data: bookings }] = await Promise.all([

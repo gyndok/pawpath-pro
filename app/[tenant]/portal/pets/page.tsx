@@ -2,6 +2,7 @@ import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 import { PetManager } from '@/components/portal/pet-manager'
+import { demoClientProfile, demoPets, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 export default async function PortalPetsPage({
@@ -10,6 +11,26 @@ export default async function PortalPetsPage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = await params
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    await requireDemoRole('client', tenantSlug)
+    const pets = demoPets.filter((pet) => pet.client_id === demoClientProfile.id)
+
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-10">
+        <div className="mb-6 flex items-center justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold">My Pets</h1>
+            <p className="text-sm text-stone-500">Pet information currently on file for Maple & Main Dog Walking.</p>
+          </div>
+          <Badge variant="secondary">{pets.length} pets</Badge>
+        </div>
+
+        <PetManager tenantSlug={tenantSlug} pets={pets} />
+      </div>
+    )
+  }
+
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)
 
   const { data: pets } = await supabase

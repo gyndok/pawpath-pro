@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isDemoTenantSlug } from '@/lib/demo'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 export type WalkerServiceState = {
@@ -32,6 +33,10 @@ export async function createServiceAction(
 
   if (!Number.isFinite(durationMinutes) || durationMinutes <= 0 || !Number.isFinite(basePrice) || basePrice <= 0) {
     return { error: 'Enter valid service duration and pricing values.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    return { success: true }
   }
 
   const { tenant, supabase } = await requireTenantWalker(tenantSlug)

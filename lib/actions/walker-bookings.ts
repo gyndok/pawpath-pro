@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isDemoTenantSlug } from '@/lib/demo'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 export async function updateBookingStatusAction(tenantSlug: string, formData: FormData) {
@@ -10,6 +11,10 @@ export async function updateBookingStatusAction(tenantSlug: string, formData: Fo
   const status = typeof rawStatus === 'string' ? rawStatus : ''
 
   if (!bookingId || !['approved', 'declined'].includes(status)) {
+    return
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
     return
   }
 

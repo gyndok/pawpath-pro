@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { updateBookingStatusAction } from '@/lib/actions/walker-bookings'
 import { completeWalkAction, generateInvoiceAction } from '@/lib/actions/walker-walks'
+import { demoBookings, demoClients, demoInvoices, demoServices, demoWalkReports, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function toDateTimeLocal(value: string) {
@@ -17,45 +18,82 @@ export default async function WalkerSchedulePage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = await params
-  const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+  type BookingRow = { id: string; client_id: string; service_id: string; scheduled_at: string; status: string; notes: string | null }
+  type ServiceRow = { id: string; name: string; base_price: number; duration_minutes: number }
+  type ClientRow = { id: string; full_name: string }
+  type WalkRow = { id: string; booking_id: string; status: string; started_at: string | null; ended_at: string | null }
+  type ReportRow = { walk_id: string; walker_message: string | null; mood: string | null; delivered_at: string | null }
+  type InvoiceRow = { id: string; walk_id: string | null; amount: number; status: string }
 
-  const [{ data: bookings }, { data: services }, { data: clients }, { data: walks }, { data: reports }, { data: invoices }] = await Promise.all([
-    supabase
-      .from('bookings')
-      .select('id, client_id, service_id, scheduled_at, status, notes')
-      .eq('tenant_id', tenant.id)
-      .order('scheduled_at', { ascending: true }),
-    supabase
-      .from('services')
-      .select('id, name, base_price, duration_minutes')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('client_profiles')
-      .select('id, full_name')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('walks')
-      .select('id, booking_id, status, started_at, ended_at')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('walk_reports')
-      .select('walk_id, walker_message, mood, delivered_at')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('invoices')
-      .select('id, walk_id, amount, status')
-      .eq('tenant_id', tenant.id),
-  ])
+  let bookings: BookingRow[] = demoBookings.map((booking) => ({
+    id: booking.id,
+    client_id: booking.client_id,
+    service_id: booking.service_id,
+    scheduled_at: booking.scheduled_at,
+    status: booking.status,
+    notes: booking.notes,
+  }))
+  let services: ServiceRow[] = demoServices
+  let clients: ClientRow[] = demoClients.map((client) => ({ id: client.id, full_name: client.full_name }))
+  let walks: WalkRow[] = demoWalks
+  let reports: ReportRow[] = demoWalkReports
+  let invoices: InvoiceRow[] = demoInvoices.map((invoice) => ({
+    id: invoice.id,
+    walk_id: invoice.walk_id,
+    amount: invoice.amount,
+    status: invoice.status,
+  }))
 
-  const serviceById = new Map((services ?? []).map((service) => [service.id, { ...service, base_price: Number(service.base_price) }]))
-  const clientById = new Map((clients ?? []).map((client) => [client.id, client]))
-  const walkByBookingId = new Map((walks ?? []).map((walk) => [walk.booking_id, walk]))
-  const reportByWalkId = new Map((reports ?? []).map((report) => [report.walk_id, report]))
-  const invoiceByWalkId = new Map((invoices ?? []).map((invoice) => [invoice.walk_id, { ...invoice, amount: Number(invoice.amount) }]))
+  if (isDemoTenantSlug(tenantSlug)) {
+    await requireDemoRole('walker', tenantSlug)
+  } else {
+    const { tenant, supabase } = await requireTenantWalker(tenantSlug)
 
-  const pendingBookings = (bookings ?? []).filter((booking) => booking.status === 'pending')
-  const approvedBookings = (bookings ?? []).filter((booking) => booking.status === 'approved')
-  const completedBookings = (bookings ?? []).filter((booking) => booking.status === 'completed')
+    const results = await Promise.all([
+      supabase
+        .from('bookings')
+        .select('id, client_id, service_id, scheduled_at, status, notes')
+        .eq('tenant_id', tenant.id)
+        .order('scheduled_at', { ascending: true }),
+      supabase
+        .from('services')
+        .select('id, name, base_price, duration_minutes')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('client_profiles')
+        .select('id, full_name')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('walks')
+        .select('id, booking_id, status, started_at, ended_at')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('walk_reports')
+        .select('walk_id, walker_message, mood, delivered_at')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('invoices')
+        .select('id, walk_id, amount, status')
+        .eq('tenant_id', tenant.id),
+    ])
+
+    bookings = results[0].data ?? []
+    services = (results[1].data ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))
+    clients = results[2].data ?? []
+    walks = results[3].data ?? []
+    reports = results[4].data ?? []
+    invoices = (results[5].data ?? []).map((invoice) => ({ ...invoice, amount: Number(invoice.amount) }))
+  }
+
+  const serviceById = new Map(services.map((service) => [service.id, service]))
+  const clientById = new Map(clients.map((client) => [client.id, client]))
+  const walkByBookingId = new Map(walks.map((walk) => [walk.booking_id, walk]))
+  const reportByWalkId = new Map(reports.map((report) => [report.walk_id, report]))
+  const invoiceByWalkId = new Map(invoices.map((invoice) => [invoice.walk_id, invoice]))
+
+  const pendingBookings = bookings.filter((booking) => booking.status === 'pending')
+  const approvedBookings = bookings.filter((booking) => booking.status === 'approved')
+  const completedBookings = bookings.filter((booking) => booking.status === 'completed')
 
   return (
     <div className="max-w-6xl p-6">

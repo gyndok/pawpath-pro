@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isDemoTenantSlug } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 function value(formData: FormData, key: string) {
@@ -29,6 +30,10 @@ export async function updatePetAction(
 
   if (!petId || !name) {
     return { error: 'Pet name is required.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    return { success: true }
   }
 
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)
@@ -69,6 +74,10 @@ export async function addPetAction(
   const name = value(formData, 'name')
   if (!name) {
     return { error: 'Pet name is required.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    return { success: true }
   }
 
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)

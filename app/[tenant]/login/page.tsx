@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { loginAction } from '@/lib/actions/auth'
+import { loginAction, startDemoSessionAction } from '@/lib/actions/auth'
 import type { AuthState } from '@/lib/actions/auth'
 
 export default function LoginPage() {
@@ -36,6 +36,15 @@ export default function LoginPage() {
             <CardDescription>Sign in to your walker dashboard</CardDescription>
           </CardHeader>
           <CardContent>
+            {tenantSlug === 'demo' && (
+              <form action={startDemoSessionAction.bind(null, tenantSlug)} className="mb-4">
+                <input type="hidden" name="role" value="walker" />
+                <Button type="submit" variant="outline" className="w-full border-[#c66a2b] text-[#b45a21]">
+                  Enter Walker Demo
+                </Button>
+              </form>
+            )}
+
             <form action={formAction} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>

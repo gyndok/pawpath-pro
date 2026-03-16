@@ -1,4 +1,5 @@
 import { WaiverSignCard } from '@/components/portal/waiver-sign-card'
+import { demoClientProfile, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 export default async function PortalWaiverPage({
@@ -7,6 +8,28 @@ export default async function PortalWaiverPage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = await params
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    await requireDemoRole('client', tenantSlug)
+
+    return (
+      <div className="mx-auto max-w-4xl px-4 py-10">
+        <div className="mb-6">
+          <h1 className="text-3xl font-bold">Waiver</h1>
+          <p className="text-sm text-stone-500">Review and sign the current service agreement and liability waiver.</p>
+        </div>
+
+        <WaiverSignCard
+          waiverTitle={demoWaiver.title}
+          waiverBody={demoWaiver.body_text}
+          isSigned
+          signatureName={demoClientProfile.full_name}
+          signedAt={demoWaiver.signed_at}
+        />
+      </div>
+    )
+  }
+
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)
 
   const { data: waiver } = await supabase

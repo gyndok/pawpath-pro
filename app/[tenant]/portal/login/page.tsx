@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { loginAction } from '@/lib/actions/auth'
+import { loginAction, startDemoSessionAction } from '@/lib/actions/auth'
 import type { AuthState } from '@/lib/actions/auth'
 import { useTenant } from '@/lib/context/tenant-context'
 
@@ -34,6 +34,15 @@ export default function ClientLoginPage() {
             <CardDescription>Sign in to {tenant.business_name}</CardDescription>
           </CardHeader>
           <CardContent>
+            {params.tenant === 'demo' && (
+              <form action={startDemoSessionAction.bind(null, params.tenant)} className="mb-4">
+                <input type="hidden" name="role" value="client" />
+                <Button type="submit" variant="outline" className="w-full border-[#c66a2b] text-[#b45a21]">
+                  Enter Client Demo
+                </Button>
+              </form>
+            )}
+
             {searchParams.get('registered') === '1' && (
               <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
                 Your account is ready. Sign in to view your portal.

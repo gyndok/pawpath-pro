@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { isDemoTenantSlug } from '@/lib/demo'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function value(formData: FormData, key: string) {
@@ -13,6 +14,10 @@ export async function updateInvoiceStatusAction(tenantSlug: string, formData: Fo
   const status = value(formData, 'status')
 
   if (!invoiceId || !['sent', 'paid', 'overdue', 'voided'].includes(status)) {
+    return
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
     return
   }
 
@@ -36,6 +41,10 @@ export async function updateInvoiceStatusAction(tenantSlug: string, formData: Fo
 export async function sendInvoiceReminderAction(tenantSlug: string, formData: FormData) {
   const invoiceId = value(formData, 'invoice_id')
   if (!invoiceId) {
+    return
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
     return
   }
 

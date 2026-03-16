@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Dog, DollarSign, PawPrint, Clock } from 'lucide-react'
+import { demoBookings, demoClients, demoInvoices, demoServices, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function isSameDay(date: Date, other: Date) {
@@ -15,42 +16,71 @@ export default async function DashboardPage({
   params: Promise<{ tenant: string }>
 }) {
   const { tenant: tenantSlug } = await params
-  const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+  let tenantName = 'PawPath Pro'
+  let bookings: Array<{ id: string; client_id: string; service_id: string; scheduled_at: string; status: string; notes: string | null }> = []
+  let services: Array<{ id: string; name: string }> = []
+  let clients: Array<{ id: string; full_name: string }> = []
+  let invoices: Array<{ id: string; amount: number; status: string; due_date: string | null }> = []
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    await requireDemoRole('walker', tenantSlug)
+    tenantName = 'Maple & Main Dog Walking'
+    bookings = demoBookings
+    services = demoServices.map((service) => ({ id: service.id, name: service.name }))
+    clients = demoClients.map((client) => ({ id: client.id, full_name: client.full_name }))
+    invoices = demoInvoices.map((invoice) => ({
+      id: invoice.id,
+      amount: invoice.amount,
+      status: invoice.status,
+      due_date: invoice.due_date,
+    }))
+  } else {
+    const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+    tenantName = tenant.business_name
+
+    const results = await Promise.all([
+      supabase
+        .from('bookings')
+        .select('id, client_id, service_id, scheduled_at, status, notes')
+        .eq('tenant_id', tenant.id)
+        .order('scheduled_at', { ascending: true }),
+      supabase
+        .from('services')
+        .select('id, name')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('client_profiles')
+        .select('id, full_name')
+        .eq('tenant_id', tenant.id),
+      supabase
+        .from('invoices')
+        .select('id, amount, status, due_date')
+        .eq('tenant_id', tenant.id),
+    ])
+
+    bookings = results[0].data ?? []
+    services = results[1].data ?? []
+    clients = results[2].data ?? []
+    invoices = (results[3].data ?? []).map((invoice) => ({ ...invoice, amount: Number(invoice.amount) }))
+  }
+
   const now = new Date()
 
-  const [{ data: bookings }, { data: services }, { data: clients }, { data: invoices }] = await Promise.all([
-    supabase
-      .from('bookings')
-      .select('id, client_id, service_id, scheduled_at, status, notes')
-      .eq('tenant_id', tenant.id)
-      .order('scheduled_at', { ascending: true }),
-    supabase
-      .from('services')
-      .select('id, name')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('client_profiles')
-      .select('id, full_name')
-      .eq('tenant_id', tenant.id),
-    supabase
-      .from('invoices')
-      .select('id, amount, status, due_date')
-      .eq('tenant_id', tenant.id),
-  ])
-
-  const serviceById = new Map((services ?? []).map((service) => [service.id, service.name]))
-  const clientById = new Map((clients ?? []).map((client) => [client.id, client.full_name]))
-  const bookingList = bookings ?? []
+  const serviceById = new Map(services.map((service) => [service.id, service.name]))
+  const clientById = new Map(clients.map((client) => [client.id, client.full_name]))
+  const bookingList = bookings
 
   const todaysWalks = bookingList.filter((booking) => isSameDay(new Date(booking.scheduled_at), now))
   const upcomingWalks = bookingList.filter((booking) => new Date(booking.scheduled_at) >= now && booking.status === 'approved')
   const pendingBookings = bookingList.filter((booking) => booking.status === 'pending')
-  const unpaidInvoices = (invoices ?? []).filter((invoice) => !['paid', 'voided'].includes(invoice.status))
+  const unpaidInvoices = invoices.filter((invoice) => !['paid', 'voided'].includes(invoice.status))
   const overdueInvoices = unpaidInvoices.filter((invoice) => {
     if (invoice.status === 'overdue') return true
     if (!invoice.due_date) return false
     return new Date(`${invoice.due_date}T23:59:59`) < now
   })
+  const totalCollected = invoices.filter((invoice) => invoice.status === 'paid').reduce((sum, invoice) => sum + invoice.amount, 0)
+  const clientCount = clients.length
 
   const stats = [
     { label: "Today's Walks", value: String(todaysWalks.length), sub: todaysWalks.length ? 'Scheduled for today' : 'No walks on today\'s calendar', icon: PawPrint, color: 'text-violet-600' },
@@ -70,7 +100,10 @@ export default async function DashboardPage({
     <div className="max-w-6xl p-6">
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <div>
+          <h1 className="text-2xl font-bold">Dashboard</h1>
+          <p className="text-sm text-stone-500">{tenantName}</p>
+        </div>
         <p className="text-gray-500 text-sm mt-1">{today}</p>
       </div>
 
@@ -143,6 +176,50 @@ export default async function DashboardPage({
           )}
         </CardContent>
       </Card>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <Card className="border-stone-200">
+          <CardHeader>
+            <CardTitle>Client Snapshot</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="rounded-xl border border-stone-200 bg-stone-50 p-4">
+              <p className="text-2xl font-bold text-stone-900">{clientCount}</p>
+              <p className="text-sm text-stone-500">Active client relationships on file</p>
+            </div>
+            {clients.slice(0, 3).map((client) => (
+              <div key={client.id} className="rounded-xl border border-stone-200 p-4">
+                <p className="font-medium text-stone-900">{client.full_name}</p>
+                <p className="text-sm text-stone-500">
+                  {(bookingList.filter((booking) => booking.client_id === client.id && ['approved', 'completed'].includes(booking.status)).length)} booked visits on record
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+
+        <Card className="border-stone-200">
+          <CardHeader>
+            <CardTitle>Financial Overview</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="text-sm text-stone-500">Collected</p>
+              <p className="mt-1 text-2xl font-bold text-stone-900">${totalCollected.toFixed(2)}</p>
+            </div>
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="text-sm text-stone-500">Open receivables</p>
+              <p className="mt-1 text-2xl font-bold text-stone-900">
+                ${unpaidInvoices.reduce((sum, invoice) => sum + invoice.amount, 0).toFixed(2)}
+              </p>
+            </div>
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="text-sm text-stone-500">Overdue</p>
+              <p className="mt-1 text-2xl font-bold text-stone-900">{overdueInvoices.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
