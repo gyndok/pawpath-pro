@@ -1,17 +1,63 @@
-import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Dog, DollarSign, MessageSquare, PawPrint, Clock } from 'lucide-react'
+import { Calendar, Dog, DollarSign, PawPrint, Clock } from 'lucide-react'
+import { requireTenantWalker } from '@/lib/tenant-session'
 
-// Placeholder stat cards for day-at-a-glance
-const PLACEHOLDER_STATS = [
-  { label: "Today's Walks", value: '—', sub: 'No walks scheduled yet', icon: PawPrint, color: 'text-violet-600' },
-  { label: 'Upcoming',      value: '—', sub: 'This week',               icon: Calendar,     color: 'text-blue-600'   },
-  { label: 'Unread Messages', value: '—', sub: 'From clients',          icon: MessageSquare, color: 'text-green-600'  },
-  { label: 'Unpaid Invoices', value: '—', sub: 'Pending payment',       icon: DollarSign,   color: 'text-amber-600'  },
-]
+function isSameDay(date: Date, other: Date) {
+  return date.getFullYear() === other.getFullYear()
+    && date.getMonth() === other.getMonth()
+    && date.getDate() === other.getDate()
+}
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  params,
+}: {
+  params: Promise<{ tenant: string }>
+}) {
+  const { tenant: tenantSlug } = await params
+  const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+  const now = new Date()
+
+  const [{ data: bookings }, { data: services }, { data: clients }, { data: invoices }] = await Promise.all([
+    supabase
+      .from('bookings')
+      .select('id, client_id, service_id, scheduled_at, status, notes')
+      .eq('tenant_id', tenant.id)
+      .order('scheduled_at', { ascending: true }),
+    supabase
+      .from('services')
+      .select('id, name')
+      .eq('tenant_id', tenant.id),
+    supabase
+      .from('client_profiles')
+      .select('id, full_name')
+      .eq('tenant_id', tenant.id),
+    supabase
+      .from('invoices')
+      .select('id, amount, status, due_date')
+      .eq('tenant_id', tenant.id),
+  ])
+
+  const serviceById = new Map((services ?? []).map((service) => [service.id, service.name]))
+  const clientById = new Map((clients ?? []).map((client) => [client.id, client.full_name]))
+  const bookingList = bookings ?? []
+
+  const todaysWalks = bookingList.filter((booking) => isSameDay(new Date(booking.scheduled_at), now))
+  const upcomingWalks = bookingList.filter((booking) => new Date(booking.scheduled_at) >= now && booking.status === 'approved')
+  const pendingBookings = bookingList.filter((booking) => booking.status === 'pending')
+  const unpaidInvoices = (invoices ?? []).filter((invoice) => !['paid', 'voided'].includes(invoice.status))
+  const overdueInvoices = unpaidInvoices.filter((invoice) => {
+    if (invoice.status === 'overdue') return true
+    if (!invoice.due_date) return false
+    return new Date(`${invoice.due_date}T23:59:59`) < now
+  })
+
+  const stats = [
+    { label: "Today's Walks", value: String(todaysWalks.length), sub: todaysWalks.length ? 'Scheduled for today' : 'No walks on today\'s calendar', icon: PawPrint, color: 'text-violet-600' },
+    { label: 'Upcoming', value: String(upcomingWalks.length), sub: 'Approved upcoming walks', icon: Calendar, color: 'text-blue-600' },
+    { label: 'Pending Requests', value: String(pendingBookings.length), sub: 'Awaiting approval', icon: Dog, color: 'text-amber-600' },
+    { label: 'Unpaid Invoices', value: String(unpaidInvoices.length), sub: overdueInvoices.length ? `${overdueInvoices.length} overdue` : 'All current invoices tracked', icon: DollarSign, color: 'text-green-600' },
+  ]
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',
@@ -28,9 +74,8 @@ export default async function DashboardPage() {
         <p className="text-gray-500 text-sm mt-1">{today}</p>
       </div>
 
-      {/* Day-at-a-glance stat cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        {PLACEHOLDER_STATS.map((stat) => (
+        {stats.map((stat) => (
           <Card key={stat.label}>
             <CardHeader className="pb-2">
               <CardTitle className="text-sm text-gray-500 flex items-center gap-2">
@@ -39,72 +84,63 @@ export default async function DashboardPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-gray-400">{stat.value}</div>
-              <p className="text-xs text-gray-400 mt-1">{stat.sub}</p>
+              <div className="text-3xl font-bold text-stone-900">{stat.value}</div>
+              <p className="text-xs text-stone-500 mt-1">{stat.sub}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {/* Today's walks placeholder */}
-      <Card className="mb-4 overflow-hidden">
+      <Card className="mb-4 border-stone-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-violet-600" />
             Today&apos;s Schedule
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 py-2 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
-            <div className="overflow-hidden rounded-2xl bg-stone-50">
-              <Image
-                src="/assets/portal/empty-state-no-walks.png"
-                alt="Empty schedule illustration"
-                width={1200}
-                height={900}
-                className="h-auto w-full"
-                priority
-              />
-            </div>
-            <div className="text-center lg:text-left">
-              <p className="font-medium text-gray-600">No walks scheduled today</p>
-              <p className="mt-1 text-sm text-gray-400">
-                Walks will appear here once clients start booking.
-              </p>
-              <div className="mt-4">
-                <Badge variant="secondary">Phase 1 Scaffold — full schedule in Phase 3</Badge>
+        <CardContent className="space-y-4">
+          {!todaysWalks.length ? (
+            <p className="text-sm text-stone-500">No walks scheduled today.</p>
+          ) : (
+            todaysWalks.map((booking) => (
+              <div key={booking.id} className="rounded-xl border border-stone-200 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-stone-900">{serviceById.get(booking.service_id) || 'Walk service'}</p>
+                    <p className="text-sm text-stone-500">{clientById.get(booking.client_id) || 'Client'} · {new Date(booking.scheduled_at).toLocaleString()}</p>
+                    {booking.notes && <p className="mt-2 text-sm text-stone-600">{booking.notes}</p>}
+                  </div>
+                  <Badge variant="secondary" className="capitalize">{booking.status}</Badge>
+                </div>
               </div>
-            </div>
-          </div>
+            ))
+          )}
         </CardContent>
       </Card>
 
-      {/* Pending approvals placeholder */}
-      <Card>
+      <Card className="border-stone-200">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Dog className="h-5 w-5 text-amber-500" />
             Walk Requests Pending Approval
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 py-2 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <div className="overflow-hidden rounded-2xl bg-stone-50">
-              <Image
-                src="/assets/portal/empty-state-no-messages.png"
-                alt="Empty approvals illustration"
-                width={1200}
-                height={900}
-                className="h-auto w-full"
-              />
-            </div>
-            <div className="text-center lg:text-left">
-              <p className="text-sm text-gray-400">No pending requests</p>
-              <div className="mt-3">
-                <Badge variant="secondary">Full booking system ships in Phase 3</Badge>
+        <CardContent className="space-y-4">
+          {!pendingBookings.length ? (
+            <p className="text-sm text-stone-500">No pending requests.</p>
+          ) : (
+            pendingBookings.slice(0, 5).map((booking) => (
+              <div key={booking.id} className="rounded-xl border border-stone-200 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium text-stone-900">{serviceById.get(booking.service_id) || 'Walk service'}</p>
+                    <p className="text-sm text-stone-500">{clientById.get(booking.client_id) || 'Client'} · {new Date(booking.scheduled_at).toLocaleString()}</p>
+                  </div>
+                  <Badge variant="secondary">pending</Badge>
+                </div>
               </div>
-            </div>
-          </div>
+            ))
+          )}
         </CardContent>
       </Card>
     </div>

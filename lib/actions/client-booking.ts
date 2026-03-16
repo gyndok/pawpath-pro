@@ -1,5 +1,6 @@
 'use server'
 
+import { revalidatePath } from 'next/cache'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 export type ClientBookingState = {
@@ -18,13 +19,16 @@ export async function requestBookingAction(
   formData: FormData
 ): Promise<ClientBookingState> {
   const serviceId = value(formData, 'service_id')
-  const petId = value(formData, 'pet_id')
+  const petIds = formData
+    .getAll('pet_ids')
+    .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+    .filter(Boolean)
   const date = value(formData, 'date')
   const time = value(formData, 'time')
   const notes = value(formData, 'notes')
 
-  if (!serviceId || !petId || !date || !time) {
-    return { error: 'Service, pet, date, and time are required.' }
+  if (!serviceId || !petIds.length || !date || !time) {
+    return { error: 'Service, at least one pet, date, and time are required.' }
   }
 
   const authClient = await createServerClient()
@@ -80,16 +84,16 @@ export async function requestBookingAction(
     }
   }
 
-  const { data: pet, error: petError } = await supabase
+  const { data: pets, error: petError } = await supabase
     .from('pets')
     .select('id')
-    .eq('id', petId)
+    .in('id', petIds)
     .eq('tenant_id', tenant.id)
     .eq('client_id', clientProfile.id)
-    .single()
+    
 
-  if (petError || !pet) {
-    return { error: 'Selected pet could not be found.' }
+  if (petError || !pets || pets.length !== petIds.length) {
+    return { error: 'One or more selected pets could not be found.' }
   }
 
   const { data: service, error: serviceError } = await supabase
@@ -145,16 +149,23 @@ export async function requestBookingAction(
     return { error: bookingError?.message || 'Failed to create booking request.' }
   }
 
-  const { error: bookingPetError } = await supabase.from('booking_pets').insert({
-    booking_id: booking.id,
-    pet_id: pet.id,
-    tenant_id: tenant.id,
-  })
+  const { error: bookingPetError } = await supabase.from('booking_pets').insert(
+    pets.map((pet) => ({
+      booking_id: booking.id,
+      pet_id: pet.id,
+      tenant_id: tenant.id,
+    }))
+  )
 
   if (bookingPetError) {
     await supabase.from('bookings').delete().eq('id', booking.id)
     return { error: bookingPetError.message }
   }
+
+  revalidatePath(`/${tenantSlug}/portal`)
+  revalidatePath(`/${tenantSlug}/portal/schedule`)
+  revalidatePath(`/${tenantSlug}/dashboard`)
+  revalidatePath(`/${tenantSlug}/schedule`)
 
   return { success: true }
 }
