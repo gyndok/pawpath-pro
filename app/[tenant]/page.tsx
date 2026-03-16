@@ -61,9 +61,16 @@ export default function TenantPublicPage() {
             />
             <span className="hidden text-sm text-stone-500 sm:inline">powered by PawPath Pro</span>
           </div>
-          <Link href={`/${tenant.slug}/portal/login`}>
-            <Button variant="outline" size="sm">Client sign in</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            {isDemo && (
+              <Link href={`/${tenant.slug}`}>
+                <Button variant="outline" size="sm">Demo Hub</Button>
+              </Link>
+            )}
+            <Link href={`/${tenant.slug}/portal/login`}>
+              <Button variant="outline" size="sm">Client sign in</Button>
+            </Link>
+          </div>
         </div>
       </section>
 

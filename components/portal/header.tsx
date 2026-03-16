@@ -22,6 +22,7 @@ export function PortalHeader() {
   const { tenant } = useTenant()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const isDemo = tenant.slug === 'demo'
 
   return (
     <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 backdrop-blur">
@@ -69,6 +70,16 @@ export function PortalHeader() {
 
         {/* Auth CTA */}
         <div className="hidden md:flex items-center gap-2">
+          {isDemo && (
+            <>
+              <Link href={`/${tenant.slug}`}>
+                <Button variant="outline" size="sm" className="border-stone-300">Demo Hub</Button>
+              </Link>
+              <Link href={`/${tenant.slug}/login`}>
+                <Button variant="outline" size="sm" className="border-stone-300">Walker Side</Button>
+              </Link>
+            </>
+          )}
           <Link href={`/${tenant.slug}/portal/login`}>
             <Button variant="outline" size="sm" className="border-stone-300">Sign In</Button>
           </Link>
@@ -97,6 +108,24 @@ export function PortalHeader() {
               {label}
             </Link>
           ))}
+          {isDemo && (
+            <>
+              <Link
+                href={`/${tenant.slug}`}
+                className="block rounded-md px-3 py-2 text-sm text-stone-600 hover:bg-stone-100"
+                onClick={() => setMenuOpen(false)}
+              >
+                Demo Hub
+              </Link>
+              <Link
+                href={`/${tenant.slug}/login`}
+                className="block rounded-md px-3 py-2 text-sm text-stone-600 hover:bg-stone-100"
+                onClick={() => setMenuOpen(false)}
+              >
+                Walker Side
+              </Link>
+            </>
+          )}
           <Link href={`/${tenant.slug}/portal/login`} onClick={() => setMenuOpen(false)}>
             <Button variant="outline" size="sm" className="w-full mt-2">Sign In</Button>
           </Link>

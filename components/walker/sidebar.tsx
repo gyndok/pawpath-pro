@@ -26,6 +26,7 @@ const NAV_ITEMS = [
 export function WalkerSidebar() {
   const pathname = usePathname()
   const { tenant } = useTenant()
+  const isDemo = tenant.slug === 'demo'
 
   return (
     <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col border-r border-stone-200 bg-[#f5efe6]">
@@ -73,6 +74,22 @@ export function WalkerSidebar() {
 
       {/* Logout */}
       <div className="border-t border-stone-200 p-3">
+        {isDemo && (
+          <div className="mb-3 space-y-2">
+            <Link
+              href={`/${tenant.slug}`}
+              className="block rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
+            >
+              Demo Hub
+            </Link>
+            <Link
+              href={`/${tenant.slug}/portal`}
+              className="block rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
+            >
+              Switch to Client Side
+            </Link>
+          </div>
+        )}
         <div className="mb-3 overflow-hidden rounded-2xl bg-white">
           <Image
             src="/assets/portal/empty-state-no-walks.png"
