@@ -73,7 +73,7 @@ export function PortalHeader() {
           {isDemo && (
             <>
               <Link href={`/${tenant.slug}`}>
-                <Button variant="outline" size="sm" className="border-stone-300">Demo Hub</Button>
+                <Button variant="outline" size="sm" className="border-stone-300 bg-[#fff7ef] text-[#b45a21]">Demo Hub</Button>
               </Link>
               <Link href={`/${tenant.slug}/login`}>
                 <Button variant="outline" size="sm" className="border-stone-300">Walker Side</Button>
@@ -112,7 +112,7 @@ export function PortalHeader() {
             <>
               <Link
                 href={`/${tenant.slug}`}
-                className="block rounded-md px-3 py-2 text-sm text-stone-600 hover:bg-stone-100"
+                className="block rounded-md bg-[#fff7ef] px-3 py-2 text-sm text-[#b45a21] hover:bg-[#fff0df]"
                 onClick={() => setMenuOpen(false)}
               >
                 Demo Hub

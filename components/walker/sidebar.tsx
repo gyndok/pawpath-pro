@@ -75,7 +75,9 @@ export function WalkerSidebar() {
       {/* Logout */}
       <div className="border-t border-stone-200 p-3">
         {isDemo && (
-          <div className="mb-3 space-y-2">
+          <div className="mb-3 rounded-2xl border border-[#e7c6a8] bg-[#fff6ed] p-3">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Demo Navigation</p>
+            <div className="space-y-2">
             <Link
               href={`/${tenant.slug}`}
               className="block rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
@@ -88,6 +90,7 @@ export function WalkerSidebar() {
             >
               Switch to Client Side
             </Link>
+            </div>
           </div>
         )}
         <div className="mb-3 overflow-hidden rounded-2xl bg-white">
