@@ -1,7 +1,10 @@
+'use client'
+
 import Link from 'next/link'
 import { ArrowRight, BriefcaseBusiness, Globe2, PawPrint } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { startDemoSessionAction } from '@/lib/actions/auth'
 
 export function DemoBanner({
   tenantSlug,
@@ -93,9 +96,10 @@ export function DemoBanner({
             </div>
           </div>
           <div className="mt-3">
-            <Link href={`/${tenantSlug}/login`}>
-              <Button size="sm" variant="outline">Open walker demo <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button>
-            </Link>
+            <form action={startDemoSessionAction.bind(null, tenantSlug)}>
+              <input type="hidden" name="role" value="walker" />
+              <Button type="submit" size="sm" variant="outline">Enter walker dashboard <ArrowRight className="ml-1 h-3.5 w-3.5" /></Button>
+            </form>
           </div>
         </div>
         </div>

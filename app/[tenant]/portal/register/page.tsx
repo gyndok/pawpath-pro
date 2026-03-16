@@ -15,6 +15,7 @@ import { useTenant } from '@/lib/context/tenant-context'
 export default function ClientRegisterPage() {
   const params = useParams<{ tenant: string }>()
   const { tenant } = useTenant()
+  const isDemo = params.tenant === 'demo'
   const [state, formAction, isPending] = useActionState(
     registerClientAction.bind(null, params.tenant),
     {}
@@ -34,9 +35,9 @@ export default function ClientRegisterPage() {
         </CardHeader>
         <CardContent>
           <form action={formAction} className="space-y-8">
-            {params.tenant === 'demo' && (
+            {isDemo && (
               <section className="rounded-xl border border-[#f2d2b5] bg-[#fff6ed] p-4 text-sm text-stone-700">
-                This demo onboarding flow signs you into the seeded client account after submission so you can explore the portal immediately.
+                This demo onboarding flow is pre-filled. Click <span className="font-semibold">Create Client Account</span> and you&apos;ll be taken straight into the client dashboard.
               </section>
             )}
 
@@ -45,24 +46,24 @@ export default function ClientRegisterPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="full_name">Full name</Label>
-                  <Input id="full_name" name="full_name" placeholder="Jordan Lee" required />
+                  <Input id="full_name" name="full_name" placeholder="Jordan Lee" required defaultValue={isDemo ? 'Jordan Lee' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="email">Email</Label>
-                  <Input id="email" name="email" type="email" placeholder="you@example.com" required />
+                  <Input id="email" name="email" type="email" placeholder="you@example.com" required defaultValue={isDemo ? 'jordan@example.com' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="password">Password</Label>
-                  <Input id="password" name="password" type="password" placeholder="8+ characters" required minLength={8} />
+                  <Input id="password" name="password" type="password" placeholder="8+ characters" required minLength={8} defaultValue={isDemo ? 'demo-pass-123' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="phone">Phone</Label>
-                  <Input id="phone" name="phone" type="tel" placeholder="(555) 555-1212" />
+                  <Input id="phone" name="phone" type="tel" placeholder="(555) 555-1212" defaultValue={isDemo ? '(713) 555-0131' : ''} />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="address">Home address</Label>
-                <Input id="address" name="address" placeholder="123 Oak Street, Houston, TX 77001" />
+                <Input id="address" name="address" placeholder="123 Oak Street, Houston, TX 77001" defaultValue={isDemo ? '1248 Blossom Street, Houston, TX 77007' : ''} />
               </div>
             </section>
 
@@ -71,11 +72,11 @@ export default function ClientRegisterPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="emergency_contact_name">Emergency contact name</Label>
-                  <Input id="emergency_contact_name" name="emergency_contact_name" placeholder="Alex Morgan" />
+                  <Input id="emergency_contact_name" name="emergency_contact_name" placeholder="Alex Morgan" defaultValue={isDemo ? 'Alex Lee' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="emergency_contact_phone">Emergency contact phone</Label>
-                  <Input id="emergency_contact_phone" name="emergency_contact_phone" type="tel" placeholder="(555) 222-3344" />
+                  <Input id="emergency_contact_phone" name="emergency_contact_phone" type="tel" placeholder="(555) 222-3344" defaultValue={isDemo ? '(713) 555-0198' : ''} />
                 </div>
               </div>
             </section>
@@ -85,58 +86,58 @@ export default function ClientRegisterPage() {
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="pet_name">Pet name</Label>
-                  <Input id="pet_name" name="pet_name" placeholder="Mochi" required />
+                  <Input id="pet_name" name="pet_name" placeholder="Mochi" required defaultValue={isDemo ? 'Mochi' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="breed">Breed</Label>
-                  <Input id="breed" name="breed" placeholder="Mini Goldendoodle" />
+                  <Input id="breed" name="breed" placeholder="Mini Goldendoodle" defaultValue={isDemo ? 'Mini Goldendoodle' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="dob">Birthday</Label>
-                  <Input id="dob" name="dob" type="date" />
+                  <Input id="dob" name="dob" type="date" defaultValue={isDemo ? '2021-04-17' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="weight_lbs">Weight (lbs)</Label>
-                  <Input id="weight_lbs" name="weight_lbs" type="number" min="0" step="0.1" placeholder="28" />
+                  <Input id="weight_lbs" name="weight_lbs" type="number" min="0" step="0.1" placeholder="28" defaultValue={isDemo ? '28' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="vet_name">Vet name</Label>
-                  <Input id="vet_name" name="vet_name" placeholder="Dr. Kim" />
+                  <Input id="vet_name" name="vet_name" placeholder="Dr. Kim" defaultValue={isDemo ? 'Dr. Kim' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="vet_clinic">Vet clinic</Label>
-                  <Input id="vet_clinic" name="vet_clinic" placeholder="Houston Pet Clinic" />
+                  <Input id="vet_clinic" name="vet_clinic" placeholder="Houston Pet Clinic" defaultValue={isDemo ? 'Houston Pet Clinic' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="vet_phone">Vet phone</Label>
-                  <Input id="vet_phone" name="vet_phone" type="tel" placeholder="(555) 987-6543" />
+                  <Input id="vet_phone" name="vet_phone" type="tel" placeholder="(555) 987-6543" defaultValue={isDemo ? '(713) 555-0171' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="microchip">Microchip #</Label>
-                  <Input id="microchip" name="microchip" placeholder="981020004567891" />
+                  <Input id="microchip" name="microchip" placeholder="981020004567891" defaultValue={isDemo ? '981020004567891' : ''} />
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">
                 <div className="space-y-1.5">
                   <Label htmlFor="medications">Medications</Label>
-                  <textarea id="medications" name="medications" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Medication name, dosage, schedule" />
+                  <textarea id="medications" name="medications" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Medication name, dosage, schedule" defaultValue={isDemo ? 'Allergy chew after evening meal.' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="allergies">Allergies / medical conditions</Label>
-                  <textarea id="allergies" name="allergies" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Food allergies, heat sensitivity, medical history" />
+                  <textarea id="allergies" name="allergies" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Food allergies, heat sensitivity, medical history" defaultValue={isDemo ? 'Chicken sensitivity, avoid high heat mid-day.' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="behavior_notes">Behavior profile</Label>
-                  <textarea id="behavior_notes" name="behavior_notes" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Reactivity, leash manners, triggers, recall cues" />
+                  <textarea id="behavior_notes" name="behavior_notes" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Reactivity, leash manners, triggers, recall cues" defaultValue={isDemo ? 'Friendly with people, barks at scooters, loves shaded routes.' : ''} />
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="special_notes">Special handling notes</Label>
-                  <textarea id="special_notes" name="special_notes" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Preferred routes, harness setup, off-limit areas, feeding notes" />
+                  <textarea id="special_notes" name="special_notes" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Preferred routes, harness setup, off-limit areas, feeding notes" defaultValue={isDemo ? 'Use front-clip harness and double-check gate latch.' : ''} />
                 </div>
               </div>
             </section>
 
-            {params.tenant === 'demo' && (
+            {isDemo && (
               <section className="space-y-4">
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-stone-500">Payment Setup</h2>
                 <div className="grid gap-4 md:grid-cols-3">
@@ -172,15 +173,15 @@ export default function ClientRegisterPage() {
                 </div>
               </div>
               <label className="flex items-start gap-3 text-sm text-stone-700">
-                <input type="checkbox" name="accepts_waiver" className="mt-1" required />
+                <input type="checkbox" name="accepts_waiver" className="mt-1" required defaultChecked={isDemo} />
                 <span>I understand dog walking involves inherent risks and I accept the service agreement and liability waiver for services provided by {tenant.business_name}.</span>
               </label>
               <label className="flex items-start gap-3 text-sm text-stone-700">
-                <input type="checkbox" name="authorizes_emergency_care" className="mt-1" required />
+                <input type="checkbox" name="authorizes_emergency_care" className="mt-1" required defaultChecked={isDemo} />
                 <span>I authorize emergency veterinary treatment if I cannot be reached and understand I am responsible for related costs.</span>
               </label>
               <label className="flex items-start gap-3 text-sm text-stone-700">
-                <input type="checkbox" name="disclosed_behavior" className="mt-1" required />
+                <input type="checkbox" name="disclosed_behavior" className="mt-1" required defaultChecked={isDemo} />
                 <span>I have disclosed any bite history, aggression, reactivity, medication needs, and other safety-relevant behavioral information.</span>
               </label>
             </section>
@@ -197,7 +198,7 @@ export default function ClientRegisterPage() {
                 <Link href="login" className="text-violet-600 hover:underline">Sign in</Link>
               </p>
               <Button type="submit" className="bg-[#c66a2b] hover:bg-[#ad5821]" disabled={isPending}>
-                {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account…</> : 'Create Client Account'}
+                {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account…</> : isDemo ? 'Create Client Account and Continue' : 'Create Client Account'}
               </Button>
             </div>
           </form>
