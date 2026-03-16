@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -14,6 +14,7 @@ import { useTenant } from '@/lib/context/tenant-context'
 
 export default function ClientLoginPage() {
   const params = useParams<{ tenant: string }>()
+  const searchParams = useSearchParams()
   const { tenant } = useTenant()
 
   // Bind tenant slug and role=client to the action
@@ -33,6 +34,12 @@ export default function ClientLoginPage() {
             <CardDescription>Sign in to {tenant.business_name}</CardDescription>
           </CardHeader>
           <CardContent>
+            {searchParams.get('registered') === '1' && (
+              <div className="mb-4 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                Your account is ready. Sign in to view your portal.
+              </div>
+            )}
+
             <form action={formAction} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>

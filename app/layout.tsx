@@ -4,6 +4,7 @@ import { ThemeProvider } from 'next-themes'
 import './globals.css'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(`https://${process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'}`),
   title: 'PawPath Pro — Dog Walking Business Platform',
   description:
     'Professional dog walking software. GPS tracking, walk reports, client portal, and billing — all in one place.',

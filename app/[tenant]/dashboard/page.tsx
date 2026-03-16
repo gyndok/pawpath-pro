@@ -1,3 +1,4 @@
+import Image from 'next/image'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Dog, DollarSign, MessageSquare, PawPrint, Clock } from 'lucide-react'
@@ -20,9 +21,9 @@ export default async function DashboardPage() {
   })
 
   return (
-    <div className="p-6 max-w-5xl">
+    <div className="max-w-6xl p-6">
       {/* Header */}
-      <div className="mb-6">
+      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <p className="text-gray-500 text-sm mt-1">{today}</p>
       </div>
@@ -46,7 +47,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Today's walks placeholder */}
-      <Card className="mb-4">
+      <Card className="mb-4 overflow-hidden">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5 text-violet-600" />
@@ -54,14 +55,25 @@ export default async function DashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-12 text-center">
-            <PawPrint className="h-10 w-10 text-gray-300 mb-3" />
-            <p className="text-gray-500 font-medium">No walks scheduled today</p>
-            <p className="text-sm text-gray-400 mt-1">
-              Walks will appear here once clients start booking.
-            </p>
-            <div className="mt-4">
-              <Badge variant="secondary">Phase 1 Scaffold — full schedule in Phase 3</Badge>
+          <div className="grid gap-6 py-2 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
+            <div className="overflow-hidden rounded-2xl bg-stone-50">
+              <Image
+                src="/assets/portal/empty-state-no-walks.png"
+                alt="Empty schedule illustration"
+                width={1200}
+                height={900}
+                className="h-auto w-full"
+                priority
+              />
+            </div>
+            <div className="text-center lg:text-left">
+              <p className="font-medium text-gray-600">No walks scheduled today</p>
+              <p className="mt-1 text-sm text-gray-400">
+                Walks will appear here once clients start booking.
+              </p>
+              <div className="mt-4">
+                <Badge variant="secondary">Phase 1 Scaffold — full schedule in Phase 3</Badge>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -76,10 +88,21 @@ export default async function DashboardPage() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col items-center justify-center py-8 text-center">
-            <p className="text-gray-400 text-sm">No pending requests</p>
-            <div className="mt-3">
-              <Badge variant="secondary">Full booking system ships in Phase 3</Badge>
+          <div className="grid gap-6 py-2 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div className="overflow-hidden rounded-2xl bg-stone-50">
+              <Image
+                src="/assets/portal/empty-state-no-messages.png"
+                alt="Empty approvals illustration"
+                width={1200}
+                height={900}
+                className="h-auto w-full"
+              />
+            </div>
+            <div className="text-center lg:text-left">
+              <p className="text-sm text-gray-400">No pending requests</p>
+              <div className="mt-3">
+                <Badge variant="secondary">Full booking system ships in Phase 3</Badge>
+              </div>
             </div>
           </div>
         </CardContent>

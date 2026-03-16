@@ -1,8 +1,9 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { PawPrint, Menu, X } from 'lucide-react'
+import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
 import { useTenant } from '@/lib/context/tenant-context'
 import { Button } from '@/components/ui/button'
@@ -22,17 +23,23 @@ export function PortalHeader() {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="bg-white border-b sticky top-0 z-30">
-      <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
+    <header className="sticky top-0 z-30 border-b border-stone-200 bg-white/95 backdrop-blur">
+      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
         {/* Brand */}
         <Link href={`/${tenant.slug}/portal`} className="flex items-center gap-2">
           {tenant.logo_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={tenant.logo_url} alt={tenant.business_name} className="h-8 w-auto" />
           ) : (
-            <div className="flex items-center gap-2">
-              <PawPrint className="h-5 w-5" style={{ color: tenant.branding_primary_color }} />
-              <span className="font-bold">{tenant.business_name}</span>
+            <div className="flex items-center gap-3">
+              <Image
+                src="/assets/brand/logo-full-color.png"
+                alt="PawPath Pro"
+                width={150}
+                height={40}
+                className="h-9 w-auto"
+              />
+              <span className="hidden text-sm font-medium text-stone-600 md:inline">{tenant.business_name}</span>
             </div>
           )}
         </Link>
@@ -47,10 +54,10 @@ export function PortalHeader() {
                 key={href}
                 href={fullHref}
                 className={cn(
-                  'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                   isActive
-                    ? 'bg-violet-50 text-violet-700'
-                    : 'text-gray-600 hover:bg-gray-100'
+                    ? 'bg-[#fff4e8] text-[#b45a21]'
+                    : 'text-stone-600 hover:bg-stone-100'
                 )}
               >
                 {label}
@@ -62,7 +69,7 @@ export function PortalHeader() {
         {/* Auth CTA */}
         <div className="hidden md:flex items-center gap-2">
           <Link href={`/${tenant.slug}/portal/login`}>
-            <Button variant="outline" size="sm">Sign In</Button>
+            <Button variant="outline" size="sm" className="border-stone-300">Sign In</Button>
           </Link>
         </div>
 
@@ -78,12 +85,12 @@ export function PortalHeader() {
 
       {/* Mobile nav */}
       {menuOpen && (
-        <div className="md:hidden border-t bg-white px-4 py-3 space-y-1">
+        <div className="space-y-1 border-t border-stone-200 bg-white px-4 py-3 md:hidden">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
               href={`/${tenant.slug}/${href}`}
-              className="block px-3 py-2 rounded-md text-sm text-gray-600 hover:bg-gray-100"
+              className="block rounded-md px-3 py-2 text-sm text-stone-600 hover:bg-stone-100"
               onClick={() => setMenuOpen(false)}
             >
               {label}
