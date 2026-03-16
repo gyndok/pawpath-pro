@@ -1,7 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Dog, DollarSign, PawPrint, Clock } from 'lucide-react'
-import { demoBookings, demoClients, demoInvoices, demoServices, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { demoBookings, demoClients, demoInvoices, demoServices, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function isSameDay(date: Date, other: Date) {
@@ -21,6 +21,7 @@ export default async function DashboardPage({
   let services: Array<{ id: string; name: string }> = []
   let clients: Array<{ id: string; full_name: string }> = []
   let invoices: Array<{ id: string; amount: number; status: string; due_date: string | null }> = []
+  let waiverSignedCount = 1
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('walker', tenantSlug)
@@ -56,12 +57,33 @@ export default async function DashboardPage({
         .from('invoices')
         .select('id, amount, status, due_date')
         .eq('tenant_id', tenant.id),
+      supabase
+        .from('waivers')
+        .select('id')
+        .eq('tenant_id', tenant.id)
+        .eq('is_active', true)
+        .order('version', { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ])
 
     bookings = results[0].data ?? []
     services = results[1].data ?? []
     clients = results[2].data ?? []
     invoices = (results[3].data ?? []).map((invoice) => ({ ...invoice, amount: Number(invoice.amount) }))
+
+    const activeWaiverId = results[4].data?.id
+    if (activeWaiverId) {
+      const signatures = await supabase
+        .from('waiver_signatures')
+        .select('id', { count: 'exact', head: true })
+        .eq('tenant_id', tenant.id)
+        .eq('waiver_id', activeWaiverId)
+
+      waiverSignedCount = signatures.count ?? 0
+    } else {
+      waiverSignedCount = 0
+    }
   }
 
   const now = new Date()
@@ -106,6 +128,18 @@ export default async function DashboardPage({
         </div>
         <p className="text-gray-500 text-sm mt-1">{today}</p>
       </div>
+
+      {isDemoTenantSlug(tenantSlug) && (
+        <Card className="mb-6 border-stone-200 bg-[#fff6ed]">
+          <CardHeader>
+            <CardTitle>Walker demo walkthrough</CardTitle>
+          </CardHeader>
+          <CardContent className="grid gap-3 text-sm text-stone-700 md:grid-cols-2">
+            <p>Use this view as the “owner/operator home base” after a walker finishes onboarding.</p>
+            <p>Then move through `Clients`, `Schedule`, `Billing`, and `Settings` to show the full business workflow.</p>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {stats.map((stat) => (
@@ -216,6 +250,52 @@ export default async function DashboardPage({
             <div className="rounded-xl border border-stone-200 p-4">
               <p className="text-sm text-stone-500">Overdue</p>
               <p className="mt-1 text-2xl font-bold text-stone-900">{overdueInvoices.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+        <Card className="border-stone-200">
+          <CardHeader>
+            <CardTitle>Walker Onboarding Snapshot</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-stone-600">
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="font-medium text-stone-900">Business setup</p>
+              <p className="mt-1">{services.length} active services configured and ready for client booking.</p>
+            </div>
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="font-medium text-stone-900">Waiver readiness</p>
+              <p className="mt-1">
+                {isDemoTenantSlug(tenantSlug)
+                  ? `Current waiver template is active: ${demoWaiver.title}.`
+                  : `${waiverSignedCount} clients have signed the current active waiver.`}
+              </p>
+            </div>
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="font-medium text-stone-900">Collections workflow</p>
+              <p className="mt-1">Invoices are being tracked across `sent`, `paid`, and `overdue` states for demo accounting.</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-stone-200">
+          <CardHeader>
+            <CardTitle>Operational Workflow</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3 text-sm text-stone-600">
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="font-medium text-stone-900">1. Client review</p>
+              <p className="mt-1">Check pet profiles, logistics, emergency contacts, and signed waivers before the first booking.</p>
+            </div>
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="font-medium text-stone-900">2. Schedule operations</p>
+              <p className="mt-1">Approve incoming requests, review visit notes, and complete walk documentation from the schedule view.</p>
+            </div>
+            <div className="rounded-xl border border-stone-200 p-4">
+              <p className="font-medium text-stone-900">3. Billing follow-through</p>
+              <p className="mt-1">Track invoices, log reminders, and mark manual payments in the billing view.</p>
             </div>
           </CardContent>
         </Card>

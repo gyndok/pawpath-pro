@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
   Calendar,
+  Users,
   DollarSign,
   Settings,
   LogOut,
@@ -16,6 +17,7 @@ import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: 'dashboard',  label: 'Dashboard',  icon: LayoutDashboard },
+  { href: 'clients',    label: 'Clients',    icon: Users },
   { href: 'schedule',   label: 'Schedule',   icon: Calendar },
   { href: 'billing',    label: 'Billing',    icon: DollarSign },
   { href: 'settings',   label: 'Settings',   icon: Settings },
