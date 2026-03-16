@@ -23,7 +23,7 @@ export default async function SignupSuccessPage({
           <PawPrint className="h-5 w-5 text-violet-600" />
           <span className="font-bold text-lg">PawPath Pro</span>
         </div>
-        <h1 className="text-2xl font-bold mb-2">You're all set!</h1>
+        <h1 className="text-2xl font-bold mb-2">You&apos;re all set!</h1>
         <p className="text-gray-600 mb-6">
           Your account has been created. Check your email to verify your address,
           then log in to set up your business.

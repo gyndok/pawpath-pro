@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { extractSubdomain, getTenantBySlug, APP_DOMAIN } from '@/lib/tenant'
 
-const PLATFORM_ADMIN_EMAIL = process.env.PLATFORM_ADMIN_EMAIL || 'geffrey@pawpathpro.com'
-
 export async function proxy(request: NextRequest) {
   const { pathname, searchParams } = request.nextUrl
   const host = request.headers.get('host') || ''
@@ -57,9 +55,9 @@ export async function proxy(request: NextRequest) {
   const trialEnds = new Date(tenant.trial_ends_at)
   const now = new Date()
   const isInTrial = trialEnds > now
-  const isSubscribed = !!tenant.stripe_subscription_id
+  const hasActiveSubscription = !!tenant.stripe_subscription_id && tenant.is_active
 
-  if (!isInTrial && !isSubscribed) {
+  if (!isInTrial && !hasActiveSubscription) {
     // Tenant subscription expired — redirect to billing/reactivate page
     // Allow access to /login so they can log in to reactivate
     if (!pathname.includes('/login') && !pathname.includes('/api/')) {

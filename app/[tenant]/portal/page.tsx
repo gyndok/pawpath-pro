@@ -8,10 +8,10 @@ import { Badge } from '@/components/ui/badge'
 import { useTenant } from '@/lib/context/tenant-context'
 
 const PORTAL_FEATURES = [
-  { icon: Calendar,  title: 'Book a Walk',    desc: 'Request walk appointments from our availability calendar.',    href: 'schedule' },
-  { icon: FileText,  title: 'Walk Reports',   desc: 'View GPS maps, photos, and notes from every completed walk.',  href: 'walks'    },
-  { icon: CreditCard, title: 'Billing',       desc: 'View and pay your invoices online. See your payment history.', href: 'billing'  },
-  { icon: PawPrint,  title: 'My Pets',        desc: 'Manage pet profiles, vaccines, and vet information.',          href: 'pets'     },
+  { icon: Calendar,   title: 'Book a Walk',  desc: 'Booking requests and approvals are part of the MVP rollout now in progress.' },
+  { icon: FileText,   title: 'Walk Reports', desc: 'Completed visit summaries, photos, and notes will appear here.' },
+  { icon: CreditCard, title: 'Billing',      desc: 'Invoice viewing and payment collection are being built into the client portal.' },
+  { icon: PawPrint,   title: 'My Pets',      desc: 'Pet profiles, care notes, and vaccine details will live here.' },
 ]
 
 export default function PortalHomePage() {
@@ -42,7 +42,7 @@ export default function PortalHomePage() {
 
       {/* Feature grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
-        {PORTAL_FEATURES.map(({ icon: Icon, title, desc, href }) => (
+        {PORTAL_FEATURES.map(({ icon: Icon, title, desc }) => (
           <Card key={title} className="hover:shadow-md transition-shadow">
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center gap-2 text-base">
@@ -52,9 +52,9 @@ export default function PortalHomePage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-gray-600 mb-3">{desc}</p>
-              <Link href={`/${tenant.slug}/${href}`} className="text-violet-600 text-sm font-medium hover:underline">
-                {title} →
-              </Link>
+              <span className="text-violet-600 text-sm font-medium">
+                Available in the next MVP release
+              </span>
             </CardContent>
           </Card>
         ))}

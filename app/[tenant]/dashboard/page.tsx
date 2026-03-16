@@ -1,4 +1,3 @@
-import { headers } from 'next/headers'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Calendar, Dog, DollarSign, MessageSquare, PawPrint, Clock } from 'lucide-react'
@@ -11,12 +10,7 @@ const PLACEHOLDER_STATS = [
   { label: 'Unpaid Invoices', value: '—', sub: 'Pending payment',       icon: DollarSign,   color: 'text-amber-600'  },
 ]
 
-export default async function DashboardPage({
-  params,
-}: {
-  params: Promise<{ tenant: string }>
-}) {
-  const { tenant: slug } = await params
+export default async function DashboardPage() {
 
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long',

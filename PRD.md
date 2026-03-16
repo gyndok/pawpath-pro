@@ -148,10 +148,71 @@ Next.js middleware reads the subdomain from the request host, looks up the tenan
 
 ### Launch Strategy
 
-1. **Phase 0:** Build and deploy for the founder's daughter (Tenant #1)
-2. **Phase 1 post-launch:** Onboard 5 beta walkers free for 3 months; collect feedback
-3. **Phase 2:** Activate paid subscriptions; launch marketing site
-4. **Phase 3:** Paid acquisition targeting Rover/Wag walkers via social ads
+1. **Tenant Zero Alpha:** Launch with the founder's daughter as the first live tenant and prove the core workflow with real clients.
+2. **Design-Partner Beta:** Onboard 5 local solo walkers free for 60--90 days in exchange for weekly feedback and bug reports.
+3. **Soft Paid Launch:** Open paid self-serve signup only after the MVP handles real bookings, reports, and invoices without manual database intervention.
+4. **Focused Acquisition:** Target independent walkers leaving Rover/Wag through direct outreach, referrals, and local social communities before buying broad paid traffic.
+
+### Market Entry Strategy
+
+PawPath Pro should go to market as a **narrow, opinionated solo-walker operating system**, not as a feature-complete pet-care platform. The fastest route to revenue is to solve the end-to-end workflow for one independent dog walker business: get discovered, onboard a client, book a walk, complete the walk, send the report, and collect payment.
+
+This means the initial launch prioritizes:
+
+- A tenant-branded public page with inquiry capture
+- Client onboarding, waiver completion, and pet profile collection
+- Booking requests and walker approval workflow
+- Walk completion with photos and client-facing report delivery
+- Invoice creation and online payment collection
+
+The initial launch explicitly does **not** require:
+
+- Agency / multi-walker scheduling
+- GPS route capture and playback
+- In-app messaging
+- Advanced analytics and CSV export
+- SMS / push notifications
+- Custom domains
+
+### MVP Definition for Market Launch
+
+The market-launch MVP is successful when one tenant can operate the business end-to-end without reverting to text messages, Venmo, or paper waivers.
+
+#### In Scope for MVP
+
+- Marketing site for PawPath Pro platform
+- Tenant-branded public landing page
+- Lead capture / inquiry form
+- Walker signup and tenant provisioning
+- Client registration and login
+- Pet profiles
+- Digital waiver acceptance
+- Booking request flow
+- Walker schedule / approval dashboard
+- Walk completion form with photos and notes
+- Walk report delivery
+- Invoice generation and card payment
+- Transactional email for booking, report, and billing events
+
+#### Out of Scope for MVP
+
+- Native mobile apps
+- Agency tier operations
+- Stripe Connect marketplace-style revenue sharing
+- Route GPS replay
+- Rich messaging center
+- Automation-heavy onboarding sequences
+
+#### Launch Gates
+
+Before opening paid self-serve signup, PawPath Pro should meet all of the following:
+
+- 5--10 real clients onboarded for Tenant Zero
+- At least 20 completed walks processed through the product
+- At least 5 invoices paid successfully through Stripe
+- No known tenant-isolation or auth defects
+- No required manual SQL edits for normal day-to-day operations
+- Mobile usability validated on current iPhone Safari
 
 ---
 
@@ -563,29 +624,29 @@ This stack is selected for rapid development, low infrastructure overhead, excel
 
 **7. Development Phases & Timeline**
 
-Estimated timeline assumes Claude Code as the primary development tool with you as the technical lead. Adjust based on available hours per week.
+Estimated timeline assumes Claude Code as the primary development tool with you as the technical lead. This sequence is optimized for **time-to-market**, not for shipping every feature in the full PRD before launch.
 
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  **Phase**     **Name**                   **Duration**   **Key Deliverables**
-  ------------- -------------------------- -------------- -------------------------------------------------------------------------------------------------------------------------------------------------
-  **Phase 0**   SaaS Foundation            1--2 weeks     Multi-tenant schema (tenants + tenant_id on all tables), RLS policies, subdomain routing middleware, tenant signup + onboarding wizard, Stripe Billing for subscriptions, platform admin dashboard
+  **Phase**     **Name**                        **Duration**   **Key Deliverables**
+  ------------- ------------------------------- -------------- ------------------------------------------------------------------------------------------------------------------------------------------------
+  **Phase 0**   Foundation Hardening            1--2 weeks     Fix tenant auth and RLS alignment, correct subscription gating, clean broken routes, add CI checks, validate local/dev/prod environment setup
 
- **Phase 1**   Foundation & Auth          2--3 weeks     Project scaffold, Next.js setup, Supabase config, user auth (register/login/verify), basic DB schema, deployment to Vercel with custom domain, first tenant (founder's daughter) provisioned
+  **Phase 1**   Tenant Public Site              1--2 weeks     Tenant-branded homepage, services/pricing sections, inquiry form, mobile-responsive layout, initial SEO metadata, lead capture storage
 
-  **Phase 2**   Public Website             2--3 weeks     Home page, About, Services/Pricing, Service Area, FAQ, Contact form, SEO metadata, mobile responsiveness, Google Analytics
+  **Phase 2**   Client Onboarding & Booking     2--3 weeks     Client registration/login, pet profiles, waiver signing, booking request flow, walker approval/decline workflow, basic email notifications
 
-  **Phase 3**   Client Portal Core         3--4 weeks     Client account dashboard, pet profile creation, digital waiver signing, booking request flow, schedule calendar view, basic notification emails
+  **Phase 3**   Walker Operations MVP           2--3 weeks     Real dashboard data for today's walks, upcoming bookings, pending approvals, service configuration, availability management, client directory basics
 
-  **Phase 4**   Walker Dashboard Core      3--4 weeks     Walker dashboard home, schedule management, booking approval/decline, client directory, availability & service configuration
+  **Phase 4**   Walk Reports + Billing MVP      2--3 weeks     Walk completion form, photo upload, client-facing report viewer, invoice creation from completed walks, Stripe payment collection, payment status updates
 
-  **Phase 5**   Walk Execution & Reports   2--3 weeks     Walk Mode screen (GPS, timer, photos), walk report builder, report delivery to client, client walk report viewer, photo gallery
+  **Phase 5**   Tenant Zero Launch              1--2 weeks     Production deployment for founder's daughter, real-client onboarding, bug triage loop, support tooling, QA on mobile, launch KPI tracking
 
-  **Phase 6**   Billing & Payments         2--3 weeks     Stripe integration, auto-invoice generation, client invoice portal, payment collection, overdue reminders, manual payment recording
-
-  **Phase 7**   Messaging & Polish         2--3 weeks     In-app messaging, notification preferences, earnings dashboard, walk GPS history playback, CSV export, UI polish & QA
-
-  **Phase 8**   Launch & Marketing         1--2 weeks     Load testing, security audit, Google Business Profile, social media setup, referral cards, soft launch to first 5 clients
+  **Phase 6**   Beta Cohort + Paid Soft Launch  2--3 weeks     Design-partner beta cohort, onboarding playbook, pricing activation, support docs, referral loop, direct outreach to independent walkers
   ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+#### Execution Rule
+
+No Phase 6 growth work should begin until Tenant Zero can complete the full workflow from inquiry to paid invoice inside the product.
 
 **8. Walk Report --- Detailed UX Design**
 
