@@ -1,132 +1,99 @@
-'use client'
+import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { PortalPublicHome } from '@/components/portal/public-home'
+import { ClientPortalHome } from '@/components/portal/client-home'
 
-import Image from 'next/image'
-import Link from 'next/link'
-import { PawPrint, Calendar, FileText, CreditCard, ArrowRight } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { useTenant } from '@/lib/context/tenant-context'
+export default async function PortalHomePage({
+  params,
+}: {
+  params: Promise<{ tenant: string }>
+}) {
+  const { tenant: tenantSlug } = await params
+  const authClient = await createServerClient()
+  const { data: { user } } = await authClient.auth.getUser()
 
-const PORTAL_FEATURES = [
-  { icon: Calendar,   title: 'Book a Walk',  desc: 'Booking requests and approvals are part of the MVP rollout now in progress.' },
-  { icon: FileText,   title: 'Walk Reports', desc: 'Completed visit summaries, photos, and notes will appear here.' },
-  { icon: CreditCard, title: 'Billing',      desc: 'Invoice viewing and payment collection are being built into the client portal.' },
-  { icon: PawPrint,   title: 'My Pets',      desc: 'Pet profiles, care notes, and vaccine details will live here.' },
-]
+  if (!user) {
+    return <PortalPublicHome />
+  }
 
-export default function PortalHomePage() {
-  const { tenant } = useTenant()
+  const supabase = createServiceClient()
+
+  const { data: tenant } = await supabase
+    .from('tenants')
+    .select('id')
+    .eq('slug', tenantSlug)
+    .maybeSingle()
+
+  if (!tenant) {
+    return <PortalPublicHome />
+  }
+
+  const { data: clientProfile } = await supabase
+    .from('client_profiles')
+    .select('id, full_name')
+    .eq('tenant_id', tenant.id)
+    .eq('user_id', user.id)
+    .maybeSingle()
+
+  if (!clientProfile) {
+    return <PortalPublicHome />
+  }
+
+  const [{ data: pets }, { data: services }, { data: activeWaiver }, { data: waiverSignature }, { data: bookings }] = await Promise.all([
+    supabase
+      .from('pets')
+      .select('id, name, breed, behavior_notes, special_notes, allergies')
+      .eq('tenant_id', tenant.id)
+      .eq('client_id', clientProfile.id)
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('services')
+      .select('id, name, duration_minutes, base_price')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .order('base_price', { ascending: true }),
+    supabase
+      .from('waivers')
+      .select('id, title')
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .order('version', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('waiver_signatures')
+      .select('id')
+      .eq('tenant_id', tenant.id)
+      .eq('client_id', clientProfile.id)
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('bookings')
+      .select('id, scheduled_at, status, service_id')
+      .eq('tenant_id', tenant.id)
+      .eq('client_id', clientProfile.id)
+      .order('scheduled_at', { ascending: true })
+      .limit(6),
+  ])
+
+  const serviceNameById = new Map((services ?? []).map((service) => [service.id, service.name]))
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-12">
-      {/* Hero */}
-      <div className="mb-12 grid gap-6 lg:grid-cols-[1fr_0.9fr] lg:items-center">
-        <div className="text-center lg:text-left">
-          <h1 className="mb-3 text-3xl font-bold">
-            Welcome to {tenant.business_name}
-          </h1>
-          <p className="mb-6 text-gray-600">
-            Professional dog walking services. GPS-tracked walks, photo reports,
-            and easy online scheduling — all in one place.
-          </p>
-          <div className="flex flex-wrap justify-center gap-3 lg:justify-start">
-            <Link href={`/${tenant.slug}/portal/login`}>
-              <Button className="bg-[#c66a2b] hover:bg-[#ad5821]">
-                Sign In to Your Account <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href={`/${tenant.slug}/portal/register`}>
-              <Button variant="outline">Create Account</Button>
-            </Link>
-          </div>
-        </div>
-        <Card className="overflow-hidden border-stone-200">
-          <Image
-            src="/assets/portal/pet-avatar-placeholder.png"
-            alt="Pet portal illustration"
-            width={1200}
-            height={900}
-            className="h-auto w-full"
-            priority
-          />
-        </Card>
-      </div>
-
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
-        <Card className="border-stone-200 bg-[#fcfaf7]">
-          <CardContent className="flex items-center gap-3 p-4">
-            <Image src="/assets/portal/map-pin-icon.png" alt="Map pin icon" width={64} height={64} className="h-12 w-12" />
-            <div>
-              <p className="text-sm font-medium text-stone-900">Walk updates</p>
-              <p className="text-xs text-stone-500">Visit details and route summaries in one place</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-stone-200 bg-[#fcfaf7]">
-          <CardContent className="flex items-center gap-3 p-4">
-            <Image src="/assets/portal/mood-emoji-set.png" alt="Mood icons" width={64} height={64} className="h-12 w-12 rounded-lg object-cover" />
-            <div>
-              <p className="text-sm font-medium text-stone-900">Report cards</p>
-              <p className="text-xs text-stone-500">Photos, notes, potty updates, and mood snapshots</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="border-stone-200 bg-[#fcfaf7]">
-          <CardContent className="flex items-center gap-3 p-4">
-            <Image src="/assets/portal/empty-state-no-pets.png" alt="Pets placeholder" width={64} height={64} className="h-12 w-12 rounded-lg object-cover" />
-            <div>
-              <p className="text-sm font-medium text-stone-900">Pet records</p>
-              <p className="text-xs text-stone-500">Emergency info, routines, and care notes stay organized</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Feature grid */}
-      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {PORTAL_FEATURES.map(({ icon: Icon, title, desc }, index) => (
-          <Card key={title} className="overflow-hidden transition-shadow hover:shadow-md">
-            <div className="grid gap-4 p-0 md:grid-cols-[0.42fr_0.58fr]">
-              <div className="bg-stone-50">
-                <Image
-                  src={
-                    index === 0
-                      ? '/assets/portal/empty-state-no-walks.png'
-                      : index === 1
-                        ? '/assets/website/walk-report-header.png'
-                        : index === 2
-                          ? '/assets/portal/empty-state-no-messages.png'
-                          : '/assets/portal/empty-state-no-pets.png'
-                  }
-                  alt={title}
-                  width={1200}
-                  height={900}
-                  className="h-full w-full object-cover"
-                />
-              </div>
-              <div className="p-6">
-                <CardHeader className="px-0 pb-2 pt-0">
-                  <CardTitle className="flex items-center gap-2 text-base">
-                    <Icon className="h-5 w-5 text-[#c66a2b]" />
-                    {title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="px-0 pb-0">
-                  <p className="mb-3 text-sm text-gray-600">{desc}</p>
-                  <span className="text-sm font-medium text-[#b45a21]">
-                    Available in the next MVP release
-                  </span>
-                </CardContent>
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-
-      <div className="text-center">
-        <Badge variant="secondary">Phase 1 scaffold — full portal features ship in Phase 3</Badge>
-      </div>
-    </div>
+    <ClientPortalHome
+      tenantSlug={tenantSlug}
+      clientName={clientProfile.full_name}
+      pets={pets ?? []}
+      services={(services ?? []).map((service) => ({
+        ...service,
+        base_price: Number(service.base_price),
+      }))}
+      hasSignedWaiver={!!waiverSignature}
+      activeWaiverTitle={activeWaiver?.title ?? null}
+      bookings={(bookings ?? []).map((booking) => ({
+        id: booking.id,
+        scheduled_at: booking.scheduled_at,
+        status: booking.status,
+        service_name: serviceNameById.get(booking.service_id) ?? 'Walk service',
+      }))}
+    />
   )
 }
