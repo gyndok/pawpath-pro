@@ -193,6 +193,7 @@ The market-launch MVP is successful when one tenant can operate the business end
 - Walk report delivery
 - Invoice generation and card payment
 - Transactional email for booking, report, and billing events
+- Insurance guidance and embedded insurance offer / referral flow for walkers
 
 #### Out of Scope for MVP
 
@@ -202,6 +203,56 @@ The market-launch MVP is successful when one tenant can operate the business end
 - Route GPS replay
 - Rich messaging center
 - Automation-heavy onboarding sequences
+
+### Insurance & Liability Strategy
+
+PawPath Pro should treat liability management as part of the core product, not as an afterthought. A dog walker becomes the temporary guardian of the pet during service and can face meaningful legal and financial exposure while the pet is in their care, custody, and control.
+
+#### Risks the Product Must Acknowledge
+
+- Third-party bodily injury claims, including bites, falls, and traffic-related incidents
+- Third-party property damage claims
+- Pet injury, escape, loss, or emergency veterinary expense while under walker supervision
+- Breach-of-service claims, including missed visits and lost-key incidents
+- Walker injury exposure and lost-income risk
+
+#### Insurance Positioning
+
+The platform should clearly explain during marketing and onboarding that standard homeowners and personal auto policies typically do not cover commercial pet-care work. PawPath Pro should offer access to specialized dog walker insurance through a marketplace, referral, or affiliate workflow.
+
+The recommended product behavior is:
+
+- Present insurance education before a walker goes live
+- Offer access to specialist insurance options from onboarding and settings
+- Let walkers store insurance status and proof-of-coverage details in the platform
+- Make insurance completion part of the operational-readiness checklist
+
+#### Coverage Types to Highlight
+
+- General Liability
+- Care, Custody, and Control (CCC)
+- Animal Bailee coverage
+- Lost Key Liability
+- Professional Liability / Errors and Omissions
+
+#### Insurance Providers to Evaluate
+
+- Pet Care Insurance (PCI)
+- The Hartford
+- Thimble
+- Next Insurance
+- Business Insurers of the Carolinas
+
+> Product note: Until PawPath Pro has formal referral or distribution agreements, these should be presented as educational or partner-evaluation options rather than as in-house insurance products.
+
+#### Liability-Reduction Workflow Requirements
+
+- Signed service agreement and liability waiver before the first booked walk
+- Emergency veterinary authorization in onboarding documents
+- Required disclosure of aggression, reactivity, medications, allergies, and bite history
+- Pet information sheet with vet, emergency contact, and behavioral profile
+- Meet-and-greet step in onboarding or first-booking workflow
+- Documentation of leash rules, off-limit areas, and special handling instructions
 
 #### Launch Gates
 
@@ -305,6 +356,8 @@ Features are prioritized using a P0--P3 scale:
 
   **Digital Waiver**             Liability waiver displayed and signed electronically at onboarding; stored on account      **P0**
 
+  **Pet Information Sheet**      Intake for vet, emergency, meds, allergies, triggers, leash behavior, and handling notes  **P0**
+
   **Walk Scheduling**            Calendar view to request upcoming walks with date, time, service type, and pet selection   **P0**
 
   **Walk History**               List of all past walks with date, service, duration, walker notes                          **P0**
@@ -356,6 +409,8 @@ Features are prioritized using a P0--P3 scale:
   **Availability Settings**        Set working days/hours; mark dates as unavailable; vacation blocking                   **P1**
 
   **Waiver Management**            View which clients have signed; resend unsigned waiver requests                        **P1**
+
+  **Insurance & Compliance**       Track insurance status, policy details, COI uploads, and renewal reminders            **P1**
 
   **Earnings Dashboard**           Revenue totals by day/week/month; charts; export to CSV for taxes                      **P2**
 
@@ -777,6 +832,22 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 -   Stripe requires a valid SSN or EIN for payouts --- set up a business bank account
 
 -   Walk photos shared with clients: ensure no third-party dogs or people are identifiable in shared photos
+
+**10.4 Insurance & Risk Management Requirements**
+
+-   PawPath Pro should educate walkers that dog walking creates care, custody, and control exposure, third-party liability exposure, and professional-negligence exposure
+
+-   The platform should offer or refer walkers to specialized insurance products covering General Liability, CCC / Animal Bailee, Lost Key Liability, and Professional Liability
+
+-   Insurance should appear in onboarding and settings, not only in help content or FAQs
+
+-   Walker setup should capture insurance status and support storing proof of coverage details
+
+-   Service agreements should include indemnity / hold harmless language, emergency care authorization, and required behavior disclosure fields
+
+-   Pet intake should capture vet contacts, emergency contacts, allergies, medications, leash behavior, triggers, and off-limit handling notes
+
+-   PawPath Pro provides workflow and documentation infrastructure, but legal language and regulatory compliance still require local attorney review
 
 **11. Success Metrics (KPIs)**
 

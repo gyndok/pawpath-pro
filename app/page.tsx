@@ -56,7 +56,7 @@ export default function HomePage() {
         </h1>
         <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-8">
           Stop giving 20–40% to Rover and Wag. Own your clients, keep your revenue,
-          and deliver a 5-star experience with GPS walk reports your clients will love.
+          and run a safer operation with client records, waivers, and insurance-ready workflows.
         </p>
         <div className="flex gap-4 justify-center">
           <Link href="/signup">
@@ -72,7 +72,7 @@ export default function HomePage() {
           </div>
           <div className="flex items-center gap-1">
             <Shield className="h-4 w-4 text-green-500" />
-            <span>Bank-grade data security</span>
+            <span>Liability docs + insurance-ready workflows</span>
           </div>
           <div className="flex items-center gap-1">
             <BarChart3 className="h-4 w-4 text-blue-500" />
@@ -91,8 +91,8 @@ export default function HomePage() {
               { icon: '💳', title: 'Online Payments', desc: "Auto-invoice after every walk. Clients pay with a tap. Funds deposit to your bank in 2 days. You keep 100% (minus Stripe's 2.9%)." },
               { icon: '📅', title: 'Smart Scheduling', desc: 'Clients request walks from your availability calendar. You approve with one tap. No more back-and-forth texting.' },
               { icon: '🐾', title: 'Client Portal', desc: 'Professional branded portal at your-name.pawpathpro.com. Clients manage pets, book walks, sign waivers, and pay — all in one place.' },
-              { icon: '📋', title: 'Digital Waivers', desc: 'Liability waivers collected electronically with IP + timestamp. Never chase a paper form again.' },
-              { icon: '📊', title: 'Business Analytics', desc: 'Revenue by day/week/month, client retention stats, walk completion rates. Know your business at a glance.' },
+              { icon: '📋', title: 'Digital Waivers', desc: 'Liability waivers and service agreements collected electronically with IP + timestamp.' },
+              { icon: '🛡️', title: 'Insurance Readiness', desc: 'Guide walkers toward specialized coverage and keep risk documents organized in one place.' },
             ].map((f) => (
               <div key={f.title} className="bg-white rounded-xl p-6 shadow-sm">
                 <div className="text-3xl mb-3">{f.icon}</div>
