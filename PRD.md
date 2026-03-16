@@ -153,6 +153,36 @@ Next.js middleware reads the subdomain from the request host, looks up the tenan
 3. **Soft Paid Launch:** Open paid self-serve signup only after the MVP handles real bookings, reports, and invoices without manual database intervention.
 4. **Focused Acquisition:** Target independent walkers leaving Rover/Wag through direct outreach, referrals, and local social communities before buying broad paid traffic.
 
+### Demo Environment Strategy
+
+In parallel with the market-launch MVP, PawPath Pro should maintain a **demo environment** that can be deployed to Vercel and shared as a simple walkthrough link. This demo is a validation and feedback tool, not the production launch environment.
+
+The demo environment exists to:
+
+- Let the founder's daughter experience the product as both a walker and a client
+- Demonstrate the landing page, client onboarding, client portal, and walker dashboard in one coherent flow
+- Support feedback and confidence-building before real client rollout
+- Provide a polished link that feels complete enough to explore independently
+
+The demo environment should optimize for:
+
+- One realistic tenant with strong branding
+- Seeded sample data across both roles
+- Happy-path navigation with minimal setup friction
+- A stable Vercel deployment that is easy to share
+
+The demo environment may use:
+
+- Seeded pets, bookings, walk reports, invoices, and waiver records
+- Demo login shortcuts or low-friction credentials
+- Mocked or simplified delivery for non-critical integrations
+
+The demo environment must not:
+
+- Become a separate product fork
+- Replace production-readiness requirements
+- Hide critical gaps in auth correctness, billing integrity, or tenant isolation
+
 ### Market Entry Strategy
 
 PawPath Pro should go to market as a **narrow, opinionated solo-walker operating system**, not as a feature-complete pet-care platform. The fastest route to revenue is to solve the end-to-end workflow for one independent dog walker business: get discovered, onboard a client, book a walk, complete the walk, send the report, and collect payment.
@@ -177,6 +207,29 @@ The initial launch explicitly does **not** require:
 ### MVP Definition for Market Launch
 
 The market-launch MVP is successful when one tenant can operate the business end-to-end without reverting to text messages, Venmo, or paper waivers.
+
+### Demo Definition for Near-Term Validation
+
+The near-term demo is successful when a dog walker can open one Vercel link, explore the platform from both sides, and quickly understand the product's value without requiring live setup support.
+
+#### In Scope for Demo
+
+- PawPath Pro marketing homepage
+- One tenant-branded landing page
+- Seeded client onboarding and waiver experience
+- Seeded client portal with pets, scheduling, walk reports, and billing
+- Seeded walker dashboard with schedule, approvals, reports, billing, and settings
+- Demo-safe login entry points for walker and client roles
+- Preloaded realistic data that keeps key pages out of empty states
+
+#### Out of Scope for Demo
+
+- Full production-grade signup and tenant provisioning
+- Real payment collection
+- Real email delivery
+- Final insurance referral partnerships
+- Production support tooling
+- Complete edge-case coverage from the final PRD
 
 #### In Scope for MVP
 
@@ -685,6 +738,8 @@ Estimated timeline assumes Claude Code as the primary development tool with you 
   **Phase**     **Name**                        **Duration**   **Key Deliverables**
   ------------- ------------------------------- -------------- ------------------------------------------------------------------------------------------------------------------------------------------------
   **Phase 0**   Foundation Hardening            1--2 weeks     Fix tenant auth and RLS alignment, correct subscription gating, clean broken routes, add CI checks, validate local/dev/prod environment setup
+
+  **Phase 0.5** Demo Hardening                  1 week         Demo tenant branding, seeded sample data, demo login flow, happy-path polish across client and walker surfaces, stable Vercel deployment for stakeholder walkthrough
 
   **Phase 1**   Tenant Public Site              1--2 weeks     Tenant-branded homepage, services/pricing sections, inquiry form, mobile-responsive layout, initial SEO metadata, lead capture storage
 
