@@ -57,6 +57,29 @@ export async function requestBookingAction(
     return { error: 'Client profile not found for this business.' }
   }
 
+  const { data: activeWaiver } = await supabase
+    .from('waivers')
+    .select('id')
+    .eq('tenant_id', tenant.id)
+    .eq('is_active', true)
+    .order('version', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+
+  if (activeWaiver) {
+    const { data: waiverSignature } = await supabase
+      .from('waiver_signatures')
+      .select('id')
+      .eq('tenant_id', tenant.id)
+      .eq('client_id', clientProfile.id)
+      .eq('waiver_id', activeWaiver.id)
+      .maybeSingle()
+
+    if (!waiverSignature) {
+      return { error: 'You must review and sign the current waiver before requesting a booking.' }
+    }
+  }
+
   const { data: pet, error: petError } = await supabase
     .from('pets')
     .select('id')

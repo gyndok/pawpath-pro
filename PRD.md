@@ -906,6 +906,10 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 
 -   QR Code Key Tags: Generate QR code pet tags linking to the pet profile emergency card (great upsell!)
 
+**Design / UX Reference**
+
+-   For future design-polish passes only, evaluate [Leonxlnx/taste-skill](https://github.com/Leonxlnx/taste-skill) as a reference for improving visual taste, layout quality, and avoiding generic UI output. Do not prioritize this ahead of core workflow delivery, tenant isolation, booking, waiver, and billing features.
+
 **13. Appendix: Suggested Folder Structure**
 
 Recommended Next.js project structure for Claude Code build:
