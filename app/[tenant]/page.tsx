@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, CalendarDays, ClipboardCheck, HeartHandshake, ShieldCheck } from 'lucide-react'
 import { InquiryForm } from '@/components/public/inquiry-form'
+import { DemoBanner } from '@/components/demo/demo-banner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -68,6 +69,11 @@ export default function TenantPublicPage() {
 
       <section className="mx-auto grid max-w-6xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:py-20">
         <div>
+          {isDemo && (
+            <div className="mb-6">
+              <DemoBanner tenantSlug={tenant.slug} />
+            </div>
+          )}
           <Badge variant="secondary" className="mb-4">Professional dog walking with a client portal</Badge>
           <h1 className="max-w-3xl text-4xl font-bold tracking-tight sm:text-5xl">
             {tenant.business_name} gives busy pet owners dependable walks and a more organized care routine.

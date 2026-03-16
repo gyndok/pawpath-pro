@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npx next build --webpack",
   "rewrites": [
     {
       "source": "/:path*",

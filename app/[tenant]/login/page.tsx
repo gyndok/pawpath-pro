@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { PawPrint, Loader2 } from 'lucide-react'
+import { DemoBanner } from '@/components/demo/demo-banner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -36,6 +37,12 @@ export default function LoginPage() {
             <CardDescription>Sign in to your walker dashboard</CardDescription>
           </CardHeader>
           <CardContent>
+            {tenantSlug === 'demo' && (
+              <div className="mb-4">
+                <DemoBanner tenantSlug={tenantSlug} compact />
+              </div>
+            )}
+
             {tenantSlug === 'demo' && (
               <form action={startDemoSessionAction.bind(null, tenantSlug)} className="mb-4">
                 <input type="hidden" name="role" value="walker" />

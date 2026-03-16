@@ -86,6 +86,56 @@ Add all environment variables from `.env.local` to your Vercel project settings.
 In Vercel's project settings → Domains, add a wildcard domain:
 - `*.pawpathpro.com` → your Vercel deployment
 
+## Demo Walkthrough
+
+The repo includes a seeded walkthrough tenant at `/demo`.
+
+Suggested demo flow:
+- `https://your-deployment/demo` for the public tenant landing page
+- `https://your-deployment/demo/portal/register` for the dog owner onboarding flow
+- `https://your-deployment/demo/login` for the dog walker dashboard flow
+
+The demo uses seeded data and role cookies so key pages remain explorable without provisioning real accounts.
+
+## Vercel Deployment Checklist
+
+### Required environment variables
+
+Minimum required for the current app build:
+- `NEXT_PUBLIC_APP_DOMAIN`
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_KEY`
+
+Needed for full Stripe signup and webhook flows:
+- `STRIPE_SECRET_KEY`
+- `STRIPE_PRICE_STARTER`
+- `STRIPE_PRICE_PRO`
+- `STRIPE_PRICE_AGENCY`
+- `STRIPE_WEBHOOK_SECRET`
+
+### Recommended project settings
+
+- Framework preset: `Next.js`
+- Install command: `npm install`
+- Build command: `npx next build --webpack`
+- Output directory: default Next.js output
+- Node version: `20+`
+
+### Domain notes
+
+- For the seeded demo only, a standard Vercel preview or production URL is enough because the demo lives at `/demo`
+- For real tenant subdomain routing later, add the wildcard root domain and keep `NEXT_PUBLIC_APP_DOMAIN` aligned with that domain
+
+### Live smoke test after deploy
+
+Verify these routes load successfully:
+- `/demo`
+- `/demo/login`
+- `/demo/portal/register`
+- `/demo/portal`
+- `/demo/dashboard`
+
 ## Project Structure
 
 ```

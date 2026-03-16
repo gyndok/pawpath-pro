@@ -4,6 +4,7 @@ import { useActionState } from 'react'
 import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { Loader2 } from 'lucide-react'
+import { DemoBanner } from '@/components/demo/demo-banner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,6 +35,12 @@ export default function ClientLoginPage() {
             <CardDescription>Sign in to {tenant.business_name}</CardDescription>
           </CardHeader>
           <CardContent>
+            {params.tenant === 'demo' && (
+              <div className="mb-4">
+                <DemoBanner tenantSlug={params.tenant} compact />
+              </div>
+            )}
+
             {params.tenant === 'demo' && (
               <form action={startDemoSessionAction.bind(null, params.tenant)} className="mb-4">
                 <input type="hidden" name="role" value="client" />
