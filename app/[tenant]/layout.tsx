@@ -1,5 +1,6 @@
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { WalkerShell } from '@/components/walker/shell'
 import { getTenantBySlug } from '@/lib/tenant'
 import { TenantProvider } from '@/lib/context/tenant-context'
 
@@ -43,7 +44,7 @@ export default async function TenantLayout({
 
   return (
     <TenantProvider tenant={tenant}>
-      {children}
+      <WalkerShell>{children}</WalkerShell>
     </TenantProvider>
   )
 }
