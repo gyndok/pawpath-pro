@@ -332,7 +332,7 @@ ALTER TABLE tenant_walkers     ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tenants            ENABLE ROW LEVEL SECURITY;
 
 -- Helper function: get tenant_id from JWT claim
-CREATE OR REPLACE FUNCTION auth.tenant_id() RETURNS UUID
+CREATE OR REPLACE FUNCTION public.current_tenant_id() RETURNS UUID
   LANGUAGE sql STABLE
 AS $$
   SELECT NULLIF(
@@ -342,7 +342,7 @@ AS $$
 $$;
 
 -- Helper function: is platform admin
-CREATE OR REPLACE FUNCTION auth.is_platform_admin() RETURNS BOOLEAN
+CREATE OR REPLACE FUNCTION public.is_platform_admin() RETURNS BOOLEAN
   LANGUAGE sql STABLE
 AS $$
   SELECT COALESCE(
@@ -352,12 +352,12 @@ AS $$
 $$;
 
 -- Helper function: is walker for current tenant
-CREATE OR REPLACE FUNCTION auth.is_tenant_walker() RETURNS BOOLEAN
+CREATE OR REPLACE FUNCTION public.is_tenant_walker() RETURNS BOOLEAN
   LANGUAGE sql STABLE
 AS $$
   SELECT EXISTS (
     SELECT 1 FROM tenant_walkers
-    WHERE tenant_id = auth.tenant_id()
+    WHERE tenant_id = public.current_tenant_id()
     AND user_id = auth.uid()
   );
 $$;
@@ -365,7 +365,7 @@ $$;
 -- ===== TENANTS TABLE POLICIES =====
 CREATE POLICY "Platform admin can see all tenants"
   ON tenants FOR SELECT
-  USING (auth.is_platform_admin());
+  USING (public.is_platform_admin());
 
 CREATE POLICY "Owner can see their own tenant"
   ON tenants FOR SELECT
@@ -373,114 +373,114 @@ CREATE POLICY "Owner can see their own tenant"
 
 CREATE POLICY "Platform admin can modify tenants"
   ON tenants FOR ALL
-  USING (auth.is_platform_admin());
+  USING (public.is_platform_admin());
 
 -- ===== TENANT WALKERS POLICIES =====
 CREATE POLICY "Walkers can view their own tenant_walkers"
   ON tenant_walkers FOR SELECT
-  USING (tenant_id = auth.tenant_id() AND user_id = auth.uid());
+  USING (tenant_id = public.current_tenant_id() AND user_id = auth.uid());
 
 CREATE POLICY "Platform admin full access to tenant_walkers"
   ON tenant_walkers FOR ALL
-  USING (auth.is_platform_admin());
+  USING (public.is_platform_admin());
 
 -- ===== CLIENT PROFILES POLICIES =====
 CREATE POLICY "Tenant isolation on client_profiles"
   ON client_profiles FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== PETS POLICIES =====
 CREATE POLICY "Tenant isolation on pets"
   ON pets FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== PET VACCINES POLICIES =====
 CREATE POLICY "Tenant isolation on pet_vaccines"
   ON pet_vaccines FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== SERVICES POLICIES =====
 CREATE POLICY "Tenant isolation on services"
   ON services FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== AVAILABILITY POLICIES =====
 CREATE POLICY "Tenant isolation on availability"
   ON availability FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== BLOCKED DATES POLICIES =====
 CREATE POLICY "Tenant isolation on blocked_dates"
   ON blocked_dates FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== BOOKINGS POLICIES =====
 CREATE POLICY "Tenant isolation on bookings"
   ON bookings FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== BOOKING PETS POLICIES =====
 CREATE POLICY "Tenant isolation on booking_pets"
   ON booking_pets FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== WALKS POLICIES =====
 CREATE POLICY "Tenant isolation on walks"
   ON walks FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== WALK PHOTOS POLICIES =====
 CREATE POLICY "Tenant isolation on walk_photos"
   ON walk_photos FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== WALK REPORTS POLICIES =====
 CREATE POLICY "Tenant isolation on walk_reports"
   ON walk_reports FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== WAIVERS POLICIES =====
 CREATE POLICY "Tenant isolation on waivers"
   ON waivers FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== WAIVER SIGNATURES POLICIES =====
 CREATE POLICY "Tenant isolation on waiver_signatures"
   ON waiver_signatures FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== INVOICES POLICIES =====
 CREATE POLICY "Tenant isolation on invoices"
   ON invoices FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== INVOICE LINE ITEMS POLICIES =====
 CREATE POLICY "Tenant isolation on invoice_line_items"
   ON invoice_line_items FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- ===== MESSAGES POLICIES =====
 CREATE POLICY "Tenant isolation on messages"
   ON messages FOR ALL
-  USING (tenant_id = auth.tenant_id());
+  USING (tenant_id = public.current_tenant_id());
 
 -- Clients can only see messages they're part of
 CREATE POLICY "Clients see own messages"
   ON messages FOR SELECT
-  USING (tenant_id = auth.tenant_id() AND (sender_id = auth.uid() OR recipient_id = auth.uid()));
+  USING (tenant_id = public.current_tenant_id() AND (sender_id = auth.uid() OR recipient_id = auth.uid()));
 
 -- ===== NOTIFICATIONS POLICIES =====
 CREATE POLICY "Users see own notifications"
   ON notifications FOR SELECT
-  USING (tenant_id = auth.tenant_id() AND user_id = auth.uid());
+  USING (tenant_id = public.current_tenant_id() AND user_id = auth.uid());
 
 CREATE POLICY "Walkers can create notifications"
   ON notifications FOR INSERT
-  WITH CHECK (tenant_id = auth.tenant_id() AND auth.is_tenant_walker());
+  WITH CHECK (tenant_id = public.current_tenant_id() AND public.is_tenant_walker());
 
 CREATE POLICY "Users can update own notifications"
   ON notifications FOR UPDATE
-  USING (tenant_id = auth.tenant_id() AND user_id = auth.uid());
+  USING (tenant_id = public.current_tenant_id() AND user_id = auth.uid());
 
 -- ===== INQUIRY LEADS POLICIES =====
 -- Public can INSERT (contact form), walkers can read
@@ -490,11 +490,11 @@ CREATE POLICY "Public can submit inquiry leads"
 
 CREATE POLICY "Walkers can read inquiry leads for their tenant"
   ON inquiry_leads FOR SELECT
-  USING (tenant_id = auth.tenant_id() AND auth.is_tenant_walker());
+  USING (tenant_id = public.current_tenant_id() AND public.is_tenant_walker());
 
 CREATE POLICY "Walkers can update inquiry leads"
   ON inquiry_leads FOR UPDATE
-  USING (tenant_id = auth.tenant_id() AND auth.is_tenant_walker());
+  USING (tenant_id = public.current_tenant_id() AND public.is_tenant_walker());
 
 -- =============================================================================
 -- SEED: Default waiver template function (called on tenant creation)

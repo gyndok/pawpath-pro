@@ -61,27 +61,32 @@ export async function signupAction(
   const userId = authData.user.id
 
   try {
-    // ── Create Stripe customer ─────────────────────────────────────────────
-    const stripeClient = getStripe()
-    const stripeCustomer = await stripeClient.customers.create({
-      email,
-      name: businessName,
-      metadata: { user_id: userId, slug: rawSlug },
-    })
-
-    // ── Create Stripe subscription (trialing) ────────────────────────────
-    const priceId = process.env[`STRIPE_PRICE_${plan.toUpperCase()}`]
+    let stripeCustomerId: string | null = null
     let stripeSubscriptionId: string | null = null
 
-    if (priceId) {
-      const subscription = await stripeClient.subscriptions.create({
-        customer: stripeCustomer.id,
-        items: [{ price: priceId }],
-        trial_period_days: 14,
-        payment_behavior: 'default_incomplete',
-        expand: ['latest_invoice.payment_intent'],
+    // Allow tenant signup before Stripe is configured so product setup can proceed.
+    if (process.env.STRIPE_SECRET_KEY) {
+      const stripeClient = getStripe()
+      const stripeCustomer = await stripeClient.customers.create({
+        email,
+        name: businessName,
+        metadata: { user_id: userId, slug: rawSlug },
       })
-      stripeSubscriptionId = subscription.id
+
+      stripeCustomerId = stripeCustomer.id
+
+      const priceId = process.env[`STRIPE_PRICE_${plan.toUpperCase()}`]
+
+      if (priceId) {
+        const subscription = await stripeClient.subscriptions.create({
+          customer: stripeCustomer.id,
+          items: [{ price: priceId }],
+          trial_period_days: 14,
+          payment_behavior: 'default_incomplete',
+          expand: ['latest_invoice.payment_intent'],
+        })
+        stripeSubscriptionId = subscription.id
+      }
     }
 
     // ── Insert tenant row ─────────────────────────────────────────────────
@@ -90,7 +95,7 @@ export async function signupAction(
       business_name: businessName,
       owner_user_id: userId,
       plan_tier: plan,
-      stripe_customer_id: stripeCustomer.id,
+      stripe_customer_id: stripeCustomerId,
       stripe_subscription_id: stripeSubscriptionId,
     })
 
