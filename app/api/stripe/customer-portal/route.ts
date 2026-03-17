@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 /**
  * POST /api/stripe/customer-portal
@@ -13,6 +13,15 @@ import { createServiceClient } from '@/lib/supabase/server'
  */
 export async function POST(req: NextRequest) {
   try {
+    const authClient = await createServerClient()
+    const {
+      data: { user },
+    } = await authClient.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     const { tenantId } = (await req.json()) as { tenantId: string }
 
     if (!tenantId) {
@@ -28,6 +37,20 @@ export async function POST(req: NextRequest) {
 
     if (tenantError || !tenant) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
+    }
+
+    const { data: walker } = await supabase
+      .from('tenant_walkers')
+      .select('role')
+      .eq('tenant_id', tenant.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!walker || walker.role !== 'owner') {
+      return NextResponse.json(
+        { error: 'Only the account owner can manage subscription billing' },
+        { status: 403 }
+      )
     }
 
     if (!tenant.stripe_customer_id) {

@@ -47,7 +47,7 @@ export async function requireTenantWalker(tenantSlug: string) {
 
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('id, slug, business_name, branding_primary_color, plan_tier, owner_user_id')
+    .select('id, slug, business_name, branding_primary_color, plan_tier, owner_user_id, stripe_customer_id, stripe_subscription_id, trial_ends_at, is_active')
     .eq('slug', tenantSlug)
     .single()
 

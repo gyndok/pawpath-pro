@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe, STRIPE_PRICES } from '@/lib/stripe'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import type { PlanTier } from '@/types/tenant'
 
 /**
@@ -15,6 +15,15 @@ import type { PlanTier } from '@/types/tenant'
  */
 export async function POST(req: NextRequest) {
   try {
+    const authClient = await createServerClient()
+    const {
+      data: { user },
+    } = await authClient.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     const { tenantId, planTier } = (await req.json()) as {
       tenantId: string
       planTier?: PlanTier
@@ -33,6 +42,20 @@ export async function POST(req: NextRequest) {
 
     if (tenantError || !tenant) {
       return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
+    }
+
+    const { data: walker } = await supabase
+      .from('tenant_walkers')
+      .select('role')
+      .eq('tenant_id', tenant.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (!walker || walker.role !== 'owner') {
+      return NextResponse.json(
+        { error: 'Only the account owner can manage subscription billing' },
+        { status: 403 }
+      )
     }
 
     const selectedTier = planTier || (tenant.plan_tier as PlanTier) || 'starter'

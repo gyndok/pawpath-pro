@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
-import { createServiceClient } from '@/lib/supabase/server'
+import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { ensureClientStripeCustomer } from '@/lib/payments'
 
 /**
@@ -14,6 +14,15 @@ import { ensureClientStripeCustomer } from '@/lib/payments'
  */
 export async function POST(req: NextRequest) {
   try {
+    const authClient = await createServerClient()
+    const {
+      data: { user },
+    } = await authClient.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Authentication required' }, { status: 401 })
+    }
+
     const { invoiceId, tenantSlug, clientProfileId } = (await req.json()) as {
       invoiceId: string
       tenantSlug: string
@@ -29,6 +38,16 @@ export async function POST(req: NextRequest) {
 
     const supabase = createServiceClient()
 
+    const { data: tenant, error: tenantError } = await supabase
+      .from('tenants')
+      .select('id')
+      .eq('slug', tenantSlug)
+      .maybeSingle()
+
+    if (tenantError || !tenant) {
+      return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
+    }
+
     // Fetch the invoice
     const { data: invoice, error: invoiceError } = await supabase
       .from('invoices')
@@ -38,6 +57,13 @@ export async function POST(req: NextRequest) {
 
     if (invoiceError || !invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
+    }
+
+    if (invoice.tenant_id !== tenant.id) {
+      return NextResponse.json(
+        { error: 'Invoice does not belong to this business' },
+        { status: 403 }
+      )
     }
 
     if (invoice.status === 'paid') {
@@ -57,6 +83,13 @@ export async function POST(req: NextRequest) {
 
     if (clientError || !clientProfile) {
       return NextResponse.json({ error: 'Client profile not found' }, { status: 404 })
+    }
+
+    if (clientProfile.user_id !== user.id) {
+      return NextResponse.json(
+        { error: 'This client account is not authorized for that invoice' },
+        { status: 403 }
+      )
     }
 
     // Verify the invoice belongs to this client
