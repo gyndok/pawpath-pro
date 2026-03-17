@@ -59,13 +59,26 @@ export function WalkerSidebar() {
               key={href}
               href={fullHref}
               className={cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
+                'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                 isActive
-                  ? 'bg-[#fff4e8] text-[#b45a21]'
+                  ? 'bg-white text-[#9b4d1c] shadow-[0_12px_30px_-18px_rgba(180,90,33,0.65)]'
                   : 'text-stone-600 hover:bg-white hover:text-stone-900'
               )}
             >
-              <Icon className="h-4 w-4 shrink-0" />
+              <span
+                className={cn(
+                  'absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-colors',
+                  isActive ? 'bg-[#c66a2b]' : 'bg-transparent group-hover:bg-stone-200'
+                )}
+              />
+              <span
+                className={cn(
+                  'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
+                  isActive ? 'bg-[#fff4e8] text-[#b45a21]' : 'bg-transparent text-stone-500 group-hover:bg-stone-100 group-hover:text-stone-800'
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+              </span>
               {label}
             </Link>
           )
