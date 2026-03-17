@@ -1,6 +1,6 @@
 import { WalkerSettingsHome } from '@/components/walker/settings-home'
 import { SubscriptionCard } from '@/components/walker/subscription-card'
-import { demoServices, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { demoAvailability, demoBlockedDates, demoBookingSettings, demoServices, demoTenant, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { DEFAULT_BOOKING_SETTINGS } from '@/lib/scheduling'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
@@ -18,13 +18,26 @@ export default async function WalkerSettingsPage({
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('walker', tenantSlug)
     return (
-      <WalkerSettingsHome
-        services={demoServices}
-        activeWaiverTitle={demoWaiver.title}
-        availability={[]}
-        blockedDates={[]}
-        bookingSettings={DEFAULT_BOOKING_SETTINGS}
-      />
+      <>
+        <div className="max-w-6xl p-6 pb-0">
+          <SubscriptionCard
+            tenantId={demoTenant.id}
+            planTier={demoTenant.plan_tier}
+            stripeCustomerId={demoTenant.stripe_customer_id}
+            stripeSubscriptionId={demoTenant.stripe_subscription_id}
+            trialEndsAt={demoTenant.trial_ends_at}
+            isActive={demoTenant.is_active}
+            checkoutStatus={checkoutStatus}
+          />
+        </div>
+        <WalkerSettingsHome
+          services={demoServices}
+          activeWaiverTitle={demoWaiver.title}
+          availability={demoAvailability}
+          blockedDates={demoBlockedDates}
+          bookingSettings={demoBookingSettings ?? DEFAULT_BOOKING_SETTINGS}
+        />
+      </>
     )
   }
 

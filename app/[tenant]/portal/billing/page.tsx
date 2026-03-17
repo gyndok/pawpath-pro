@@ -20,6 +20,12 @@ export default async function PortalBillingPage({
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('client', tenantSlug)
     const invoices = demoInvoices.filter((invoice) => invoice.client_id === demoClientProfile.id)
+    const paymentParam = typeof query.payment === 'string' ? query.payment : ''
+    const paymentMessage = paymentParam === 'success'
+      ? 'Demo payment received! This walkthrough simulates a successful invoice payment.'
+      : paymentParam === 'cancelled'
+        ? 'Demo payment was cancelled.'
+        : null
 
     return (
       <div className="mx-auto max-w-5xl px-4 py-10">
@@ -28,14 +34,27 @@ export default async function PortalBillingPage({
           <p className="text-sm text-stone-500">Invoices, payment status, and your saved payment method.</p>
         </div>
 
+        {paymentMessage && (
+          <div className={`mb-6 rounded-md border p-3 text-sm ${
+            paymentParam === 'cancelled'
+              ? 'border-amber-200 bg-amber-50 text-amber-700'
+              : 'border-green-200 bg-green-50 text-green-700'
+          }`}>
+            {paymentMessage}
+          </div>
+        )}
+
         <div className="mb-6 grid gap-4 md:grid-cols-3">
           <Card className="border-stone-200">
             <CardHeader className="pb-2">
               <CardDescription>Payment method</CardDescription>
               <CardTitle>{demoPaymentMethod.brand} ending in {demoPaymentMethod.last4}</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-stone-500">
-              Expires {demoPaymentMethod.exp_month}/{demoPaymentMethod.exp_year}
+            <CardContent className="space-y-3 text-sm text-stone-500">
+              <p>Expires {demoPaymentMethod.exp_month}/{demoPaymentMethod.exp_year}</p>
+              <Button type="button" variant="outline" className="w-full" disabled>
+                Update card on file
+              </Button>
             </CardContent>
           </Card>
           <Card className="border-stone-200">
@@ -43,8 +62,15 @@ export default async function PortalBillingPage({
               <CardDescription>Autopay</CardDescription>
               <CardTitle>{demoPaymentMethod.autopay ? 'Enabled' : 'Off'}</CardTitle>
             </CardHeader>
-            <CardContent className="text-sm text-stone-500">
-              Demo account shows invoices collected automatically when possible.
+            <CardContent className="space-y-3 text-sm text-stone-500">
+              <p>Demo account shows invoices collected automatically when possible.</p>
+              <label className="flex items-center gap-3 text-sm text-stone-700">
+                <input type="checkbox" checked={demoPaymentMethod.autopay} readOnly />
+                <span>Enable autopay for future completed walks</span>
+              </label>
+              <Button type="button" variant="outline" className="w-full" disabled>
+                Save autopay preference
+              </Button>
             </CardContent>
           </Card>
           <Card className="border-stone-200">
@@ -74,6 +100,13 @@ export default async function PortalBillingPage({
                 <p>Due date: {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}</p>
                 <p>Paid at: {invoice.paid_at ? new Date(invoice.paid_at).toLocaleString() : 'Not yet paid'}</p>
                 {invoice.notes && <p>Notes: {invoice.notes}</p>}
+                {invoice.status !== 'paid' && invoice.status !== 'voided' && (
+                  <div className="mt-3">
+                    <Button type="button" size="sm" className="bg-[#c66a2b] hover:bg-[#ad5821]" disabled>
+                      Pay ${Number(invoice.amount).toFixed(2)}
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

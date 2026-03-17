@@ -158,6 +158,31 @@ export const demoPaymentMethod = {
   autopay: true,
 }
 
+export const demoBookingSettings = {
+  travel_buffer_minutes: 15,
+  slot_interval_minutes: 15,
+  advance_window_days: 30,
+  allow_same_day_booking: false,
+  service_area_zip_codes: ['77007', '77008', '77019'],
+}
+
+export const demoAvailability = [
+  { day_of_week: 1, start_time: '09:00:00', end_time: '17:00:00', is_active: true },
+  { day_of_week: 2, start_time: '09:00:00', end_time: '17:00:00', is_active: true },
+  { day_of_week: 3, start_time: '09:00:00', end_time: '17:00:00', is_active: true },
+  { day_of_week: 4, start_time: '09:00:00', end_time: '16:00:00', is_active: true },
+  { day_of_week: 5, start_time: '08:30:00', end_time: '14:00:00', is_active: true },
+]
+
+export const demoBlockedDates = [
+  {
+    id: 'demo-blocked-1',
+    start_date: '2026-08-21',
+    end_date: '2026-08-23',
+    reason: 'Weekend away',
+  },
+]
+
 export const demoBookings = [
   {
     id: 'demo-booking-1',
@@ -304,4 +329,3 @@ export async function requireDemoRole(expected: DemoRole, tenantSlug: string) {
   }
   return role
 }
-
