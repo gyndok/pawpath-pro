@@ -311,10 +311,18 @@ export async function startDemoSessionAction(tenantSlug: string, formData: FormD
   redirect(role === 'walker' ? `/${tenantSlug}/dashboard` : `/${tenantSlug}/portal`)
 }
 
-export async function logoutAction(tenantSlug: string) {
+async function logoutTo(tenantSlug: string, role: AuthRole) {
   const cookieStore = await cookies()
   cookieStore.delete('sb-access-token')
   cookieStore.delete('sb-refresh-token')
   cookieStore.delete(DEMO_ROLE_COOKIE)
-  redirect(`/${tenantSlug}/login`)
+  redirect(role === 'client' ? `/${tenantSlug}/portal/login` : `/${tenantSlug}/login`)
+}
+
+export async function logoutAction(tenantSlug: string) {
+  await logoutTo(tenantSlug, 'walker')
+}
+
+export async function logoutClientAction(tenantSlug: string) {
+  await logoutTo(tenantSlug, 'client')
 }

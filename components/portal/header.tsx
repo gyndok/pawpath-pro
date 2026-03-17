@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
 import { useState } from 'react'
+import { logoutClientAction } from '@/lib/actions/auth'
 import { useTenant } from '@/lib/context/tenant-context'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -18,7 +19,7 @@ const NAV_LINKS = [
   { href: 'portal/billing',  label: 'Billing' },
 ]
 
-export function PortalHeader() {
+export function PortalHeader({ isAuthenticatedClient = false }: { isAuthenticatedClient?: boolean }) {
   const { tenant } = useTenant()
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -80,9 +81,15 @@ export function PortalHeader() {
               </Link>
             </>
           )}
-          <Link href={`/${tenant.slug}/portal/login`}>
-            <Button variant="outline" size="sm" className="border-stone-300">Sign In</Button>
-          </Link>
+          {isAuthenticatedClient ? (
+            <form action={logoutClientAction.bind(null, tenant.slug)}>
+              <Button variant="outline" size="sm" className="border-stone-300">Sign Out</Button>
+            </form>
+          ) : (
+            <Link href={`/${tenant.slug}/portal/login`}>
+              <Button variant="outline" size="sm" className="border-stone-300">Sign In</Button>
+            </Link>
+          )}
         </div>
 
         {/* Mobile menu toggle */}
@@ -126,9 +133,15 @@ export function PortalHeader() {
               </Link>
             </>
           )}
-          <Link href={`/${tenant.slug}/portal/login`} onClick={() => setMenuOpen(false)}>
-            <Button variant="outline" size="sm" className="w-full mt-2">Sign In</Button>
-          </Link>
+          {isAuthenticatedClient ? (
+            <form action={logoutClientAction.bind(null, tenant.slug)} className="mt-2">
+              <Button variant="outline" size="sm" className="w-full">Sign Out</Button>
+            </form>
+          ) : (
+            <Link href={`/${tenant.slug}/portal/login`} onClick={() => setMenuOpen(false)}>
+              <Button variant="outline" size="sm" className="w-full mt-2">Sign In</Button>
+            </Link>
+          )}
         </div>
       )}
     </header>
