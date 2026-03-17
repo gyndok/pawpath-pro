@@ -46,6 +46,8 @@ This PRD defines all features, user roles, data entities, technical architecture
 
 -   Professional front-end website to attract and convert new clients
 
+-   Platform-level landing page that can serve both dog walkers evaluating the software and dog owners looking for a walker
+
 -   Client accounts: scheduling, billing, payments, communication, waivers
 
 -   Walker dashboard: full business operations in one interface
@@ -968,6 +970,7 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 -   Affiliate / Referral Program: Walker refers another walker → credit on subscription
 -   White-Label Custom Domains: Each tenant maps their own domain via Vercel CNAME
 -   Walker Marketplace Directory: Optional public listing of PawPath Pro walkers for SEO/discovery
+-   Zip-Code Walker Discovery: Dog owners can search by ZIP code, browse walker cards, and choose a walker based on profile, photo, short bio, ratings, and service area
 -   Mobile App (React Native): Native iOS/Android app for walkers — better GPS tracking, push notifications
 -   Usage-Based Billing: Charge per completed walk above a threshold instead of flat monthly
 
@@ -1004,6 +1007,8 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 
 -   Walker Payout Setup: The product needs a clear payout setup flow covering bank-account onboarding, payout schedule, instant-payout eligibility, tax identity collection, and visibility into expected payout timing after client charges clear.
 
+-   Tipping Support: Clients should be able to leave an optional tip during checkout or immediately after a completed walk report. The product must define how tips appear on receipts, whether tips can be edited after submission, and how tips flow through payouts and reporting.
+
 -   Cancellation / Reschedule Policy Engine: Tenants need configurable notice windows, cancellation fees, no-show rules, weather exceptions, and client-visible policy text at booking time.
 
 -   Service Area Geofencing: Walkers should define service ZIP codes, neighborhoods, radius rules, or map polygons. Out-of-area inquiries and bookings should be blocked or routed to a waitlist/manual review path.
@@ -1019,6 +1024,10 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 -   Incident & Emergency Workflow: The platform should support bite incidents, escapes, injuries, emergency vet care, owner unreachable scenarios, and post-incident documentation with timestamps and attachments.
 
 -   Custom Domain Provisioning: If tenants bring their own domain, the product needs clear DNS instructions, automated Vercel domain verification, SSL readiness checks, propagation status, and a stable fallback URL while setup completes.
+
+-   Platform Homepage Strategy: The root marketing site may eventually need a dual-path homepage that speaks to both walkers and owners, with clear routing into either "start your dog walking business site" or "find a local walker" experiences.
+
+-   Walker Discovery Marketplace Decision: If PawPath Pro adds owner-side walker discovery, the product must define whether discovery is optional per tenant, how rankings work, what profile fields are required, how ratings/reviews are verified, how leads are routed, and how marketplace discovery coexists with the core "owned relationship" positioning.
 
 -   Stripe Architecture Decision: Before broad launch, finalize whether PawPath Pro uses Stripe Connect connected accounts or becomes merchant of record. Recommendation: use connected accounts, not one shared platform account paying walkers manually.
 
