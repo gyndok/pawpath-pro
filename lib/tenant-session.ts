@@ -23,7 +23,7 @@ export async function requireTenantClient(tenantSlug: string) {
 
   const { data: clientProfile } = await supabase
     .from('client_profiles')
-    .select('id, full_name, phone, address, emergency_contact_name, emergency_contact_phone')
+    .select('id, full_name, phone, address, emergency_contact_name, emergency_contact_phone, stripe_customer_id, stripe_payment_method_id, stripe_card_brand, stripe_card_last4, stripe_card_exp_month, stripe_card_exp_year, autopay_enabled')
     .eq('tenant_id', tenant.id)
     .eq('user_id', user.id)
     .single()

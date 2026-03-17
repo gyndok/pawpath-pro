@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { isDemoTenantSlug } from '@/lib/demo'
+import { attemptInvoiceAutopay } from '@/lib/payments'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function value(formData: FormData, key: string) {
@@ -128,6 +129,15 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
 
   if (!service) return
 
+  const { data: clientProfile } = await supabase
+    .from('client_profiles')
+    .select('id, stripe_customer_id, stripe_payment_method_id, autopay_enabled')
+    .eq('tenant_id', tenant.id)
+    .eq('id', booking.client_id)
+    .single()
+
+  if (!clientProfile) return
+
   const startedAt = startedAtInput ? new Date(startedAtInput).toISOString() : booking.scheduled_at
   const endedAt = endedAtInput ? new Date(endedAtInput).toISOString() : new Date().toISOString()
 
@@ -217,7 +227,7 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
     throw new Error(bookingUpdateError.message)
   }
 
-  await ensureInvoiceForWalk({
+  const invoiceId = await ensureInvoiceForWalk({
     supabase,
     tenantId: tenant.id,
     clientId: booking.client_id,
@@ -225,6 +235,14 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
     serviceName: service.name,
     servicePrice: Number(service.base_price),
     scheduledAt: booking.scheduled_at,
+  })
+
+  await attemptInvoiceAutopay({
+    supabase,
+    invoiceId,
+    amount: Number(service.base_price),
+    tenantId: tenant.id,
+    clientProfile,
   })
 
   revalidatePath(`/${tenantSlug}/schedule`)
