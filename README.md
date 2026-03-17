@@ -50,6 +50,9 @@ npm install
 
 ### 3. Set up Stripe
 
+Detailed account-creation guide:
+- [docs/stripe-account-setup.md](/Users/gyndok/.codex/workspaces/default/pawpath-pro/docs/stripe-account-setup.md)
+
 PawPath Pro should use its own dedicated Stripe account. Do not reuse an unrelated single-product Stripe account such as `nextrebuy.com` for live platform operations.
 
 Recommended setup model:
