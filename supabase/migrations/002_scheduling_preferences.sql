@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS tenant_booking_settings (
 CREATE OR REPLACE FUNCTION public.touch_tenant_booking_settings_updated_at()
 RETURNS TRIGGER
 LANGUAGE plpgsql
+SET search_path = pg_catalog
 AS $$
 BEGIN
   NEW.updated_at = NOW();

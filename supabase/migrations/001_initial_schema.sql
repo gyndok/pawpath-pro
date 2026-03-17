@@ -334,6 +334,7 @@ ALTER TABLE tenants            ENABLE ROW LEVEL SECURITY;
 -- Helper function: get tenant_id from JWT claim
 CREATE OR REPLACE FUNCTION public.current_tenant_id() RETURNS UUID
   LANGUAGE sql STABLE
+  SET search_path = pg_catalog
 AS $$
   SELECT NULLIF(
     (current_setting('request.jwt.claims', true)::json->>'tenant_id'),
@@ -344,6 +345,7 @@ $$;
 -- Helper function: is platform admin
 CREATE OR REPLACE FUNCTION public.is_platform_admin() RETURNS BOOLEAN
   LANGUAGE sql STABLE
+  SET search_path = pg_catalog
 AS $$
   SELECT COALESCE(
     (current_setting('request.jwt.claims', true)::json->>'is_platform_admin')::BOOLEAN,
@@ -354,9 +356,10 @@ $$;
 -- Helper function: is walker for current tenant
 CREATE OR REPLACE FUNCTION public.is_tenant_walker() RETURNS BOOLEAN
   LANGUAGE sql STABLE
+  SET search_path = pg_catalog, public, auth
 AS $$
   SELECT EXISTS (
-    SELECT 1 FROM tenant_walkers
+    SELECT 1 FROM public.tenant_walkers
     WHERE tenant_id = public.current_tenant_id()
     AND user_id = auth.uid()
   );
@@ -484,10 +487,6 @@ CREATE POLICY "Users can update own notifications"
 
 -- ===== INQUIRY LEADS POLICIES =====
 -- Public can INSERT (contact form), walkers can read
-CREATE POLICY "Public can submit inquiry leads"
-  ON inquiry_leads FOR INSERT
-  WITH CHECK (true);
-
 CREATE POLICY "Walkers can read inquiry leads for their tenant"
   ON inquiry_leads FOR SELECT
   USING (tenant_id = public.current_tenant_id() AND public.is_tenant_walker());
@@ -504,9 +503,10 @@ CREATE OR REPLACE FUNCTION create_default_waiver(
   p_walker_user_id UUID
 ) RETURNS VOID
   LANGUAGE plpgsql SECURITY DEFINER
+  SET search_path = pg_catalog, public
 AS $$
 BEGIN
-  INSERT INTO waivers (tenant_id, walker_id, body_text)
+  INSERT INTO public.waivers (tenant_id, walker_id, body_text)
   VALUES (
     p_tenant_id,
     p_walker_user_id,
