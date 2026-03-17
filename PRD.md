@@ -176,8 +176,10 @@ PawPath Pro must make an explicit platform-level decision about how client payme
 
 The recommended direction is:
 
+- Create and operate a dedicated PawPath Pro Stripe platform account
 - Use Stripe Connect with each dog walker operating through a connected Stripe account
 - Charge the client directly for completed walks or approved autopay events
+- Keep walker SaaS subscription billing on the PawPath Pro platform account, while routing client walk payments and payouts through connected accounts
 - Avoid using one platform Stripe account to collect all client revenue and then manually paying walkers later
 - Default walker payouts to a linked bank account on Stripe's normal payout schedule, with optional instant payout to an eligible debit card as a premium convenience feature
 
@@ -186,6 +188,15 @@ Why this is the preferred model:
 - Clearer ownership of funds, disputes, refunds, and payout timing
 - Lower operational and regulatory burden around holding and disbursing third-party funds
 - Better long-term support for multiple tenants, custom pricing, and independent business ownership
+- Cleaner operational separation from any unrelated Stripe account or single-product business the founder may already operate
+
+Initial implementation guidance:
+
+- Do not reuse an unrelated existing Stripe account as the live home for PawPath Pro
+- Stand up a separate PawPath Pro Stripe account in test mode first
+- Use the platform account for PawPath subscription billing and early payment-flow development
+- Add full Connect onboarding before multi-walker or public-scale launch
+- Treat any temporary single-account client-payment collection as development-only, not the intended end-state architecture
 
 Operational implication:
 

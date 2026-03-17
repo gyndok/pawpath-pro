@@ -50,13 +50,29 @@ npm install
 
 ### 3. Set up Stripe
 
-1. Create a Stripe account and get your API keys
-2. Run the Stripe setup script:
+PawPath Pro should use its own dedicated Stripe account. Do not reuse an unrelated single-product Stripe account such as `nextrebuy.com` for live platform operations.
+
+Recommended setup model:
+- Create a dedicated Stripe account for `PawPath Pro`
+- Use that account as the platform account for walker subscriptions and platform-level Stripe Connect management
+- Plan to onboard each dog walker to a connected Stripe account for client walk payments and payouts
+- Keep client walk charges separate from the platform's own SaaS subscription billing
+
+Suggested implementation order:
+1. Start in Stripe test mode with the PawPath Pro platform account
+2. Use the current platform account keys for walker SaaS subscription billing and client card-on-file development
+3. Add Stripe Connect before broad launch so walkers are paid through connected accounts rather than a shared central account
+4. Only move to live mode after test-mode signup, saved-card setup, and autopay collection are working end to end
+
+Initial setup steps:
+1. Create a dedicated Stripe account for PawPath Pro and get your test API keys
+2. Run the Stripe setup script for the platform subscription products:
    ```bash
    STRIPE_SECRET_KEY=sk_test_... npx tsx scripts/setup-stripe.ts
    ```
 3. Copy the printed price IDs into your `.env.local`
 4. Create a webhook endpoint in the Stripe Dashboard pointing to `https://yourdomain.com/api/webhooks/stripe`
+5. Leave walker connected-account onboarding and live client payment routing as a separate follow-on milestone; the repo is now prepared for card-on-file and autopay, but not yet for full Connect payout onboarding
 
 ### 4. Configure environment
 
@@ -113,6 +129,11 @@ Needed for full Stripe signup and webhook flows:
 - `STRIPE_PRICE_PRO`
 - `STRIPE_PRICE_AGENCY`
 - `STRIPE_WEBHOOK_SECRET`
+
+Recommended before real client payment collection:
+- Use a dedicated PawPath Pro Stripe account, not another product's account
+- Keep all values in test mode until card-on-file setup and autopay are verified
+- Plan for a future Stripe Connect rollout so each walker ultimately operates through a connected account
 
 ### Recommended project settings
 
