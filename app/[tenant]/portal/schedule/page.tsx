@@ -1,4 +1,5 @@
 import { PortalScheduleHome } from '@/components/portal/schedule-home'
+import { loadPortalBookingOptions } from '@/lib/booking-options'
 import { demoBookings, demoClientProfile, demoPets, demoServices, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
@@ -25,13 +26,57 @@ export default async function PortalSchedulePage({
             status: booking.status,
             service_name: serviceNameById.get(booking.service_id) ?? 'Walk service',
           }))}
+        availableDatesByService={{
+          'demo-service-1': [
+            {
+              date: '2026-08-18',
+              label: 'Tue · Aug 18',
+              slots: [
+                { iso: '2026-08-18T18:00:00.000Z', date: '2026-08-18', time: '13:00', label: '1:00 PM' },
+                { iso: '2026-08-18T19:00:00.000Z', date: '2026-08-18', time: '14:00', label: '2:00 PM' },
+              ],
+            },
+          ],
+          'demo-service-2': [
+            {
+              date: '2026-08-19',
+              label: 'Wed · Aug 19',
+              slots: [
+                { iso: '2026-08-19T14:30:00.000Z', date: '2026-08-19', time: '09:30', label: '9:30 AM' },
+              ],
+            },
+          ],
+          'demo-service-3': [
+            {
+              date: '2026-08-20',
+              label: 'Thu · Aug 20',
+              slots: [
+                { iso: '2026-08-20T16:00:00.000Z', date: '2026-08-20', time: '11:00', label: '11:00 AM' },
+              ],
+            },
+          ],
+        }}
       />
     )
   }
 
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)
 
-  const [{ data: pets }, { data: services }, { data: bookings }] = await Promise.all([
+  let walkerId = tenant.owner_user_id
+
+  if (!walkerId) {
+    const { data: walker } = await supabase
+      .from('tenant_walkers')
+      .select('user_id')
+      .eq('tenant_id', tenant.id)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle()
+
+    walkerId = walker?.user_id ?? null
+  }
+
+  const [{ data: pets }, { data: bookings }, bookingOptions] = await Promise.all([
     supabase
       .from('pets')
       .select('id, name')
@@ -39,32 +84,34 @@ export default async function PortalSchedulePage({
       .eq('client_id', clientProfile.id)
       .order('created_at', { ascending: true }),
     supabase
-      .from('services')
-      .select('id, name, duration_minutes, base_price')
-      .eq('tenant_id', tenant.id)
-      .eq('is_active', true)
-      .order('base_price', { ascending: true }),
-    supabase
       .from('bookings')
       .select('id, scheduled_at, status, service_id')
       .eq('tenant_id', tenant.id)
       .eq('client_id', clientProfile.id)
       .order('scheduled_at', { ascending: false })
       .limit(6),
+    loadPortalBookingOptions({
+      supabase,
+      tenantId: tenant.id,
+      walkerId,
+      clientAddress: clientProfile.address,
+    }),
   ])
 
-  const serviceNameById = new Map((services ?? []).map((service) => [service.id, service.name]))
+  const serviceNameById = new Map((bookingOptions.services ?? []).map((service) => [service.id, service.name]))
 
   return (
     <PortalScheduleHome
       pets={pets ?? []}
-      services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
+      services={bookingOptions.services}
       bookings={(bookings ?? []).map((booking) => ({
         id: booking.id,
         scheduled_at: booking.scheduled_at,
         status: booking.status,
         service_name: serviceNameById.get(booking.service_id) ?? 'Walk service',
       }))}
+      availableDatesByService={bookingOptions.availableDatesByService}
+      geofenceMessage={bookingOptions.geofenceMessage}
     />
   )
 }

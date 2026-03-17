@@ -13,7 +13,7 @@ export async function requireTenantClient(tenantSlug: string) {
 
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('id, slug, business_name, branding_primary_color')
+    .select('id, slug, business_name, branding_primary_color, owner_user_id')
     .eq('slug', tenantSlug)
     .single()
 

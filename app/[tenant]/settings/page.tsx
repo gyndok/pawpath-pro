@@ -1,5 +1,6 @@
 import { WalkerSettingsHome } from '@/components/walker/settings-home'
 import { demoServices, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { DEFAULT_BOOKING_SETTINGS } from '@/lib/scheduling'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 export default async function WalkerSettingsPage({
@@ -15,13 +16,16 @@ export default async function WalkerSettingsPage({
       <WalkerSettingsHome
         services={demoServices}
         activeWaiverTitle={demoWaiver.title}
+        availability={[]}
+        blockedDates={[]}
+        bookingSettings={DEFAULT_BOOKING_SETTINGS}
       />
     )
   }
 
-  const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+  const { tenant, user, supabase } = await requireTenantWalker(tenantSlug)
 
-  const [{ data: services }, { data: activeWaiver }] = await Promise.all([
+  const [{ data: services }, { data: activeWaiver }, { data: availability }, { data: blockedDates }, bookingSettingsResult] = await Promise.all([
     supabase
       .from('services')
       .select('id, name, description, duration_minutes, base_price, is_active')
@@ -35,12 +39,41 @@ export default async function WalkerSettingsPage({
       .order('version', { ascending: false })
       .limit(1)
       .maybeSingle(),
+    supabase
+      .from('availability')
+      .select('day_of_week, start_time, end_time, is_active')
+      .eq('tenant_id', tenant.id)
+      .eq('walker_id', user.id)
+      .order('day_of_week', { ascending: true }),
+    supabase
+      .from('blocked_dates')
+      .select('id, start_date, end_date, reason')
+      .eq('tenant_id', tenant.id)
+      .eq('walker_id', user.id)
+      .order('start_date', { ascending: true })
+      .limit(12),
+    supabase
+      .from('tenant_booking_settings')
+      .select('travel_buffer_minutes, slot_interval_minutes, advance_window_days, allow_same_day_booking, service_area_zip_codes')
+      .eq('tenant_id', tenant.id)
+      .maybeSingle(),
   ])
+
+  const bookingSettings = bookingSettingsResult.error
+    ? DEFAULT_BOOKING_SETTINGS
+    : {
+        ...DEFAULT_BOOKING_SETTINGS,
+        ...bookingSettingsResult.data,
+        service_area_zip_codes: bookingSettingsResult.data?.service_area_zip_codes ?? DEFAULT_BOOKING_SETTINGS.service_area_zip_codes,
+      }
 
   return (
     <WalkerSettingsHome
       services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
       activeWaiverTitle={activeWaiver?.title ?? null}
+      availability={availability ?? []}
+      blockedDates={blockedDates ?? []}
+      bookingSettings={bookingSettings}
     />
   )
 }

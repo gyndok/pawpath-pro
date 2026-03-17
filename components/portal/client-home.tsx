@@ -1,13 +1,12 @@
 'use client'
 
-import { useActionState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { CalendarDays, CheckCircle2, CreditCard, FileText, Loader2, PawPrint, ShieldAlert } from 'lucide-react'
+import { CalendarDays, CheckCircle2, CreditCard, FileText, PawPrint, ShieldAlert } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { requestBookingAction, type ClientBookingState } from '@/lib/actions/client-booking'
+import { BookingRequestForm } from '@/components/portal/booking-request-form'
 
 type PetSummary = {
   id: string
@@ -40,6 +39,8 @@ export function ClientPortalHome({
   hasSignedWaiver,
   activeWaiverTitle,
   bookings,
+  availableDatesByService,
+  geofenceMessage,
 }: {
   tenantSlug: string
   clientName: string
@@ -48,12 +49,13 @@ export function ClientPortalHome({
   hasSignedWaiver: boolean
   activeWaiverTitle: string | null
   bookings: BookingSummary[]
+  availableDatesByService: Record<string, Array<{
+    date: string
+    label: string
+    slots: Array<{ iso: string; date: string; time: string; label: string }>
+  }>>
+  geofenceMessage?: string | null
 }) {
-  const [state, formAction, isPending] = useActionState<ClientBookingState, FormData>(
-    requestBookingAction.bind(null, tenantSlug),
-    {}
-  )
-
   return (
     <div className="mx-auto max-w-6xl px-4 py-12">
       <div className="mb-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
@@ -191,71 +193,16 @@ export function ClientPortalHome({
                 <CalendarDays className="h-5 w-5 text-[#c66a2b]" />
                 Request a walk
               </CardTitle>
-              <CardDescription>Start the MVP booking flow by sending a pending request to the walker.</CardDescription>
+              <CardDescription>Select from currently open dates and times based on the walker&apos;s published schedule.</CardDescription>
             </CardHeader>
             <CardContent>
-              {services.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-stone-200 p-4 text-sm text-stone-500">
-                  This business has not configured any services yet, so booking requests are not available.
-                </div>
-              ) : (
-                <form action={formAction} className="space-y-4">
-                  <div className="grid gap-4 md:grid-cols-2">
-                    <label className="space-y-1.5 text-sm">
-                      <span className="font-medium text-stone-800">Service</span>
-                      <select name="service_id" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" required>
-                        <option value="">Select a service</option>
-                        {services.map((service) => (
-                          <option key={service.id} value={service.id}>
-                            {service.name} · {service.duration_minutes} min · ${service.base_price.toFixed(2)}
-                          </option>
-                        ))}
-                      </select>
-                    </label>
-                    <label className="space-y-1.5 text-sm">
-                      <span className="font-medium text-stone-800">Pets</span>
-                      <div className="rounded-md border border-input p-3">
-                        <div className="space-y-2">
-                          {pets.map((pet, index) => (
-                            <label key={pet.id} className="flex items-center gap-2 text-sm text-stone-700">
-                              <input type="checkbox" name="pet_ids" value={pet.id} defaultChecked={index === 0} />
-                              <span>{pet.name}</span>
-                            </label>
-                          ))}
-                        </div>
-                      </div>
-                    </label>
-                    <label className="space-y-1.5 text-sm">
-                      <span className="font-medium text-stone-800">Date</span>
-                      <input type="date" name="date" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" required />
-                    </label>
-                    <label className="space-y-1.5 text-sm">
-                      <span className="font-medium text-stone-800">Time</span>
-                      <input type="time" name="time" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" required />
-                    </label>
-                  </div>
-                  <label className="space-y-1.5 text-sm">
-                    <span className="font-medium text-stone-800">Notes for the walker</span>
-                    <textarea name="notes" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Anything important about timing, access, or special care for this visit" />
-                  </label>
-
-                  {state.error && (
-                    <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
-                      {state.error}
-                    </div>
-                  )}
-
-                  {state.success && (
-                    <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-                      Booking request submitted. The walker will review it and approve or decline it.
-                    </div>
-                  )}
-
-                  <Button type="submit" className="bg-[#c66a2b] hover:bg-[#ad5821]" disabled={isPending || pets.length === 0}>
-                    {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending request…</> : 'Request booking'}
-                  </Button>
-                </form>
-              )}
+              <BookingRequestForm
+                tenantSlug={tenantSlug}
+                pets={pets.map((pet) => ({ id: pet.id, name: pet.name }))}
+                services={services}
+                availableDatesByService={availableDatesByService}
+                geofenceMessage={geofenceMessage}
+              />
             </CardContent>
           </Card>
 
