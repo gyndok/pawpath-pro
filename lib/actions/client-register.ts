@@ -10,6 +10,28 @@ export type ClientRegisterState = {
   error?: string
 }
 
+async function findAuthUserByEmail(email: string) {
+  const supabase = createServiceClient()
+  let page = 1
+
+  while (page <= 10) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    })
+
+    if (error) throw new Error(error.message)
+
+    const match = data.users.find((user) => user.email?.toLowerCase() === email)
+    if (match) return match
+
+    if (data.users.length < 200) break
+    page += 1
+  }
+
+  return null
+}
+
 function value(formData: FormData, key: string) {
   const raw = formData.get(key)
   return typeof raw === 'string' ? raw.trim() : ''
@@ -84,22 +106,64 @@ export async function registerClientAction(
     return { error: 'Business not found.' }
   }
 
-  const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email,
-    password,
-    email_confirm: true,
-    user_metadata: {
-      full_name: fullName,
-      role: 'client',
-      tenant_slug: tenantSlug,
-    },
-  })
+  let userId: string
+  let createdAuthUser = false
 
-  if (authError || !authData.user) {
-    return { error: authError?.message || 'Failed to create the client account.' }
+  try {
+    const existingUser = await findAuthUserByEmail(email)
+
+    if (existingUser) {
+      userId = existingUser.id
+
+      const { data: existingProfile } = await supabase
+        .from('client_profiles')
+        .select('id')
+        .eq('tenant_id', tenant.id)
+        .eq('user_id', userId)
+        .maybeSingle()
+
+      if (existingProfile) {
+        return { error: 'A user with this email address has already been registered.' }
+      }
+
+      const { error: updateError } = await supabase.auth.admin.updateUserById(userId, {
+        password,
+        email_confirm: true,
+        user_metadata: {
+          ...(existingUser.user_metadata ?? {}),
+          full_name: fullName,
+          role: 'client',
+          tenant_slug: tenantSlug,
+        },
+      })
+
+      if (updateError) {
+        return { error: updateError.message }
+      }
+    } else {
+      const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: {
+          full_name: fullName,
+          role: 'client',
+          tenant_slug: tenantSlug,
+        },
+      })
+
+      if (authError || !authData.user) {
+        return { error: authError?.message || 'Failed to create the client account.' }
+      }
+
+      userId = authData.user.id
+      createdAuthUser = true
+    }
+  } catch (error) {
+    return {
+      error: error instanceof Error ? error.message : 'Failed to create the client account.',
+    }
   }
-
-  const userId = authData.user.id
 
   try {
     const { data: clientProfile, error: clientProfileError } = await supabase
@@ -173,7 +237,9 @@ export async function registerClientAction(
       }
     }
   } catch (error) {
-    await supabase.auth.admin.deleteUser(userId)
+    if (createdAuthUser) {
+      await supabase.auth.admin.deleteUser(userId)
+    }
     return {
       error: error instanceof Error ? error.message : 'Failed to finish onboarding.',
     }

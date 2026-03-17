@@ -16,12 +16,131 @@ function normalizeRole(role: string | null): AuthRole {
   return role === 'client' ? 'client' : 'walker'
 }
 
+async function findAuthUsersByEmail(email: string) {
+  const serviceClient = createServiceClient()
+  const matches: string[] = []
+  let page = 1
+
+  while (page <= 10) {
+    const { data, error } = await serviceClient.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    })
+
+    if (error) throw new Error(error.message)
+
+    for (const user of data.users) {
+      if (user.email?.toLowerCase() === email) {
+        matches.push(user.id)
+      }
+    }
+
+    if (data.users.length < 200) break
+    page += 1
+  }
+
+  return matches
+}
+
+async function linkTenantMembershipByEmail(
+  tenantSlug: string,
+  role: AuthRole,
+  userId: string
+) {
+  const serviceClient = createServiceClient()
+  const { data: currentUserData, error: currentUserError } = await serviceClient.auth.admin.getUserById(userId)
+
+  if (currentUserError || !currentUserData.user.email) {
+    return
+  }
+
+  const tenantQuery = await serviceClient
+    .from('tenants')
+    .select('id')
+    .eq('slug', tenantSlug)
+    .single()
+
+  if (tenantQuery.error || !tenantQuery.data) {
+    return
+  }
+
+  const tenantId = tenantQuery.data.id
+  const matchingUserIds = await findAuthUsersByEmail(currentUserData.user.email.toLowerCase())
+  const legacyUserIds = matchingUserIds.filter((candidateId) => candidateId !== userId)
+
+  if (legacyUserIds.length === 0) {
+    return
+  }
+
+  if (role === 'walker') {
+    const { data: linkedWalker } = await serviceClient
+      .from('tenant_walkers')
+      .select('id')
+      .eq('tenant_id', tenantId)
+      .eq('user_id', userId)
+      .maybeSingle()
+
+    if (linkedWalker) return
+
+    const { data: legacyWalker } = await serviceClient
+      .from('tenant_walkers')
+      .select('id, role, user_id')
+      .eq('tenant_id', tenantId)
+      .in('user_id', legacyUserIds)
+      .limit(1)
+      .maybeSingle()
+
+    if (!legacyWalker) return
+
+    await serviceClient
+      .from('tenant_walkers')
+      .update({ user_id: userId })
+      .eq('id', legacyWalker.id)
+
+    if (legacyWalker.role === 'owner') {
+      await serviceClient
+        .from('tenants')
+        .update({ owner_user_id: userId })
+        .eq('id', tenantId)
+        .eq('owner_user_id', legacyWalker.user_id)
+    }
+
+    return
+  }
+
+  const { data: linkedProfile } = await serviceClient
+    .from('client_profiles')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .eq('user_id', userId)
+    .maybeSingle()
+
+  if (linkedProfile) return
+
+  const { data: legacyProfile } = await serviceClient
+    .from('client_profiles')
+    .select('id')
+    .eq('tenant_id', tenantId)
+    .in('user_id', legacyUserIds)
+    .limit(1)
+    .maybeSingle()
+
+  if (!legacyProfile) return
+
+  await serviceClient
+    .from('client_profiles')
+    .update({ user_id: userId })
+    .eq('id', legacyProfile.id)
+}
+
 async function validateTenantMembership(
   tenantSlug: string,
   role: AuthRole,
   userId: string
 ): Promise<{ error?: string }> {
   const serviceClient = createServiceClient()
+
+  await linkTenantMembershipByEmail(tenantSlug, role, userId)
 
   if (role === 'walker') {
     const { data: walkerRow } = await serviceClient

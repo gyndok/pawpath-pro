@@ -10,6 +10,7 @@ export default async function SignupSuccessPage({
   searchParams: Promise<{ slug?: string }>
 }) {
   const { slug } = await searchParams
+  const loginUrl = slug ? `https://${APP_DOMAIN}/${slug}/login` : null
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -32,7 +33,7 @@ export default async function SignupSuccessPage({
           <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-gray-600 mb-2">Your login URL:</p>
             <p className="font-mono font-bold text-violet-700 break-all">
-              https://{APP_DOMAIN}/{slug}/login
+              {loginUrl}
             </p>
           </div>
         )}

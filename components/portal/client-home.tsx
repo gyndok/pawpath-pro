@@ -66,11 +66,11 @@ export function ClientPortalHome({
         </div>
         <Card className="overflow-hidden border-stone-200">
           <Image
-            src={pets.length === 0 ? '/assets/portal/empty-state-no-pets.png' : '/assets/portal/dog-collar.png'}
+            src={pets.length === 0 ? '/assets/portal/empty-state-no-pets.png' : '/assets/brand/mascot-dog.png'}
             alt="Portal overview illustration"
             width={1200}
             height={900}
-            className="h-auto w-full"
+            className="h-auto w-full bg-[#fff8f0] object-contain p-8"
             priority
           />
         </Card>
