@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { loginAction, startDemoSessionAction } from '@/lib/actions/auth'
+import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
 import type { AuthState } from '@/lib/actions/auth'
 
 export default function LoginPage() {
@@ -74,6 +75,17 @@ export default function LoginPage() {
                 ) : 'Sign In'}
               </Button>
             </form>
+
+            {tenantSlug !== 'demo' && (
+              <>
+                <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-wide text-stone-400">
+                  <div className="h-px flex-1 bg-stone-200" />
+                  <span>or</span>
+                  <div className="h-px flex-1 bg-stone-200" />
+                </div>
+                <GoogleSignInButton tenantSlug={tenantSlug} role="walker" />
+              </>
+            )}
 
             <div className="mt-4 text-center">
               <p className="text-sm text-gray-500">

@@ -12,6 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { loginAction, startDemoSessionAction } from '@/lib/actions/auth'
 import type { AuthState } from '@/lib/actions/auth'
 import { useTenant } from '@/lib/context/tenant-context'
+import { GoogleSignInButton } from '@/components/auth/google-sign-in-button'
 
 export default function ClientLoginPage() {
   const params = useParams<{ tenant: string }>()
@@ -76,6 +77,17 @@ export default function ClientLoginPage() {
                 {isPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in…</> : 'Sign In'}
               </Button>
             </form>
+
+            {params.tenant !== 'demo' && (
+              <>
+                <div className="my-4 flex items-center gap-3 text-xs uppercase tracking-wide text-stone-400">
+                  <div className="h-px flex-1 bg-stone-200" />
+                  <span>or</span>
+                  <div className="h-px flex-1 bg-stone-200" />
+                </div>
+                <GoogleSignInButton tenantSlug={params.tenant} role="client" />
+              </>
+            )}
 
             <p className="text-center text-sm text-gray-500 mt-4">
               New client?{' '}
