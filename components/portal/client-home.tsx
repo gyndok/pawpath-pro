@@ -66,7 +66,7 @@ export function ClientPortalHome({
         </div>
         <Card className="overflow-hidden border-stone-200">
           <Image
-            src={hasSignedWaiver ? '/assets/portal/empty-state-no-pets.png' : '/assets/portal/empty-state-no-messages.png'}
+            src={pets.length === 0 ? '/assets/portal/empty-state-no-pets.png' : '/assets/portal/dog-collar.png'}
             alt="Portal overview illustration"
             width={1200}
             height={900}
