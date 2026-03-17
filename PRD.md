@@ -89,6 +89,28 @@ Each tenant is an independent dog walking business with:
 6. Walker completes onboarding wizard: services, pricing, availability, branding colors/logo
 7. Shareable client portal link generated: `[slug].pawpathpro.com`
 
+### Enrollment & Acquisition Model
+
+PawPath Pro should support two distinct enrollment funnels:
+
+- Walker enrollment: independent walkers sign up directly from the platform landing page or arrive through walker-to-walker referrals
+- Dog owner enrollment: dog owners sign up either through the platform landing page, through a direct tenant-branded link from a walker, or through referral/discovery channels
+
+Dog owner acquisition sources may include:
+
+- Direct invite links from the walker
+- QR codes on flyers, cards, doors, or pet materials
+- Email links sent by the walker
+- Referral from another dog owner
+- Google ads, local SEO, and organic search
+- Future marketplace or ZIP-code-based discovery flows
+
+Product implication:
+
+- The platform homepage should eventually route users cleanly into "I am a dog walker" versus "I am looking for a dog walker" journeys
+- Tenant-branded public pages remain the primary conversion surface when the owner already knows the walker
+- Referral source and attribution should be preserved whenever possible for both walker and owner acquisition
+
 ### Subscription Tiers
 
 | Plan | Price | Features |
@@ -1028,6 +1050,8 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 -   Platform Homepage Strategy: The root marketing site may eventually need a dual-path homepage that speaks to both walkers and owners, with clear routing into either "start your dog walking business site" or "find a local walker" experiences.
 
 -   Walker Discovery Marketplace Decision: If PawPath Pro adds owner-side walker discovery, the product must define whether discovery is optional per tenant, how rankings work, what profile fields are required, how ratings/reviews are verified, how leads are routed, and how marketplace discovery coexists with the core "owned relationship" positioning.
+
+-   Referral Attribution Model: The product should track whether a new walker came from another walker, whether a new dog owner came from a walker or another owner, and whether the lead originated from QR code, email, ad, SEO, or marketplace discovery.
 
 -   Stripe Architecture Decision: Before broad launch, finalize whether PawPath Pro uses Stripe Connect connected accounts or becomes merchant of record. Recommendation: use connected accounts, not one shared platform account paying walkers manually.
 
