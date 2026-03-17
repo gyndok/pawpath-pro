@@ -3,6 +3,7 @@ import { syncCheckoutSetupSession, isStripePaymentsReady } from '@/lib/payments'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { PayInvoiceButton } from '@/components/portal/pay-invoice-button'
 import { demoClientProfile, demoInvoices, demoPaymentMethod, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
@@ -107,6 +108,13 @@ export default async function PortalBillingPage({
     setupMessage = 'Stripe payments are not configured yet for this portal.'
   }
 
+  const paymentParam = typeof query.payment === 'string' ? query.payment : ''
+  const paymentMessage = paymentParam === 'success'
+    ? 'Payment received! Your invoice has been marked as paid.'
+    : paymentParam === 'cancelled'
+      ? 'Payment was cancelled. You can try again anytime.'
+      : null
+
   const autopayParam = typeof query.autopay === 'string' ? query.autopay : ''
   const autopayMessage = autopayParam === 'enabled'
     ? 'Autopay enabled.'
@@ -134,9 +142,13 @@ export default async function PortalBillingPage({
         <p className="text-sm text-stone-500">Invoices, payment status, and your saved payment method.</p>
       </div>
 
-      {(setupMessage || autopayMessage) && (
-        <div className="mb-6 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
-          {setupMessage || autopayMessage}
+      {(setupMessage || autopayMessage || paymentMessage) && (
+        <div className={`mb-6 rounded-md border p-3 text-sm ${
+          paymentParam === 'cancelled'
+            ? 'border-amber-200 bg-amber-50 text-amber-700'
+            : 'border-green-200 bg-green-50 text-green-700'
+        }`}>
+          {setupMessage || autopayMessage || paymentMessage}
         </div>
       )}
 
@@ -217,6 +229,16 @@ export default async function PortalBillingPage({
                 <p>Due date: {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}</p>
                 <p>Paid at: {invoice.paid_at ? new Date(invoice.paid_at).toLocaleString() : 'Not yet paid'}</p>
                 {invoice.notes && <p>Notes: {invoice.notes}</p>}
+                {invoice.status !== 'paid' && invoice.status !== 'voided' && (
+                  <div className="mt-3">
+                    <PayInvoiceButton
+                      invoiceId={invoice.id}
+                      tenantSlug={tenantSlug}
+                      clientProfileId={clientProfile.id}
+                      amount={Number(invoice.amount)}
+                    />
+                  </div>
+                )}
               </CardContent>
             </Card>
           ))}

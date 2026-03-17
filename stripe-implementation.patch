@@ -1,0 +1,770 @@
+diff --git a/.env.example b/.env.example
+index aabcb62..d08d3f1 100644
+--- a/.env.example
++++ b/.env.example
+@@ -21,6 +21,7 @@ SUPABASE_SERVICE_KEY=your-service-role-key-here
+ 
+ # ─── Stripe ──────────────────────────────────────────────────────────────────
+ # Found in: Stripe Dashboard → Developers → API Keys
++NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_...
+ STRIPE_SECRET_KEY=sk_test_...
+ 
+ # Run `npx tsx scripts/setup-stripe.ts` to generate these price IDs
+diff --git a/app/[tenant]/portal/billing/page.tsx b/app/[tenant]/portal/billing/page.tsx
+index 38567ef..b2a4955 100644
+--- a/app/[tenant]/portal/billing/page.tsx
++++ b/app/[tenant]/portal/billing/page.tsx
+@@ -3,6 +3,7 @@ import { syncCheckoutSetupSession, isStripePaymentsReady } from '@/lib/payments'
+ import { Badge } from '@/components/ui/badge'
+ import { Button } from '@/components/ui/button'
+ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
++import { PayInvoiceButton } from '@/components/portal/pay-invoice-button'
+ import { demoClientProfile, demoInvoices, demoPaymentMethod, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+ import { requireTenantClient } from '@/lib/tenant-session'
+ 
+@@ -107,6 +108,13 @@ export default async function PortalBillingPage({
+     setupMessage = 'Stripe payments are not configured yet for this portal.'
+   }
+ 
++  const paymentParam = typeof query.payment === 'string' ? query.payment : ''
++  const paymentMessage = paymentParam === 'success'
++    ? 'Payment received! Your invoice has been marked as paid.'
++    : paymentParam === 'cancelled'
++      ? 'Payment was cancelled. You can try again anytime.'
++      : null
++
+   const autopayParam = typeof query.autopay === 'string' ? query.autopay : ''
+   const autopayMessage = autopayParam === 'enabled'
+     ? 'Autopay enabled.'
+@@ -134,9 +142,13 @@ export default async function PortalBillingPage({
+         <p className="text-sm text-stone-500">Invoices, payment status, and your saved payment method.</p>
+       </div>
+ 
+-      {(setupMessage || autopayMessage) && (
+-        <div className="mb-6 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+-          {setupMessage || autopayMessage}
++      {(setupMessage || autopayMessage || paymentMessage) && (
++        <div className={`mb-6 rounded-md border p-3 text-sm ${
++          paymentParam === 'cancelled'
++            ? 'border-amber-200 bg-amber-50 text-amber-700'
++            : 'border-green-200 bg-green-50 text-green-700'
++        }`}>
++          {setupMessage || autopayMessage || paymentMessage}
+         </div>
+       )}
+ 
+@@ -217,6 +229,16 @@ export default async function PortalBillingPage({
+                 <p>Due date: {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}</p>
+                 <p>Paid at: {invoice.paid_at ? new Date(invoice.paid_at).toLocaleString() : 'Not yet paid'}</p>
+                 {invoice.notes && <p>Notes: {invoice.notes}</p>}
++                {invoice.status !== 'paid' && invoice.status !== 'voided' && (
++                  <div className="mt-3">
++                    <PayInvoiceButton
++                      invoiceId={invoice.id}
++                      tenantSlug={tenantSlug}
++                      clientProfileId={clientProfile.id}
++                      amount={Number(invoice.amount)}
++                    />
++                  </div>
++                )}
+               </CardContent>
+             </Card>
+           ))}
+diff --git a/app/[tenant]/settings/page.tsx b/app/[tenant]/settings/page.tsx
+index dd62e99..5d55e94 100644
+--- a/app/[tenant]/settings/page.tsx
++++ b/app/[tenant]/settings/page.tsx
+@@ -1,14 +1,19 @@
+ import { WalkerSettingsHome } from '@/components/walker/settings-home'
++import { SubscriptionCard } from '@/components/walker/subscription-card'
+ import { demoServices, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+ import { DEFAULT_BOOKING_SETTINGS } from '@/lib/scheduling'
+ import { requireTenantWalker } from '@/lib/tenant-session'
+ 
+ export default async function WalkerSettingsPage({
+   params,
++  searchParams,
+ }: {
+   params: Promise<{ tenant: string }>
++  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+ }) {
+   const { tenant: tenantSlug } = await params
++  const query = await searchParams
++  const checkoutStatus = typeof query.checkout === 'string' ? query.checkout : undefined
+ 
+   if (isDemoTenantSlug(tenantSlug)) {
+     await requireDemoRole('walker', tenantSlug)
+@@ -68,12 +73,25 @@ export default async function WalkerSettingsPage({
+       }
+ 
+   return (
+-    <WalkerSettingsHome
+-      services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
+-      activeWaiverTitle={activeWaiver?.title ?? null}
+-      availability={availability ?? []}
+-      blockedDates={blockedDates ?? []}
+-      bookingSettings={bookingSettings}
+-    />
++    <>
++      <div className="max-w-6xl p-6 pb-0">
++        <SubscriptionCard
++          tenantId={tenant.id}
++          planTier={tenant.plan_tier as 'starter' | 'pro' | 'agency'}
++          stripeCustomerId={tenant.stripe_customer_id}
++          stripeSubscriptionId={tenant.stripe_subscription_id}
++          trialEndsAt={tenant.trial_ends_at}
++          isActive={tenant.is_active}
++          checkoutStatus={checkoutStatus}
++        />
++      </div>
++      <WalkerSettingsHome
++        services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
++        activeWaiverTitle={activeWaiver?.title ?? null}
++        availability={availability ?? []}
++        blockedDates={blockedDates ?? []}
++        bookingSettings={bookingSettings}
++      />
++    </>
+   )
+ }
+diff --git a/app/api/stripe/create-checkout/route.ts b/app/api/stripe/create-checkout/route.ts
+new file mode 100644
+index 0000000..0869a2b
+--- /dev/null
++++ b/app/api/stripe/create-checkout/route.ts
+@@ -0,0 +1,87 @@
++import { NextRequest, NextResponse } from 'next/server'
++import { getStripe, STRIPE_PRICES } from '@/lib/stripe'
++import { createServiceClient } from '@/lib/supabase/server'
++import type { PlanTier } from '@/types/tenant'
++
++/**
++ * POST /api/stripe/create-checkout
++ *
++ * Creates a Stripe Checkout Session for a walker to subscribe (or re-subscribe)
++ * to a PawPath Pro plan. This is used when:
++ *   - A walker's trial expires and they need to enter payment info
++ *   - A walker wants to upgrade/change their plan
++ *
++ * Body: { tenantId: string, planTier?: PlanTier }
++ */
++export async function POST(req: NextRequest) {
++  try {
++    const { tenantId, planTier } = (await req.json()) as {
++      tenantId: string
++      planTier?: PlanTier
++    }
++
++    if (!tenantId) {
++      return NextResponse.json({ error: 'tenantId is required' }, { status: 400 })
++    }
++
++    const supabase = createServiceClient()
++    const { data: tenant, error: tenantError } = await supabase
++      .from('tenants')
++      .select('id, slug, stripe_customer_id, stripe_subscription_id, plan_tier, business_name, owner_user_id')
++      .eq('id', tenantId)
++      .single()
++
++    if (tenantError || !tenant) {
++      return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
++    }
++
++    const selectedTier = planTier || (tenant.plan_tier as PlanTier) || 'starter'
++    const priceId = STRIPE_PRICES[selectedTier]
++
++    if (!priceId) {
++      return NextResponse.json({ error: `No Stripe price configured for plan: ${selectedTier}` }, { status: 400 })
++    }
++
++    const stripe = getStripe()
++
++    // Ensure the tenant has a Stripe customer
++    let customerId = tenant.stripe_customer_id
++    if (!customerId) {
++      // Look up owner email
++      const { data: ownerUser } = await supabase.auth.admin.getUserById(tenant.owner_user_id!)
++      const customer = await stripe.customers.create({
++        email: ownerUser?.user?.email || undefined,
++        name: tenant.business_name,
++        metadata: { tenant_id: tenant.id, slug: tenant.slug },
++      })
++      customerId = customer.id
++
++      await supabase
++        .from('tenants')
++        .update({ stripe_customer_id: customerId })
++        .eq('id', tenant.id)
++    }
++
++    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'
++    const baseUrl = `https://${appDomain}`
++
++    const session = await stripe.checkout.sessions.create({
++      mode: 'subscription',
++      customer: customerId,
++      line_items: [{ price: priceId, quantity: 1 }],
++      subscription_data: {
++        trial_period_days: undefined, // No additional trial — they already had one
++        metadata: { tenant_id: tenant.id },
++      },
++      success_url: `${baseUrl}/${tenant.slug}/settings?checkout=success`,
++      cancel_url: `${baseUrl}/${tenant.slug}/settings?checkout=cancelled`,
++      allow_promotion_codes: true,
++    })
++
++    return NextResponse.json({ url: session.url })
++  } catch (err) {
++    console.error('Error creating checkout session:', err)
++    const message = err instanceof Error ? err.message : 'Failed to create checkout session'
++    return NextResponse.json({ error: message }, { status: 500 })
++  }
++}
+diff --git a/app/api/stripe/customer-portal/route.ts b/app/api/stripe/customer-portal/route.ts
+new file mode 100644
+index 0000000..24faf14
+--- /dev/null
++++ b/app/api/stripe/customer-portal/route.ts
+@@ -0,0 +1,54 @@
++import { NextRequest, NextResponse } from 'next/server'
++import { getStripe } from '@/lib/stripe'
++import { createServiceClient } from '@/lib/supabase/server'
++
++/**
++ * POST /api/stripe/customer-portal
++ *
++ * Creates a Stripe Billing Portal session so the walker (tenant owner)
++ * can manage their subscription: update payment method, change plan,
++ * view invoices, or cancel.
++ *
++ * Body: { tenantId: string }
++ */
++export async function POST(req: NextRequest) {
++  try {
++    const { tenantId } = (await req.json()) as { tenantId: string }
++
++    if (!tenantId) {
++      return NextResponse.json({ error: 'tenantId is required' }, { status: 400 })
++    }
++
++    const supabase = createServiceClient()
++    const { data: tenant, error: tenantError } = await supabase
++      .from('tenants')
++      .select('id, slug, stripe_customer_id')
++      .eq('id', tenantId)
++      .single()
++
++    if (tenantError || !tenant) {
++      return NextResponse.json({ error: 'Tenant not found' }, { status: 404 })
++    }
++
++    if (!tenant.stripe_customer_id) {
++      return NextResponse.json(
++        { error: 'No Stripe customer found. Please subscribe first.' },
++        { status: 400 }
++      )
++    }
++
++    const stripe = getStripe()
++    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'
++
++    const portalSession = await stripe.billingPortal.sessions.create({
++      customer: tenant.stripe_customer_id,
++      return_url: `https://${appDomain}/${tenant.slug}/settings`,
++    })
++
++    return NextResponse.json({ url: portalSession.url })
++  } catch (err) {
++    console.error('Error creating customer portal session:', err)
++    const message = err instanceof Error ? err.message : 'Failed to open billing portal'
++    return NextResponse.json({ error: message }, { status: 500 })
++  }
++}
+diff --git a/app/api/stripe/pay-invoice/route.ts b/app/api/stripe/pay-invoice/route.ts
+new file mode 100644
+index 0000000..6d4cfab
+--- /dev/null
++++ b/app/api/stripe/pay-invoice/route.ts
+@@ -0,0 +1,117 @@
++import { NextRequest, NextResponse } from 'next/server'
++import { getStripe } from '@/lib/stripe'
++import { createServiceClient } from '@/lib/supabase/server'
++import { ensureClientStripeCustomer } from '@/lib/payments'
++
++/**
++ * POST /api/stripe/pay-invoice
++ *
++ * Creates a Stripe Checkout Session in "payment" mode for a client to pay
++ * a specific invoice. The client clicks "Pay Now" on their portal billing page,
++ * gets redirected to Stripe Checkout, and comes back after payment.
++ *
++ * Body: { invoiceId: string, tenantSlug: string, clientProfileId: string }
++ */
++export async function POST(req: NextRequest) {
++  try {
++    const { invoiceId, tenantSlug, clientProfileId } = (await req.json()) as {
++      invoiceId: string
++      tenantSlug: string
++      clientProfileId: string
++    }
++
++    if (!invoiceId || !tenantSlug || !clientProfileId) {
++      return NextResponse.json(
++        { error: 'invoiceId, tenantSlug, and clientProfileId are required' },
++        { status: 400 }
++      )
++    }
++
++    const supabase = createServiceClient()
++
++    // Fetch the invoice
++    const { data: invoice, error: invoiceError } = await supabase
++      .from('invoices')
++      .select('id, amount, status, tenant_id, client_id')
++      .eq('id', invoiceId)
++      .single()
++
++    if (invoiceError || !invoice) {
++      return NextResponse.json({ error: 'Invoice not found' }, { status: 404 })
++    }
++
++    if (invoice.status === 'paid') {
++      return NextResponse.json({ error: 'Invoice is already paid' }, { status: 400 })
++    }
++
++    if (invoice.status === 'voided') {
++      return NextResponse.json({ error: 'Invoice has been voided' }, { status: 400 })
++    }
++
++    // Fetch client profile
++    const { data: clientProfile, error: clientError } = await supabase
++      .from('client_profiles')
++      .select('id, user_id, full_name, stripe_customer_id')
++      .eq('id', clientProfileId)
++      .single()
++
++    if (clientError || !clientProfile) {
++      return NextResponse.json({ error: 'Client profile not found' }, { status: 404 })
++    }
++
++    // Verify the invoice belongs to this client
++    if (invoice.client_id !== clientProfile.id) {
++      return NextResponse.json({ error: 'Invoice does not belong to this client' }, { status: 403 })
++    }
++
++    // Get client email from auth
++    const { data: authUser } = await supabase.auth.admin.getUserById(clientProfile.user_id)
++
++    // Ensure Stripe customer exists
++    const customerId = await ensureClientStripeCustomer({
++      supabase,
++      clientProfileId: clientProfile.id,
++      existingStripeCustomerId: clientProfile.stripe_customer_id,
++      email: authUser?.user?.email ?? null,
++      fullName: clientProfile.full_name,
++    })
++
++    const stripe = getStripe()
++    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'
++    const baseUrl = `https://${appDomain}`
++
++    const session = await stripe.checkout.sessions.create({
++      mode: 'payment',
++      customer: customerId || undefined,
++      customer_email: !customerId ? (authUser?.user?.email || undefined) : undefined,
++      line_items: [
++        {
++          price_data: {
++            currency: 'usd',
++            product_data: {
++              name: `Invoice Payment`,
++              description: `PawPath Pro invoice #${invoice.id.slice(0, 8)}`,
++            },
++            unit_amount: Math.round(Number(invoice.amount) * 100),
++          },
++          quantity: 1,
++        },
++      ],
++      payment_intent_data: {
++        metadata: {
++          invoice_id: invoice.id,
++          tenant_id: invoice.tenant_id,
++          client_profile_id: clientProfile.id,
++        },
++      },
++      success_url: `${baseUrl}/${tenantSlug}/portal/billing?payment=success&invoice_id=${invoice.id}`,
++      cancel_url: `${baseUrl}/${tenantSlug}/portal/billing?payment=cancelled`,
++    })
++
++    return NextResponse.json({ url: session.url })
++  } catch (err) {
++    console.error('Error creating payment session:', err)
++    const message = err instanceof Error ? err.message : 'Failed to create payment session'
++    return NextResponse.json({ error: message }, { status: 500 })
++  }
++}
+diff --git a/app/api/webhooks/stripe/route.ts b/app/api/webhooks/stripe/route.ts
+index 14dba30..3736ce6 100644
+--- a/app/api/webhooks/stripe/route.ts
++++ b/app/api/webhooks/stripe/route.ts
+@@ -19,16 +19,15 @@ export async function POST(req: NextRequest) {
+   const supabase = createServiceClient()
+ 
+   switch (event.type) {
++    // ─── Subscription lifecycle (walker SaaS billing) ───────────────────
+     case 'customer.subscription.created':
+     case 'customer.subscription.updated': {
+       const subscription = event.data.object as Stripe.Subscription
+       const customerId = subscription.customer as string
+       const status = subscription.status
+ 
+-      // Map Stripe status to tenant active state
+       const isActive = ['active', 'trialing', 'past_due'].includes(status)
+ 
+-      // Get price ID to determine plan tier
+       const priceId = subscription.items.data[0]?.price?.id
+       let planTier = 'starter'
+       if (priceId === process.env.STRIPE_PRICE_PRO) planTier = 'pro'
+@@ -58,9 +57,9 @@ export async function POST(req: NextRequest) {
+       break
+     }
+ 
++    // ─── Subscription invoice events ────────────────────────────────────
+     case 'invoice.payment_succeeded': {
+       const invoice = event.data.object as Stripe.Invoice
+-      // Ensure tenant stays active after successful payment
+       if (invoice.customer) {
+         await supabase
+           .from('tenants')
+@@ -71,8 +70,89 @@ export async function POST(req: NextRequest) {
+     }
+ 
+     case 'invoice.payment_failed': {
+-      // Could send alert email; tenant stays active until subscription fully cancels
+-      console.warn('Payment failed for customer:', (event.data.object as Stripe.Invoice).customer)
++      const invoice = event.data.object as Stripe.Invoice
++      console.warn('Subscription payment failed for customer:', invoice.customer)
++      // Tenant stays active until subscription fully cancels.
++      // TODO: Send alert email via Resend when email integration is ready.
++      break
++    }
++
++    // ─── Client walk-payment events (PaymentIntent from Checkout or autopay) ─
++    case 'checkout.session.completed': {
++      const session = event.data.object as Stripe.Checkout.Session
++
++      // Only handle payment-mode sessions (client invoice payments)
++      if (session.mode !== 'payment') break
++
++      const invoiceId = session.metadata?.invoice_id
++        || (session.payment_intent &&
++            typeof session.payment_intent === 'object'
++              ? (session.payment_intent as Stripe.PaymentIntent).metadata?.invoice_id
++              : null)
++
++      if (!invoiceId) break
++
++      const paymentIntentId = typeof session.payment_intent === 'string'
++        ? session.payment_intent
++        : (session.payment_intent as Stripe.PaymentIntent)?.id
++
++      await supabase
++        .from('invoices')
++        .update({
++          status: 'paid',
++          paid_at: new Date().toISOString(),
++          stripe_payment_intent_id: paymentIntentId || null,
++          notes: 'Paid via Stripe Checkout.',
++        })
++        .eq('id', invoiceId)
++
++      break
++    }
++
++    case 'payment_intent.succeeded': {
++      const paymentIntent = event.data.object as Stripe.PaymentIntent
++      const invoiceId = paymentIntent.metadata?.invoice_id
++
++      // Only process if this PI is linked to a PawPath invoice (autopay or checkout)
++      if (!invoiceId) break
++
++      // Check if already marked paid (checkout.session.completed may have fired first)
++      const { data: existingInvoice } = await supabase
++        .from('invoices')
++        .select('status')
++        .eq('id', invoiceId)
++        .single()
++
++      if (existingInvoice?.status === 'paid') break
++
++      await supabase
++        .from('invoices')
++        .update({
++          status: 'paid',
++          paid_at: new Date().toISOString(),
++          stripe_payment_intent_id: paymentIntent.id,
++          notes: 'Paid via Stripe.',
++        })
++        .eq('id', invoiceId)
++
++      break
++    }
++
++    case 'payment_intent.payment_failed': {
++      const paymentIntent = event.data.object as Stripe.PaymentIntent
++      const invoiceId = paymentIntent.metadata?.invoice_id
++
++      if (!invoiceId) break
++
++      const failReason = paymentIntent.last_payment_error?.message || 'Payment failed'
++      await supabase
++        .from('invoices')
++        .update({
++          notes: `Payment failed: ${failReason}`,
++        })
++        .eq('id', invoiceId)
++
++      console.warn(`Payment failed for invoice ${invoiceId}:`, failReason)
+       break
+     }
+   }
+diff --git a/components/portal/pay-invoice-button.tsx b/components/portal/pay-invoice-button.tsx
+new file mode 100644
+index 0000000..d92e1a1
+--- /dev/null
++++ b/components/portal/pay-invoice-button.tsx
+@@ -0,0 +1,55 @@
++'use client'
++
++import { useState } from 'react'
++import { Loader2 } from 'lucide-react'
++import { Button } from '@/components/ui/button'
++
++export function PayInvoiceButton({
++  invoiceId,
++  tenantSlug,
++  clientProfileId,
++  amount,
++}: {
++  invoiceId: string
++  tenantSlug: string
++  clientProfileId: string
++  amount: number
++}) {
++  const [loading, setLoading] = useState(false)
++
++  async function handlePay() {
++    setLoading(true)
++    try {
++      const res = await fetch('/api/stripe/pay-invoice', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ invoiceId, tenantSlug, clientProfileId }),
++      })
++      const data = await res.json()
++      if (data.url) {
++        window.location.href = data.url
++      } else {
++        alert(data.error || 'Failed to start payment')
++      }
++    } catch {
++      alert('Something went wrong. Please try again.')
++    } finally {
++      setLoading(false)
++    }
++  }
++
++  return (
++    <Button
++      onClick={handlePay}
++      disabled={loading}
++      size="sm"
++      className="bg-[#c66a2b] hover:bg-[#ad5821]"
++    >
++      {loading ? (
++        <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…</>
++      ) : (
++        `Pay $${amount.toFixed(2)}`
++      )}
++    </Button>
++  )
++}
+diff --git a/components/walker/subscription-card.tsx b/components/walker/subscription-card.tsx
+new file mode 100644
+index 0000000..d3b13bf
+--- /dev/null
++++ b/components/walker/subscription-card.tsx
+@@ -0,0 +1,173 @@
++'use client'
++
++import { useState } from 'react'
++import { Loader2, CreditCard, ExternalLink } from 'lucide-react'
++import { Badge } from '@/components/ui/badge'
++import { Button } from '@/components/ui/button'
++import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
++
++const PLAN_DETAILS = {
++  starter: { name: 'Starter', price: '$29/mo', desc: '1 walker, up to 30 clients' },
++  pro: { name: 'Pro', price: '$59/mo', desc: 'Unlimited clients, custom domain, CSV export' },
++  agency: { name: 'Agency', price: '$99/mo', desc: 'Up to 5 walkers, all Pro features' },
++} as const
++
++type PlanTier = keyof typeof PLAN_DETAILS
++
++export function SubscriptionCard({
++  tenantId,
++  planTier,
++  stripeCustomerId,
++  stripeSubscriptionId,
++  trialEndsAt,
++  isActive,
++  checkoutStatus,
++}: {
++  tenantId: string
++  planTier: PlanTier
++  stripeCustomerId: string | null
++  stripeSubscriptionId: string | null
++  trialEndsAt: string
++  isActive: boolean
++  checkoutStatus?: string
++}) {
++  const [loading, setLoading] = useState<string | null>(null)
++
++  const trialEnd = new Date(trialEndsAt)
++  const now = new Date()
++  const trialActive = trialEnd > now
++  const daysLeft = trialActive ? Math.ceil((trialEnd.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)) : 0
++  const plan = PLAN_DETAILS[planTier] || PLAN_DETAILS.starter
++
++  const hasSubscription = Boolean(stripeSubscriptionId)
++
++  async function handleCheckout(tier: PlanTier) {
++    setLoading(tier)
++    try {
++      const res = await fetch('/api/stripe/create-checkout', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ tenantId, planTier: tier }),
++      })
++      const data = await res.json()
++      if (data.url) {
++        window.location.href = data.url
++      } else {
++        alert(data.error || 'Failed to start checkout')
++      }
++    } catch {
++      alert('Something went wrong. Please try again.')
++    } finally {
++      setLoading(null)
++    }
++  }
++
++  async function handlePortal() {
++    setLoading('portal')
++    try {
++      const res = await fetch('/api/stripe/customer-portal', {
++        method: 'POST',
++        headers: { 'Content-Type': 'application/json' },
++        body: JSON.stringify({ tenantId }),
++      })
++      const data = await res.json()
++      if (data.url) {
++        window.location.href = data.url
++      } else {
++        alert(data.error || 'Failed to open billing portal')
++      }
++    } catch {
++      alert('Something went wrong. Please try again.')
++    } finally {
++      setLoading(null)
++    }
++  }
++
++  return (
++    <Card className="border-stone-200">
++      <CardHeader>
++        <div className="flex items-center justify-between">
++          <div>
++            <CardTitle className="flex items-center gap-3">
++              <CreditCard className="h-5 w-5 text-stone-400" />
++              Subscription & Billing
++            </CardTitle>
++            <CardDescription>Manage your PawPath Pro plan and payment method.</CardDescription>
++          </div>
++          <Badge
++            className={
++              !isActive
++                ? 'bg-red-100 text-red-700'
++                : trialActive
++                  ? 'bg-blue-100 text-blue-700'
++                  : 'bg-green-100 text-green-700'
++            }
++          >
++            {!isActive ? 'Inactive' : trialActive ? `Trial (${daysLeft}d left)` : 'Active'}
++          </Badge>
++        </div>
++      </CardHeader>
++
++      <CardContent className="space-y-5">
++        {checkoutStatus === 'success' && (
++          <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
++            Subscription activated! Your plan is now active.
++          </div>
++        )}
++        {checkoutStatus === 'cancelled' && (
++          <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-700">
++            Checkout was cancelled. You can try again anytime.
++          </div>
++        )}
++
++        {/* Current plan summary */}
++        <div className="rounded-xl border border-stone-200 p-4">
++          <div className="flex items-center justify-between">
++            <div>
++              <p className="font-semibold text-stone-900">{plan.name} Plan</p>
++              <p className="text-sm text-stone-500">{plan.desc}</p>
++            </div>
++            <p className="text-lg font-bold text-violet-600">{plan.price}</p>
++          </div>
++        </div>
++
++        {/* Actions */}
++        {hasSubscription && stripeCustomerId ? (
++          // Active subscription — show portal button
++          <Button onClick={handlePortal} variant="outline" className="w-full" disabled={loading === 'portal'}>
++            {loading === 'portal' ? (
++              <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening portal…</>
++            ) : (
++              <><ExternalLink className="mr-2 h-4 w-4" /> Manage subscription & payment method</>
++            )}
++          </Button>
++        ) : (
++          // No subscription yet — show plan selection + checkout
++          <div className="space-y-3">
++            <p className="text-sm text-stone-600">
++              {trialActive
++                ? 'Add a payment method now to ensure uninterrupted service when your trial ends.'
++                : 'Your trial has expired. Subscribe to reactivate your account.'}
++            </p>
++            <div className="grid gap-3 sm:grid-cols-3">
++              {(Object.entries(PLAN_DETAILS) as [PlanTier, typeof PLAN_DETAILS[PlanTier]][]).map(([tier, details]) => (
++                <Button
++                  key={tier}
++                  onClick={() => handleCheckout(tier)}
++                  disabled={loading !== null}
++                  variant={tier === planTier ? 'default' : 'outline'}
++                  className={tier === planTier ? 'bg-violet-600 hover:bg-violet-700' : ''}
++                >
++                  {loading === tier ? (
++                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
++                  ) : null}
++                  {details.name} — {details.price}
++                </Button>
++              ))}
++            </div>
++          </div>
++        )}
++      </CardContent>
++    </Card>
++  )
++}

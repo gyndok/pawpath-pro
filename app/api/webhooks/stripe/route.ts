@@ -19,16 +19,15 @@ export async function POST(req: NextRequest) {
   const supabase = createServiceClient()
 
   switch (event.type) {
+    // ─── Subscription lifecycle (walker SaaS billing) ───────────────────
     case 'customer.subscription.created':
     case 'customer.subscription.updated': {
       const subscription = event.data.object as Stripe.Subscription
       const customerId = subscription.customer as string
       const status = subscription.status
 
-      // Map Stripe status to tenant active state
       const isActive = ['active', 'trialing', 'past_due'].includes(status)
 
-      // Get price ID to determine plan tier
       const priceId = subscription.items.data[0]?.price?.id
       let planTier = 'starter'
       if (priceId === process.env.STRIPE_PRICE_PRO) planTier = 'pro'
@@ -58,9 +57,9 @@ export async function POST(req: NextRequest) {
       break
     }
 
+    // ─── Subscription invoice events ────────────────────────────────────
     case 'invoice.payment_succeeded': {
       const invoice = event.data.object as Stripe.Invoice
-      // Ensure tenant stays active after successful payment
       if (invoice.customer) {
         await supabase
           .from('tenants')
@@ -71,8 +70,89 @@ export async function POST(req: NextRequest) {
     }
 
     case 'invoice.payment_failed': {
-      // Could send alert email; tenant stays active until subscription fully cancels
-      console.warn('Payment failed for customer:', (event.data.object as Stripe.Invoice).customer)
+      const invoice = event.data.object as Stripe.Invoice
+      console.warn('Subscription payment failed for customer:', invoice.customer)
+      // Tenant stays active until subscription fully cancels.
+      // TODO: Send alert email via Resend when email integration is ready.
+      break
+    }
+
+    // ─── Client walk-payment events (PaymentIntent from Checkout or autopay) ─
+    case 'checkout.session.completed': {
+      const session = event.data.object as Stripe.Checkout.Session
+
+      // Only handle payment-mode sessions (client invoice payments)
+      if (session.mode !== 'payment') break
+
+      const invoiceId = session.metadata?.invoice_id
+        || (session.payment_intent &&
+            typeof session.payment_intent === 'object'
+              ? (session.payment_intent as Stripe.PaymentIntent).metadata?.invoice_id
+              : null)
+
+      if (!invoiceId) break
+
+      const paymentIntentId = typeof session.payment_intent === 'string'
+        ? session.payment_intent
+        : (session.payment_intent as Stripe.PaymentIntent)?.id
+
+      await supabase
+        .from('invoices')
+        .update({
+          status: 'paid',
+          paid_at: new Date().toISOString(),
+          stripe_payment_intent_id: paymentIntentId || null,
+          notes: 'Paid via Stripe Checkout.',
+        })
+        .eq('id', invoiceId)
+
+      break
+    }
+
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent
+      const invoiceId = paymentIntent.metadata?.invoice_id
+
+      // Only process if this PI is linked to a PawPath invoice (autopay or checkout)
+      if (!invoiceId) break
+
+      // Check if already marked paid (checkout.session.completed may have fired first)
+      const { data: existingInvoice } = await supabase
+        .from('invoices')
+        .select('status')
+        .eq('id', invoiceId)
+        .single()
+
+      if (existingInvoice?.status === 'paid') break
+
+      await supabase
+        .from('invoices')
+        .update({
+          status: 'paid',
+          paid_at: new Date().toISOString(),
+          stripe_payment_intent_id: paymentIntent.id,
+          notes: 'Paid via Stripe.',
+        })
+        .eq('id', invoiceId)
+
+      break
+    }
+
+    case 'payment_intent.payment_failed': {
+      const paymentIntent = event.data.object as Stripe.PaymentIntent
+      const invoiceId = paymentIntent.metadata?.invoice_id
+
+      if (!invoiceId) break
+
+      const failReason = paymentIntent.last_payment_error?.message || 'Payment failed'
+      await supabase
+        .from('invoices')
+        .update({
+          notes: `Payment failed: ${failReason}`,
+        })
+        .eq('id', invoiceId)
+
+      console.warn(`Payment failed for invoice ${invoiceId}:`, failReason)
       break
     }
   }

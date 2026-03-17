@@ -1,14 +1,19 @@
 import { WalkerSettingsHome } from '@/components/walker/settings-home'
+import { SubscriptionCard } from '@/components/walker/subscription-card'
 import { demoServices, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { DEFAULT_BOOKING_SETTINGS } from '@/lib/scheduling'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 export default async function WalkerSettingsPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ tenant: string }>
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
 }) {
   const { tenant: tenantSlug } = await params
+  const query = await searchParams
+  const checkoutStatus = typeof query.checkout === 'string' ? query.checkout : undefined
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('walker', tenantSlug)
@@ -68,12 +73,25 @@ export default async function WalkerSettingsPage({
       }
 
   return (
-    <WalkerSettingsHome
-      services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
-      activeWaiverTitle={activeWaiver?.title ?? null}
-      availability={availability ?? []}
-      blockedDates={blockedDates ?? []}
-      bookingSettings={bookingSettings}
-    />
+    <>
+      <div className="max-w-6xl p-6 pb-0">
+        <SubscriptionCard
+          tenantId={tenant.id}
+          planTier={tenant.plan_tier as 'starter' | 'pro' | 'agency'}
+          stripeCustomerId={tenant.stripe_customer_id}
+          stripeSubscriptionId={tenant.stripe_subscription_id}
+          trialEndsAt={tenant.trial_ends_at}
+          isActive={tenant.is_active}
+          checkoutStatus={checkoutStatus}
+        />
+      </div>
+      <WalkerSettingsHome
+        services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
+        activeWaiverTitle={activeWaiver?.title ?? null}
+        availability={availability ?? []}
+        blockedDates={blockedDates ?? []}
+        bookingSettings={bookingSettings}
+      />
+    </>
   )
 }
