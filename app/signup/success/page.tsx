@@ -25,22 +25,21 @@ export default async function SignupSuccessPage({
         </div>
         <h1 className="text-2xl font-bold mb-2">You&apos;re all set!</h1>
         <p className="text-gray-600 mb-6">
-          Your account has been created. Check your email to verify your address,
-          then log in to set up your business.
+          Your account has been created. Use the login link below to set up your business.
         </p>
 
         {slug && (
           <div className="bg-violet-50 border border-violet-200 rounded-lg p-4 mb-6">
-            <p className="text-sm text-gray-600 mb-2">Your portal URL:</p>
+            <p className="text-sm text-gray-600 mb-2">Your login URL:</p>
             <p className="font-mono font-bold text-violet-700 break-all">
-              https://{slug}.{APP_DOMAIN}
+              https://{APP_DOMAIN}/{slug}/login
             </p>
           </div>
         )}
 
         <div className="space-y-3">
           {slug && (
-            <Link href={`https://${slug}.${APP_DOMAIN}/login`}>
+            <Link href={`/${slug}/login`}>
               <Button className="w-full bg-violet-600 hover:bg-violet-700">
                 Go to your dashboard <ExternalLink className="ml-2 h-4 w-4" />
               </Button>
