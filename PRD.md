@@ -155,12 +155,19 @@ The recommended direction is:
 - Use Stripe Connect with each dog walker operating through a connected Stripe account
 - Charge the client directly for completed walks or approved autopay events
 - Avoid using one platform Stripe account to collect all client revenue and then manually paying walkers later
+- Default walker payouts to a linked bank account on Stripe's normal payout schedule, with optional instant payout to an eligible debit card as a premium convenience feature
 
 Why this is the preferred model:
 
 - Clearer ownership of funds, disputes, refunds, and payout timing
 - Lower operational and regulatory burden around holding and disbursing third-party funds
 - Better long-term support for multiple tenants, custom pricing, and independent business ownership
+
+Operational implication:
+
+- Client-facing payment methods can include cards, ACH, and wallet flows such as Apple Pay / Google Pay where supported
+- Walker payout methods should stay inside the processor's payout rails, primarily bank account payouts and optional instant debit-card payouts
+- Zelle, Cash App, PayPal, Venmo, and Apple Cash may still be recorded as manual external payments, but they should not be the primary integrated payout architecture
 
 If PawPath Pro ever acts as merchant of record and pays walkers out from a central Stripe account, the platform will also need:
 
@@ -991,7 +998,11 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 
 -   Conflict Prevention: Pending requests should place a temporary hold or follow a clear first-come rule so two clients cannot book the same slot while approval is still pending.
 
+-   Travel Buffer Rules: Walkers need configurable buffers before and after bookings so the system can account for drive time, parking, lockbox entry, and schedule overruns when presenting available slots.
+
 -   Automatic Card-on-File Charging: Move from "invoice now, maybe pay later" to autopay on walk completion or approval, with optional deposits, saved payment methods, retries, receipts, and failed-payment handling.
+
+-   Walker Payout Setup: The product needs a clear payout setup flow covering bank-account onboarding, payout schedule, instant-payout eligibility, tax identity collection, and visibility into expected payout timing after client charges clear.
 
 -   Cancellation / Reschedule Policy Engine: Tenants need configurable notice windows, cancellation fees, no-show rules, weather exceptions, and client-visible policy text at booking time.
 
