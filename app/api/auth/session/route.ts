@@ -9,6 +9,8 @@ export async function POST(request: Request) {
       role?: string
       accessToken?: string
       refreshToken?: string
+      userId?: string
+      expiresIn?: number
     }
 
     const tenantSlug = body.tenantSlug?.trim()
@@ -18,29 +20,37 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing login data.' }, { status: 400 })
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      { auth: { persistSession: false, autoRefreshToken: false } }
-    )
+    let userId = body.userId?.trim()
+    let expiresIn = typeof body.expiresIn === 'number' ? body.expiresIn : 3600
 
-    const { data, error } = await supabase.auth.setSession({
-      access_token: body.accessToken,
-      refresh_token: body.refreshToken,
-    })
+    if (!userId) {
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        { auth: { persistSession: false, autoRefreshToken: false } }
+      )
 
-    if (error || !data.session || !data.user) {
-      return NextResponse.json({ error: 'Unable to establish session.' }, { status: 401 })
+      const { data, error } = await supabase.auth.setSession({
+        access_token: body.accessToken,
+        refresh_token: body.refreshToken,
+      })
+
+      if (error || !data.session || !data.user) {
+        return NextResponse.json({ error: 'Unable to establish session.' }, { status: 401 })
+      }
+
+      userId = data.user.id
+      expiresIn = data.session.expires_in
     }
 
     const result = await finalizeTenantLogin({
       tenantSlug,
       role,
-      userId: data.user.id,
+      userId,
       session: {
-        access_token: data.session.access_token,
-        refresh_token: data.session.refresh_token,
-        expires_in: data.session.expires_in,
+        access_token: body.accessToken,
+        refresh_token: body.refreshToken,
+        expires_in: expiresIn,
       },
     })
 
