@@ -75,7 +75,7 @@ Each tenant is an independent dog walking business with:
 - Optional custom domain support (e.g., `sarahswalks.com` → CNAME to Vercel)
 - Their own walker accounts, clients, pets, walks, billing, and branding
 - Complete data isolation — tenants cannot see each other's data
-- Their own Stripe Connect account for client payment collection
+- A tenant-specific payment account model for client payment collection, finalized in later billing architecture work
 
 ### Tenant Onboarding Flow
 
@@ -145,6 +145,30 @@ Next.js middleware reads the subdomain from the request host, looks up the tenan
 - Walker subscription fees (Stripe Billing, recurring monthly)
 - Platform takes **0% of client payments** — walkers keep 100% (minus Stripe's 2.9%)
 - This is the core value proposition vs. Rover/Wag
+
+### Payment Account Model (Decision Required Before Scale)
+
+PawPath Pro must make an explicit platform-level decision about how client payments are collected and disbursed.
+
+The recommended direction is:
+
+- Use Stripe Connect with each dog walker operating through a connected Stripe account
+- Charge the client directly for completed walks or approved autopay events
+- Avoid using one platform Stripe account to collect all client revenue and then manually paying walkers later
+
+Why this is the preferred model:
+
+- Clearer ownership of funds, disputes, refunds, and payout timing
+- Lower operational and regulatory burden around holding and disbursing third-party funds
+- Better long-term support for multiple tenants, custom pricing, and independent business ownership
+
+If PawPath Pro ever acts as merchant of record and pays walkers out from a central Stripe account, the platform will also need:
+
+- Internal ledgering and payout reconciliation
+- Refund and chargeback allocation rules
+- 1099 / tax reporting workflows
+- Reserve and payout-hold policies
+- Stronger legal and compliance review
 
 ### Launch Strategy
 
@@ -960,6 +984,40 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 -   Review Collection: Post-walk email asking client to leave a Google review (link to Google Business Profile)
 
 -   QR Code Key Tags: Generate QR code pet tags linking to the pet profile emergency card (great upsell!)
+
+**Operational Decisions & Future Requirements**
+
+-   Availability-Driven Booking: Replace freeform date/time requests with a clickable client calendar that only shows open slots. Walkers need recurring availability, blackout dates, travel buffers, capacity limits, and same-day / advance-booking rules.
+
+-   Conflict Prevention: Pending requests should place a temporary hold or follow a clear first-come rule so two clients cannot book the same slot while approval is still pending.
+
+-   Automatic Card-on-File Charging: Move from "invoice now, maybe pay later" to autopay on walk completion or approval, with optional deposits, saved payment methods, retries, receipts, and failed-payment handling.
+
+-   Cancellation / Reschedule Policy Engine: Tenants need configurable notice windows, cancellation fees, no-show rules, weather exceptions, and client-visible policy text at booking time.
+
+-   Service Area Geofencing: Walkers should define service ZIP codes, neighborhoods, radius rules, or map polygons. Out-of-area inquiries and bookings should be blocked or routed to a waitlist/manual review path.
+
+-   Walker Availability Publishing: The walker should have a real scheduling setup flow that publishes client-bookable inventory instead of relying on manual approval for every date/time forever.
+
+-   Client / Walker Relationship Offboarding: Clients need a way to stop using a walker, and walkers need a way to terminate a client relationship. This must cancel future bookings as needed, preserve records, restrict future booking, and settle outstanding balances cleanly.
+
+-   Meet-and-Greet Workflow: Many walkers will want a required intro visit before the first paid walk. The product should support mandatory meet-and-greet completion before standard services become bookable.
+
+-   Household Access Management: Future versions need secure handling of lockbox codes, key status, alarm notes, gate codes, and lost-key incidents with auditable access instructions.
+
+-   Incident & Emergency Workflow: The platform should support bite incidents, escapes, injuries, emergency vet care, owner unreachable scenarios, and post-incident documentation with timestamps and attachments.
+
+-   Custom Domain Provisioning: If tenants bring their own domain, the product needs clear DNS instructions, automated Vercel domain verification, SSL readiness checks, propagation status, and a stable fallback URL while setup completes.
+
+-   Stripe Architecture Decision: Before broad launch, finalize whether PawPath Pro uses Stripe Connect connected accounts or becomes merchant of record. Recommendation: use connected accounts, not one shared platform account paying walkers manually.
+
+-   Refunds, Disputes, and Taxes: Define who owns refunds, chargebacks, processor fees, tips, sales-tax behavior where applicable, and year-end reporting obligations for multi-tenant payouts.
+
+-   Recurring Schedule Logic: Future scheduling should support weekly recurring walks, pause/resume, holiday overrides, alternate walkers, and client acknowledgements when the standing schedule changes.
+
+-   Staff / Agency Controls: If the product expands beyond solo walkers, assignment rules, permissions, client ownership, payout splitting, and substitute coverage need explicit product and policy decisions.
+
+-   Data Retention & Record Access: Decide how long to keep reports, waivers, invoices, pet records, and terminated-client history, and what each side can still access after a relationship ends.
 
 **Design / UX Reference**
 
