@@ -20,10 +20,10 @@ export async function requireTenantClient(tenantSlug: string) {
     .single()
 
   if (!tenant) {
-    redirect(`/${tenantSlug}/portal/login?error=tenant_not_found`)
+    redirect(`/${tenantSlug}/portal/login?error=${encodeURIComponent('tenant_not_found')}`)
   }
 
-  const { data: clientProfile } = await supabase
+  const { data: clientProfile, error: clientProfileError } = await supabase
     .from('client_profiles')
     .select('id, full_name, phone, address, emergency_contact_name, emergency_contact_phone, photo_url, stripe_customer_id, stripe_payment_method_id, stripe_card_brand, stripe_card_last4, stripe_card_exp_month, stripe_card_exp_year, autopay_enabled')
     .eq('tenant_id', tenant.id)
@@ -31,7 +31,10 @@ export async function requireTenantClient(tenantSlug: string) {
     .single()
 
   if (!clientProfile) {
-    redirect(`/${tenantSlug}/portal/login?error=${encodeURIComponent(`client_membership_not_found:${user.id}`)}`)
+    const reason = clientProfileError?.message
+      ? `client_membership_not_found:${user.id}:${clientProfileError.message}`
+      : `client_membership_not_found:${user.id}`
+    redirect(`/${tenantSlug}/portal/login?error=${encodeURIComponent(reason)}`)
   }
 
   return { tenant, user, clientProfile, supabase }
@@ -48,17 +51,18 @@ export async function requireTenantWalker(tenantSlug: string) {
 
   const supabase = createServiceClient()
 
-  const { data: tenant } = await supabase
+  const { data: tenant, error: tenantError } = await supabase
     .from('tenants')
     .select('id, slug, business_name, branding_primary_color, plan_tier, owner_user_id, stripe_customer_id, stripe_subscription_id, trial_ends_at, is_active')
     .eq('slug', tenantSlug)
     .single()
 
   if (!tenant) {
-    redirect(`/${tenantSlug}/login?error=tenant_not_found`)
+    const reason = tenantError?.message ? `tenant_not_found:${tenantError.message}` : 'tenant_not_found'
+    redirect(`/${tenantSlug}/login?error=${encodeURIComponent(reason)}`)
   }
 
-  const { data: walker } = await supabase
+  const { data: walker, error: walkerError } = await supabase
     .from('tenant_walkers')
     .select('id, role, photo_url')
     .eq('tenant_id', tenant.id)
@@ -66,7 +70,10 @@ export async function requireTenantWalker(tenantSlug: string) {
     .single()
 
   if (!walker) {
-    redirect(`/${tenantSlug}/login?error=${encodeURIComponent(`walker_membership_not_found:${user.id}`)}`)
+    const reason = walkerError?.message
+      ? `walker_membership_not_found:${user.id}:${walkerError.message}`
+      : `walker_membership_not_found:${user.id}`
+    redirect(`/${tenantSlug}/login?error=${encodeURIComponent(reason)}`)
   }
 
   return { tenant, user, walker, supabase }
