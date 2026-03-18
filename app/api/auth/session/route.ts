@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
-import { finalizeTenantLogin, type AuthRole } from '@/lib/actions/auth'
+import { prepareTenantLogin, type AuthRole } from '@/lib/actions/auth'
 
 export async function POST(request: Request) {
   try {
@@ -43,22 +43,33 @@ export async function POST(request: Request) {
       expiresIn = data.session.expires_in
     }
 
-    const result = await finalizeTenantLogin({
+    const result = await prepareTenantLogin({
       tenantSlug,
       role,
       userId,
-      session: {
-        access_token: body.accessToken,
-        refresh_token: body.refreshToken,
-        expires_in: expiresIn,
-      },
     })
 
     if (result.error || !result.destination) {
       return NextResponse.json({ error: result.error || 'Unable to complete login.' }, { status: 403 })
     }
 
-    return NextResponse.json({ destination: result.destination })
+    const response = NextResponse.json({ destination: result.destination })
+    response.cookies.set('sb-access-token', body.accessToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: expiresIn,
+      path: '/',
+    })
+    response.cookies.set('sb-refresh-token', body.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30,
+      path: '/',
+    })
+
+    return response
   } catch {
     return NextResponse.json({ error: 'Unexpected login error.' }, { status: 500 })
   }

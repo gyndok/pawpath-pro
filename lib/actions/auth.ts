@@ -215,6 +215,19 @@ function getDestination(tenantSlug: string, role: AuthRole) {
     : `/${tenantSlug}/portal`
 }
 
+export async function prepareTenantLogin(params: {
+  tenantSlug: string
+  role: AuthRole
+  userId: string
+}): Promise<{ error?: string; destination?: string }> {
+  const membership = await validateTenantMembership(params.tenantSlug, params.role, params.userId)
+  if (membership.error) return membership
+
+  return {
+    destination: getDestination(params.tenantSlug, params.role),
+  }
+}
+
 export async function finalizeTenantLogin(params: {
   tenantSlug: string
   role: AuthRole
@@ -225,14 +238,18 @@ export async function finalizeTenantLogin(params: {
     expires_in: number
   }
 }): Promise<{ error?: string; destination?: string }> {
-  const membership = await validateTenantMembership(params.tenantSlug, params.role, params.userId)
-  if (membership.error) return membership
+  const result = await prepareTenantLogin({
+    tenantSlug: params.tenantSlug,
+    role: params.role,
+    userId: params.userId,
+  })
+
+  if (result.error) {
+    return result
+  }
 
   await setSessionCookies(params.session)
-
-  return {
-    destination: getDestination(params.tenantSlug, params.role),
-  }
+  return result
 }
 
 export async function loginAction(
