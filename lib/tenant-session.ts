@@ -1,7 +1,9 @@
 import { redirect } from 'next/navigation'
+import { unstable_noStore as noStore } from 'next/cache'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function requireTenantClient(tenantSlug: string) {
+  noStore()
   const authClient = await createServerClient()
   const { data: { user } } = await authClient.auth.getUser()
 
@@ -36,6 +38,7 @@ export async function requireTenantClient(tenantSlug: string) {
 }
 
 export async function requireTenantWalker(tenantSlug: string) {
+  noStore()
   const authClient = await createServerClient()
   const { data: { user } } = await authClient.auth.getUser()
 
