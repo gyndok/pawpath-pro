@@ -24,6 +24,7 @@ export default async function PortalHomePage({
       <ClientPortalHome
         tenantSlug={tenantSlug}
         clientName={demoClientProfile.full_name}
+        clientPhotoUrl={demoClientProfile.photo_url}
         pets={demoPets.filter((pet) => pet.client_id === demoClientProfile.id)}
         services={demoServices}
         hasSignedWaiver
@@ -90,8 +91,8 @@ export default async function PortalHomePage({
   }
 
   const { data: clientProfile } = await supabase
-      .from('client_profiles')
-    .select('id, full_name, address')
+    .from('client_profiles')
+    .select('id, full_name, address, photo_url')
     .eq('tenant_id', tenant.id)
     .eq('user_id', user.id)
     .maybeSingle()
@@ -126,7 +127,7 @@ export default async function PortalHomePage({
   const [{ data: pets }, { data: waiverSignature }, { data: bookings }, bookingOptions] = await Promise.all([
     supabase
       .from('pets')
-      .select('id, name, breed, behavior_notes, special_notes, allergies')
+      .select('id, name, photo_url, breed, behavior_notes, special_notes, allergies')
       .eq('tenant_id', tenant.id)
       .eq('client_id', clientProfile.id)
       .order('created_at', { ascending: true }),
@@ -161,6 +162,7 @@ export default async function PortalHomePage({
     <ClientPortalHome
       tenantSlug={tenantSlug}
       clientName={clientProfile.full_name}
+      clientPhotoUrl={clientProfile.photo_url ?? null}
       pets={pets ?? []}
       services={bookingOptions.services}
       hasSignedWaiver={!!waiverSignature}

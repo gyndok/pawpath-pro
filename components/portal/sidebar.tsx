@@ -3,8 +3,9 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ClipboardCheck, CreditCard, Dog, Home, LogOut, CalendarDays, FileText } from 'lucide-react'
+import { ClipboardCheck, CreditCard, Dog, Home, LogOut, CalendarDays, FileText, UserRound } from 'lucide-react'
 import { logoutClientAction } from '@/lib/actions/auth'
+import { ProfilePhoto } from '@/components/shared/profile-photo'
 import { useTenant } from '@/lib/context/tenant-context'
 import { cn } from '@/lib/utils'
 
@@ -19,25 +20,26 @@ const NAV_ITEMS = [
 
 export function PortalSidebar() {
   const pathname = usePathname()
-  const { tenant } = useTenant()
+  const { tenant, clientProfile } = useTenant()
   const isDemo = tenant.slug === 'demo'
 
   return (
     <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col border-r border-stone-200 bg-[#f8f2e9]">
       <div className="border-b border-stone-200 p-5">
         <Link href={`/${tenant.slug}/portal`} className="flex items-center gap-3">
-          <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
-            <Image
-              src="/assets/brand/logo-icon-dark.png"
-              alt="PawPath Pro"
-              width={96}
-              height={96}
-              className="h-10 w-10 object-cover"
+          <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            <ProfilePhoto
+              src={clientProfile?.photo_url || tenant.logo_url}
+              alt={`${clientProfile?.full_name || tenant.business_name} photo`}
+              name={clientProfile?.full_name || tenant.business_name}
+              className="h-14 w-14"
+              fallbackClassName="text-base"
+              fallback={<UserRound className="h-6 w-6 text-[#b45a21]" />}
             />
           </div>
           <div>
-            <div className="text-sm font-bold leading-tight text-stone-900">{tenant.business_name}</div>
-            <div className="text-xs text-stone-500">Client portal</div>
+            <div className="text-sm font-bold leading-tight text-stone-900">{clientProfile?.full_name || tenant.business_name}</div>
+            <div className="text-xs text-stone-500">{clientProfile ? 'Client portal' : tenant.business_name}</div>
           </div>
         </Link>
       </div>

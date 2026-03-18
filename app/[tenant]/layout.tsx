@@ -1,6 +1,7 @@
 import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { WalkerShell } from '@/components/walker/shell'
+import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/tenant'
 import { TenantProvider } from '@/lib/context/tenant-context'
 
@@ -42,8 +43,30 @@ export default async function TenantLayout({
 
   if (!tenant) notFound()
 
+  let walkerProfile: { photo_url: string | null } | null = null
+  const authClient = await createServerClient()
+  const {
+    data: { user },
+  } = await authClient.auth.getUser()
+
+  if (user) {
+    const supabase = createServiceClient()
+    const { data: walker } = await supabase
+      .from('tenant_walkers')
+      .select('photo_url')
+      .eq('tenant_id', tenant.id)
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (walker) {
+      walkerProfile = {
+        photo_url: walker.photo_url ?? null,
+      }
+    }
+  }
+
   return (
-    <TenantProvider tenant={tenant}>
+    <TenantProvider tenant={tenant} walkerProfile={walkerProfile}>
       <WalkerShell>{children}</WalkerShell>
     </TenantProvider>
   )

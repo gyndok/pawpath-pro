@@ -10,8 +10,10 @@ import {
   DollarSign,
   Settings,
   LogOut,
+  Camera,
 } from 'lucide-react'
 import { logoutAction } from '@/lib/actions/auth'
+import { ProfilePhoto } from '@/components/shared/profile-photo'
 import { useTenant } from '@/lib/context/tenant-context'
 import { cn } from '@/lib/utils'
 
@@ -25,7 +27,7 @@ const NAV_ITEMS = [
 
 export function WalkerSidebar() {
   const pathname = usePathname()
-  const { tenant } = useTenant()
+  const { tenant, walkerProfile } = useTenant()
   const isDemo = tenant.slug === 'demo'
 
   return (
@@ -33,13 +35,14 @@ export function WalkerSidebar() {
       {/* Brand */}
       <div className="border-b border-stone-200 p-5">
         <div className="flex items-center gap-3">
-          <div className="overflow-hidden rounded-2xl bg-white p-2 shadow-sm">
-            <Image
-              src="/assets/brand/logo-icon-dark.png"
-              alt="PawPath Pro"
-              width={96}
-              height={96}
-              className="h-10 w-10 object-cover"
+          <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+            <ProfilePhoto
+              src={walkerProfile?.photo_url || tenant.logo_url}
+              alt={`${tenant.business_name} walker photo`}
+              name={tenant.business_name}
+              className="h-14 w-14"
+              fallbackClassName="text-base"
+              fallback={<Camera className="h-6 w-6 text-[#b45a21]" />}
             />
           </div>
           <div>

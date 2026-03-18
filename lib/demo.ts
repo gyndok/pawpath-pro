@@ -29,12 +29,14 @@ export const demoWalker = {
   role: 'owner' as const,
   name: 'Sophie Hart',
   email: 'walker@pawpath.demo',
+  photo_url: '/assets/brand/logo-icon-dark.png',
 }
 
 export const demoClientProfile = {
   id: 'demo-client-profile',
   user_id: 'demo-client-user',
   full_name: 'Jordan Lee',
+  photo_url: null,
   phone: '(713) 555-0131',
   address: '1248 Blossom Street, Houston, TX 77007',
   emergency_contact_name: 'Alex Lee',
@@ -71,6 +73,7 @@ export const demoPets = [
     id: 'demo-pet-1',
     client_id: demoClientProfile.id,
     name: 'Mochi',
+    photo_url: '/assets/brand/mascot-dog.png',
     species: 'dog',
     breed: 'Mini Goldendoodle',
     medications: 'Allergy chew after evening meal.',
@@ -86,6 +89,7 @@ export const demoPets = [
     id: 'demo-pet-2',
     client_id: demoClientProfile.id,
     name: 'Theo',
+    photo_url: '/assets/brand/mascot-dog.png',
     species: 'dog',
     breed: 'Cavalier King Charles Spaniel',
     medications: 'No medications.',
@@ -101,6 +105,7 @@ export const demoPets = [
     id: 'demo-pet-3',
     client_id: 'demo-client-2',
     name: 'Poppy',
+    photo_url: '/assets/brand/mascot-dog.png',
     species: 'dog',
     breed: 'Australian Shepherd',
     medications: null,

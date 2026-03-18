@@ -2,15 +2,17 @@
 
 import Image from 'next/image'
 import Link from 'next/link'
-import { CalendarDays, CheckCircle2, CreditCard, FileText, PawPrint, ShieldAlert } from 'lucide-react'
+import { CalendarDays, CheckCircle2, CreditCard, FileText, PawPrint, ShieldAlert, UserRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { BookingRequestForm } from '@/components/portal/booking-request-form'
+import { ProfilePhoto } from '@/components/shared/profile-photo'
 
 type PetSummary = {
   id: string
   name: string
+  photo_url?: string | null
   breed: string | null
   behavior_notes: string | null
   special_notes: string | null
@@ -34,6 +36,7 @@ type BookingSummary = {
 export function ClientPortalHome({
   tenantSlug,
   clientName,
+  clientPhotoUrl,
   pets,
   services,
   hasSignedWaiver,
@@ -44,6 +47,7 @@ export function ClientPortalHome({
 }: {
   tenantSlug: string
   clientName: string
+  clientPhotoUrl?: string | null
   pets: PetSummary[]
   services: ServiceSummary[]
   hasSignedWaiver: boolean
@@ -61,6 +65,18 @@ export function ClientPortalHome({
       <div className="mb-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
         <div>
           <Badge variant="secondary" className="mb-4">Client dashboard</Badge>
+          <div className="mb-4 flex items-center gap-4">
+            <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+              <ProfilePhoto
+                src={clientPhotoUrl}
+                alt={`${clientName} profile photo`}
+                name={clientName}
+                className="h-[72px] w-[72px]"
+                fallbackClassName="text-lg"
+                fallback={<UserRound className="h-7 w-7 text-[#b45a21]" />}
+              />
+            </div>
+          </div>
           <h1 className="text-3xl font-bold tracking-tight">Welcome back, {clientName}.</h1>
           <p className="mt-3 max-w-2xl text-stone-600">
             Your pet profile, waiver status, and booking requests all live here. This is the first step toward a full client portal workflow.
@@ -136,9 +152,21 @@ export function ClientPortalHome({
               pets.map((pet) => (
                 <div key={pet.id} className="rounded-xl border border-stone-200 p-4">
                   <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <h3 className="font-semibold text-stone-900">{pet.name}</h3>
-                      <p className="text-sm text-stone-500">{pet.breed || 'Breed not provided'}</p>
+                    <div className="flex items-center gap-4">
+                      <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+                        <ProfilePhoto
+                          src={pet.photo_url}
+                          alt={`${pet.name} photo`}
+                          name={pet.name}
+                          className="h-14 w-14"
+                          fallbackClassName="text-base"
+                          fallback={<PawPrint className="h-5 w-5 text-[#b45a21]" />}
+                        />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-stone-900">{pet.name}</h3>
+                        <p className="text-sm text-stone-500">{pet.breed || 'Breed not provided'}</p>
+                      </div>
                     </div>
                     <Badge variant="secondary">On file</Badge>
                   </div>

@@ -33,6 +33,7 @@ CREATE TABLE tenant_walkers (
   tenant_id   UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   user_id     UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   role        TEXT NOT NULL DEFAULT 'owner' CHECK (role IN ('owner', 'staff')),
+  photo_url   TEXT,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   UNIQUE (tenant_id, user_id)
 );
@@ -47,6 +48,7 @@ CREATE TABLE client_profiles (
   tenant_id                UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   user_id                  UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   full_name                TEXT NOT NULL,
+  photo_url                TEXT,
   phone                    TEXT,
   address                  TEXT,
   emergency_contact_name   TEXT,

@@ -42,6 +42,7 @@ export async function updatePetAction(
     .from('pets')
     .update({
       name,
+      photo_url: value(formData, 'photo_url') || null,
       breed: value(formData, 'breed') || null,
       medications: value(formData, 'medications') || null,
       allergies: value(formData, 'allergies') || null,
@@ -86,6 +87,7 @@ export async function addPetAction(
     tenant_id: tenant.id,
     client_id: clientProfile.id,
     name,
+    photo_url: value(formData, 'photo_url') || null,
     breed: value(formData, 'breed') || null,
     medications: value(formData, 'medications') || null,
     allergies: value(formData, 'allergies') || null,

@@ -1,15 +1,17 @@
 'use client'
 
 import { useActionState } from 'react'
-import { Loader2, Plus } from 'lucide-react'
+import { Dog, Loader2, Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { ProfilePhoto } from '@/components/shared/profile-photo'
 import { addPetAction, type ClientPetState, updatePetAction } from '@/lib/actions/client-pets'
 
 type PetRecord = {
   id: string
   name: string
+  photo_url: string | null
   breed: string | null
   species: string
   medications: string | null
@@ -38,9 +40,21 @@ function PetEditor({
     <Card className="border-stone-200">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <div>
-            <CardTitle>{pet.name}</CardTitle>
-            <CardDescription>{pet.breed || 'Breed not provided'} · {pet.species}</CardDescription>
+          <div className="flex items-center gap-4">
+            <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+              <ProfilePhoto
+                src={pet.photo_url}
+                alt={`${pet.name} photo`}
+                name={pet.name}
+                className="h-16 w-16"
+                fallbackClassName="text-lg"
+                fallback={<Dog className="h-7 w-7 text-[#b45a21]" />}
+              />
+            </div>
+            <div>
+              <CardTitle>{pet.name}</CardTitle>
+              <CardDescription>{pet.breed || 'Breed not provided'} · {pet.species}</CardDescription>
+            </div>
           </div>
           <Badge variant="secondary">On file</Badge>
         </div>
@@ -56,6 +70,10 @@ function PetEditor({
             <label className="space-y-1.5 text-sm">
               <span className="font-medium text-stone-800">Breed</span>
               <input name="breed" defaultValue={pet.breed ?? ''} className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" />
+            </label>
+            <label className="space-y-1.5 text-sm md:col-span-2">
+              <span className="font-medium text-stone-800">Photo URL</span>
+              <input name="photo_url" defaultValue={pet.photo_url ?? ''} placeholder="https://example.com/dog-photo.jpg" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" />
             </label>
             <label className="space-y-1.5 text-sm">
               <span className="font-medium text-stone-800">Weight (lbs)</span>
@@ -144,6 +162,10 @@ export function PetManager({
               <label className="space-y-1.5 text-sm">
                 <span className="font-medium text-stone-800">Breed</span>
                 <input name="breed" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" />
+              </label>
+              <label className="space-y-1.5 text-sm">
+                <span className="font-medium text-stone-800">Photo URL</span>
+                <input name="photo_url" placeholder="https://example.com/dog-photo.jpg" className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" />
               </label>
               <label className="space-y-1.5 text-sm">
                 <span className="font-medium text-stone-800">Weight (lbs)</span>

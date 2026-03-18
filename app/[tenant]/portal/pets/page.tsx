@@ -1,6 +1,7 @@
 import Image from 'next/image'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { ClientProfileCard } from '@/components/portal/client-profile-card'
 import { PetManager } from '@/components/portal/pet-manager'
 import { demoClientProfile, demoPets, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
@@ -26,6 +27,14 @@ export default async function PortalPetsPage({
           <Badge variant="secondary">{pets.length} pets</Badge>
         </div>
 
+        <div className="mb-6">
+          <ClientProfileCard
+            tenantSlug={tenantSlug}
+            fullName={demoClientProfile.full_name}
+            photoUrl={demoClientProfile.photo_url}
+          />
+        </div>
+
         <PetManager tenantSlug={tenantSlug} pets={pets} />
       </div>
     )
@@ -35,7 +44,7 @@ export default async function PortalPetsPage({
 
   const { data: pets } = await supabase
     .from('pets')
-    .select('id, name, breed, species, medications, allergies, behavior_notes, special_notes, vet_name, vet_phone, microchip, weight_lbs')
+    .select('id, name, photo_url, breed, species, medications, allergies, behavior_notes, special_notes, vet_name, vet_phone, microchip, weight_lbs')
     .eq('tenant_id', tenant.id)
     .eq('client_id', clientProfile.id)
     .order('created_at', { ascending: true })
@@ -58,6 +67,14 @@ export default async function PortalPetsPage({
           </CardContent>
         </Card>
       )}
+
+      <div className="mb-6">
+        <ClientProfileCard
+          tenantSlug={tenantSlug}
+          fullName={clientProfile.full_name}
+          photoUrl={clientProfile.photo_url ?? null}
+        />
+      </div>
 
       <PetManager
         tenantSlug={tenantSlug}

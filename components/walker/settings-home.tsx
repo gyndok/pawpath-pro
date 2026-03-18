@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { WalkerProfileCard } from '@/components/walker/walker-profile-card'
 import { createServiceAction } from '@/lib/actions/walker-services'
 import { addBlockedDateAction, saveAvailabilityAction, saveBookingSettingsAction } from '@/lib/actions/walker-scheduling'
 import type { BookingSettings } from '@/lib/scheduling'
@@ -46,14 +47,18 @@ const WEEK_DAYS = [
 ]
 
 export function WalkerSettingsHome({
+  businessName,
   services,
   activeWaiverTitle,
+  walkerPhotoUrl,
   availability,
   blockedDates,
   bookingSettings,
 }: {
+  businessName: string
   services: ServiceSummary[]
   activeWaiverTitle: string | null
+  walkerPhotoUrl: string | null
   availability: AvailabilitySummary[]
   blockedDates: BlockedDateSummary[]
   bookingSettings: BookingSettings
@@ -110,6 +115,12 @@ export function WalkerSettingsHome({
         </Card>
 
         <div className="space-y-6">
+          <WalkerProfileCard
+            tenantSlug={params.tenant}
+            businessName={businessName}
+            photoUrl={walkerPhotoUrl}
+          />
+
           <Card className="border-stone-200">
             <CardHeader>
               <CardTitle>Active services</CardTitle>

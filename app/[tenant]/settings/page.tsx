@@ -1,6 +1,6 @@
 import { WalkerSettingsHome } from '@/components/walker/settings-home'
 import { SubscriptionCard } from '@/components/walker/subscription-card'
-import { demoAvailability, demoBlockedDates, demoBookingSettings, demoServices, demoTenant, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { demoAvailability, demoBlockedDates, demoBookingSettings, demoServices, demoTenant, demoWaiver, demoWalker, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { DEFAULT_BOOKING_SETTINGS } from '@/lib/scheduling'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
@@ -31,8 +31,10 @@ export default async function WalkerSettingsPage({
           />
         </div>
         <WalkerSettingsHome
+          businessName={demoTenant.business_name}
           services={demoServices}
           activeWaiverTitle={demoWaiver.title}
+          walkerPhotoUrl={demoWalker.photo_url}
           availability={demoAvailability}
           blockedDates={demoBlockedDates}
           bookingSettings={demoBookingSettings ?? DEFAULT_BOOKING_SETTINGS}
@@ -41,7 +43,7 @@ export default async function WalkerSettingsPage({
     )
   }
 
-  const { tenant, user, supabase } = await requireTenantWalker(tenantSlug)
+  const { tenant, user, walker, supabase } = await requireTenantWalker(tenantSlug)
 
   const [{ data: services }, { data: activeWaiver }, { data: availability }, { data: blockedDates }, bookingSettingsResult] = await Promise.all([
     supabase
@@ -99,8 +101,10 @@ export default async function WalkerSettingsPage({
         />
       </div>
       <WalkerSettingsHome
+        businessName={tenant.business_name}
         services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
         activeWaiverTitle={activeWaiver?.title ?? null}
+        walkerPhotoUrl={walker.photo_url ?? null}
         availability={availability ?? []}
         blockedDates={blockedDates ?? []}
         bookingSettings={bookingSettings}
