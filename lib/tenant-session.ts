@@ -6,7 +6,7 @@ export async function requireTenantClient(tenantSlug: string) {
   const { data: { user } } = await authClient.auth.getUser()
 
   if (!user) {
-    redirect(`/${tenantSlug}/portal/login`)
+    redirect(`/${tenantSlug}/portal/login?error=session_not_found`)
   }
 
   const supabase = createServiceClient()
@@ -18,7 +18,7 @@ export async function requireTenantClient(tenantSlug: string) {
     .single()
 
   if (!tenant) {
-    redirect(`/${tenantSlug}/portal/login`)
+    redirect(`/${tenantSlug}/portal/login?error=tenant_not_found`)
   }
 
   const { data: clientProfile } = await supabase
@@ -29,7 +29,7 @@ export async function requireTenantClient(tenantSlug: string) {
     .single()
 
   if (!clientProfile) {
-    redirect(`/${tenantSlug}/portal/login`)
+    redirect(`/${tenantSlug}/portal/login?error=client_membership_not_found`)
   }
 
   return { tenant, user, clientProfile, supabase }
@@ -40,7 +40,7 @@ export async function requireTenantWalker(tenantSlug: string) {
   const { data: { user } } = await authClient.auth.getUser()
 
   if (!user) {
-    redirect(`/${tenantSlug}/login`)
+    redirect(`/${tenantSlug}/login?error=session_not_found`)
   }
 
   const supabase = createServiceClient()
@@ -52,7 +52,7 @@ export async function requireTenantWalker(tenantSlug: string) {
     .single()
 
   if (!tenant) {
-    redirect(`/${tenantSlug}/login`)
+    redirect(`/${tenantSlug}/login?error=tenant_not_found`)
   }
 
   const { data: walker } = await supabase
@@ -63,7 +63,7 @@ export async function requireTenantWalker(tenantSlug: string) {
     .single()
 
   if (!walker) {
-    redirect(`/${tenantSlug}/login`)
+    redirect(`/${tenantSlug}/login?error=walker_membership_not_found`)
   }
 
   return { tenant, user, walker, supabase }
