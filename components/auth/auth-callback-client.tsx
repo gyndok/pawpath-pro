@@ -74,33 +74,35 @@ export function AuthCallbackClient({
         userId = data.user.id
       }
 
-      const response = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          tenantSlug,
-          role,
-          accessToken,
-          refreshToken,
-          userId,
-          expiresIn,
-        }),
-      })
-
-      const result = (await response.json()) as { error?: string; destination?: string }
-
-      if (!isActive) return
-
-      if (!response.ok || !result.destination) {
-        setError(result.error || 'Unable to complete login for this business.')
-        return
-      }
-
       if (window.location.hash) {
         window.history.replaceState(null, '', window.location.pathname + window.location.search)
       }
 
-      window.location.assign(result.destination)
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = '/api/auth/session'
+      form.style.display = 'none'
+
+      const payload = {
+        tenantSlug,
+        role,
+        accessToken,
+        refreshToken,
+        userId,
+        expiresIn: String(expiresIn ?? 3600),
+      }
+
+      for (const [key, value] of Object.entries(payload)) {
+        if (!value) continue
+        const input = document.createElement('input')
+        input.type = 'hidden'
+        input.name = key
+        input.value = value
+        form.appendChild(input)
+      }
+
+      document.body.appendChild(form)
+      form.submit()
     }
 
     void run()
