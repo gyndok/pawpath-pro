@@ -15,7 +15,6 @@ export function createServiceClient() {
 export async function createServerClient() {
   const cookieStore = await cookies()
   const accessToken = cookieStore.get('sb-access-token')?.value
-  const refreshToken = cookieStore.get('sb-refresh-token')?.value
 
   const client = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -33,11 +32,9 @@ export async function createServerClient() {
     }
   )
 
-  if (accessToken && refreshToken) {
-    await client.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken,
-    })
+  if (accessToken) {
+    const originalGetUser = client.auth.getUser.bind(client.auth)
+    client.auth.getUser = ((jwt?: string) => originalGetUser(jwt ?? accessToken)) as typeof client.auth.getUser
   }
 
   return client
