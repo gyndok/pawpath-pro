@@ -15,7 +15,7 @@ export async function POST(request: Request) {
       let expiresIn = Number(String(formData.get('expiresIn') || '3600'))
 
       if (!tenantSlug || !accessToken || !refreshToken) {
-        return NextResponse.redirect(new URL('/?error=missing_login_data', request.url))
+        return NextResponse.redirect(new URL('/?error=missing_login_data', request.url), { status: 303 })
       }
 
       if (!userId) {
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
         })
 
         if (error || !data.session || !data.user) {
-          return NextResponse.redirect(new URL('/?error=unable_to_establish_session', request.url))
+          return NextResponse.redirect(new URL('/?error=unable_to_establish_session', request.url), { status: 303 })
         }
 
         userId = data.user.id
@@ -51,7 +51,7 @@ export async function POST(request: Request) {
         url.searchParams.set('error', result.error)
       }
 
-      const response = NextResponse.redirect(url)
+      const response = NextResponse.redirect(url, { status: 303 })
       response.cookies.set('sb-access-token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
