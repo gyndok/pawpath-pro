@@ -95,7 +95,7 @@ export function ClientPortalHome({
       </div>
 
       <div className="mb-8 grid gap-4 md:grid-cols-3">
-        <Link href={`/${tenantSlug}/portal/pets`}>
+        <Link href={`/${tenantSlug}/portal/pets`} prefetch={false}>
           <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             <PawPrint className="h-10 w-10 rounded-xl bg-white p-2 text-[#c66a2b]" />
@@ -106,7 +106,7 @@ export function ClientPortalHome({
           </CardContent>
           </Card>
         </Link>
-        <Link href={`/${tenantSlug}/portal/waiver`}>
+        <Link href={`/${tenantSlug}/portal/waiver`} prefetch={false}>
           <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             {hasSignedWaiver ? (
@@ -121,7 +121,7 @@ export function ClientPortalHome({
           </CardContent>
           </Card>
         </Link>
-        <Link href={`/${tenantSlug}/portal/schedule`}>
+        <Link href={`/${tenantSlug}/portal/schedule`} prefetch={false}>
           <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             <CalendarDays className="h-10 w-10 rounded-xl bg-white p-2 text-sky-600" />
@@ -207,7 +207,7 @@ export function ClientPortalHome({
                     : 'Your account exists, but the active waiver is not yet signed. Booking should remain limited until this is completed.'}
                 </p>
                 <div className="mt-4">
-                  <Link href={`/${tenantSlug}/portal/waiver`}>
+                  <Link href={`/${tenantSlug}/portal/waiver`} prefetch={false}>
                     <Button variant="outline" size="sm">{hasSignedWaiver ? 'Review waiver' : 'Review and sign waiver'}</Button>
                   </Link>
                 </div>
@@ -259,10 +259,10 @@ export function ClientPortalHome({
               )}
               <div className="pt-2">
                 <div className="flex flex-wrap gap-2">
-                  <Link href={`/${tenantSlug}/portal/walks`}>
+                  <Link href={`/${tenantSlug}/portal/walks`} prefetch={false}>
                     <Button variant="outline" size="sm">View walk reports</Button>
                   </Link>
-                  <Link href={`/${tenantSlug}/portal/billing`}>
+                  <Link href={`/${tenantSlug}/portal/billing`} prefetch={false}>
                     <Button variant="outline" size="sm">View billing</Button>
                   </Link>
                 </div>

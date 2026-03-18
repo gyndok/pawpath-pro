@@ -53,6 +53,7 @@ export function PortalSidebar() {
             <Link
               key={href}
               href={fullHref}
+              prefetch={false}
               className={cn(
                 'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                 isActive
@@ -87,12 +88,14 @@ export function PortalSidebar() {
             <div className="space-y-2">
               <Link
                 href={`/${tenant.slug}`}
+                prefetch={false}
                 className="block rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
               >
                 Demo Hub
               </Link>
               <Link
                 href={`/${tenant.slug}/dashboard`}
+                prefetch={false}
                 className="block rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
               >
                 Walker Side

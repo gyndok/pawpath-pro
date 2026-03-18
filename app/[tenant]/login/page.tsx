@@ -1,7 +1,7 @@
 'use client'
 
 import { useActionState } from 'react'
-import { useParams } from 'next/navigation'
+import { useParams, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { PawPrint, Loader2 } from 'lucide-react'
 import { DemoBanner } from '@/components/demo/demo-banner'
@@ -15,6 +15,7 @@ import type { AuthState } from '@/lib/actions/auth'
 
 export default function LoginPage() {
   const params = useParams<{ tenant: string }>()
+  const searchParams = useSearchParams()
   const tenantSlug = params.tenant
 
   // Bind tenantSlug as first argument; useActionState supplies (prevState, formData)
@@ -54,6 +55,11 @@ export default function LoginPage() {
             )}
 
             <form action={formAction} className="space-y-4">
+              {searchParams.get('error') && (
+                <div className="rounded-md bg-red-50 border border-red-200 p-3 text-sm text-red-700">
+                  {searchParams.get('error')}
+                </div>
+              )}
               <div className="space-y-1.5">
                 <Label htmlFor="email">Email</Label>
                 <Input id="email" name="email" type="email" placeholder="walker@example.com" required autoComplete="email" />

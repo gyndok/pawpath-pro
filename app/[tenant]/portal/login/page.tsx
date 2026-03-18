@@ -56,6 +56,11 @@ export default function ClientLoginPage() {
                 Your account is ready. Sign in to view your portal.
               </div>
             )}
+            {searchParams.get('error') && (
+              <div className="mb-4 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                {searchParams.get('error')}
+              </div>
+            )}
 
             <form action={formAction} className="space-y-4">
               <div className="space-y-1.5">
