@@ -1006,6 +1006,7 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 -   Zip-Code Walker Discovery: Dog owners can search by ZIP code, browse walker cards, and choose a walker based on profile, photo, short bio, ratings, and service area
 -   Mobile App (React Native): Native iOS/Android app for walkers — better GPS tracking, push notifications
 -   Usage-Based Billing: Charge per completed walk above a threshold instead of flat monthly
+-   Machine Payments Protocol (MPP): Potential future fit only if PawPath Pro exposes paid APIs, MCP tools, or other machine-consumable services; explicitly not part of the current Stripe Billing, Payments, or Connect roadmap
 
 **Per-Tenant Features**
 
