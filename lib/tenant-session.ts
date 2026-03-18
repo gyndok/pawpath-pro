@@ -29,7 +29,7 @@ export async function requireTenantClient(tenantSlug: string) {
     .single()
 
   if (!clientProfile) {
-    redirect(`/${tenantSlug}/portal/login?error=client_membership_not_found`)
+    redirect(`/${tenantSlug}/portal/login?error=${encodeURIComponent(`client_membership_not_found:${user.id}`)}`)
   }
 
   return { tenant, user, clientProfile, supabase }
@@ -63,7 +63,7 @@ export async function requireTenantWalker(tenantSlug: string) {
     .single()
 
   if (!walker) {
-    redirect(`/${tenantSlug}/login?error=walker_membership_not_found`)
+    redirect(`/${tenantSlug}/login?error=${encodeURIComponent(`walker_membership_not_found:${user.id}`)}`)
   }
 
   return { tenant, user, walker, supabase }
