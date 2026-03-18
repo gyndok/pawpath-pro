@@ -25,7 +25,7 @@ export async function requireTenantClient(tenantSlug: string) {
 
   const { data: clientProfile, error: clientProfileError } = await supabase
     .from('client_profiles')
-    .select('id, full_name, phone, address, emergency_contact_name, emergency_contact_phone, photo_url, stripe_customer_id, stripe_payment_method_id, stripe_card_brand, stripe_card_last4, stripe_card_exp_month, stripe_card_exp_year, autopay_enabled')
+    .select('id, full_name, phone, address, emergency_contact_name, emergency_contact_phone')
     .eq('tenant_id', tenant.id)
     .eq('user_id', user.id)
     .single()
@@ -37,7 +37,22 @@ export async function requireTenantClient(tenantSlug: string) {
     redirect(`/${tenantSlug}/portal/login?error=${encodeURIComponent(reason)}`)
   }
 
-  return { tenant, user, clientProfile, supabase }
+  return {
+    tenant,
+    user,
+    clientProfile: {
+      ...clientProfile,
+      photo_url: null,
+      stripe_customer_id: null,
+      stripe_payment_method_id: null,
+      stripe_card_brand: null,
+      stripe_card_last4: null,
+      stripe_card_exp_month: null,
+      stripe_card_exp_year: null,
+      autopay_enabled: false,
+    },
+    supabase,
+  }
 }
 
 export async function requireTenantWalker(tenantSlug: string) {
@@ -64,7 +79,7 @@ export async function requireTenantWalker(tenantSlug: string) {
 
   const { data: walker, error: walkerError } = await supabase
     .from('tenant_walkers')
-    .select('id, role, photo_url')
+    .select('id, role')
     .eq('tenant_id', tenant.id)
     .eq('user_id', user.id)
     .single()
@@ -76,5 +91,13 @@ export async function requireTenantWalker(tenantSlug: string) {
     redirect(`/${tenantSlug}/login?error=${encodeURIComponent(reason)}`)
   }
 
-  return { tenant, user, walker, supabase }
+  return {
+    tenant,
+    user,
+    walker: {
+      ...walker,
+      photo_url: null,
+    },
+    supabase,
+  }
 }
