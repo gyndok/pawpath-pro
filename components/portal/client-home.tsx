@@ -60,6 +60,8 @@ export function ClientPortalHome({
   }>>
   geofenceMessage?: string | null
 }) {
+  const completedBookings = bookings.filter((booking) => booking.status === 'completed')
+
   return (
     <div className="kinetic-shell mx-auto max-w-7xl px-4 py-10">
       <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr] xl:items-center">
@@ -99,7 +101,7 @@ export function ClientPortalHome({
         </Card>
       </div>
 
-      <div className="mb-8 mt-6 grid gap-4 md:grid-cols-3">
+      <div className="mb-8 mt-6 grid gap-4 md:grid-cols-4">
         <Link href={`/${tenantSlug}/portal/pets`} prefetch={false}>
           <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
@@ -133,6 +135,17 @@ export function ClientPortalHome({
             <div>
               <p className="text-sm font-medium text-stone-900">Upcoming requests</p>
               <p className="text-xs text-stone-500">{bookings.length} pending or scheduled</p>
+            </div>
+          </CardContent>
+          </Card>
+        </Link>
+        <Link href={`/${tenantSlug}/portal/walks`} prefetch={false}>
+          <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] transition-shadow hover:shadow-md">
+          <CardContent className="flex items-center gap-3 p-4">
+            <FileText className="h-10 w-10 rounded-xl bg-white p-2 text-[#2f6f8f]" />
+            <div>
+              <p className="text-sm font-medium text-stone-900">Completed walk details</p>
+              <p className="text-xs text-stone-500">{completedBookings.length} report{completedBookings.length === 1 ? '' : 's'} ready to review</p>
             </div>
           </CardContent>
           </Card>
@@ -245,6 +258,9 @@ export function ClientPortalHome({
                 <CreditCard className="h-5 w-5 text-[#2f6f8f]" />
                 Booking activity
               </CardTitle>
+              <CardDescription className="mt-2 text-sm leading-6 text-stone-600">
+                Upcoming requests appear here. Completed visit details live in the dedicated Walk Reports view.
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
             {bookings.length === 0 ? (
@@ -265,7 +281,9 @@ export function ClientPortalHome({
               <div className="pt-2">
                 <div className="flex flex-wrap gap-2">
                   <Link href={`/${tenantSlug}/portal/walks`} prefetch={false}>
-                    <Button variant="outline" size="sm" className="rounded-full border-[#c9dde8] text-[#143042] hover:bg-[#f5fbfe]">View walk reports</Button>
+                    <Button variant="outline" size="sm" className="rounded-full border-[#c9dde8] text-[#143042] hover:bg-[#f5fbfe]">
+                      View completed walk details
+                    </Button>
                   </Link>
                   <Link href={`/${tenantSlug}/portal/billing`} prefetch={false}>
                     <Button variant="outline" size="sm" className="rounded-full border-[#c9dde8] text-[#143042] hover:bg-[#f5fbfe]">View billing</Button>
