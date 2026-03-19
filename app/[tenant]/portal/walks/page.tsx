@@ -12,6 +12,10 @@ type DeliveredWalk = {
   startedAt: string | null
   endedAt: string | null
   report: {
+    potty_pee?: boolean | null
+    potty_pee_count?: number | null
+    potty_poo?: boolean | null
+    potty_poo_count?: number | null
     walker_message?: string | null
     behavior_notes?: string | null
     health_notes?: string | null
@@ -143,7 +147,19 @@ function WalkDetailList({ deliveredWalks }: { deliveredWalks: DeliveredWalk[] })
               </div>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-3">
+            <div className="grid gap-4 lg:grid-cols-5">
+              <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Pee count</p>
+                <p className="mt-2 font-medium text-stone-900">
+                  {walk.report?.potty_pee ? (walk.report.potty_pee_count ?? 'Recorded') : 'No'}
+                </p>
+              </div>
+              <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Poo count</p>
+                <p className="mt-2 font-medium text-stone-900">
+                  {walk.report?.potty_poo ? (walk.report.potty_poo_count ?? 'Recorded') : 'No'}
+                </p>
+              </div>
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
                 <p className="flex items-center gap-2 font-medium text-stone-900">
                   <MessageSquareQuote className="h-4 w-4 text-blue-700" />
@@ -213,7 +229,7 @@ export default async function PortalWalksPage({
 
   const { data: bookings } = await supabase
     .from('bookings')
-    .select('id, scheduled_at, status, walks(id, started_at, ended_at, walk_reports(id, walker_message, behavior_notes, health_notes, delivered_at))')
+    .select('id, scheduled_at, status, walks(id, started_at, ended_at, walk_reports(id, potty_pee, potty_pee_count, potty_poo, potty_poo_count, walker_message, behavior_notes, health_notes, delivered_at))')
     .eq('tenant_id', tenant.id)
     .eq('client_id', clientProfile.id)
     .order('scheduled_at', { ascending: false })

@@ -265,6 +265,10 @@ export const demoWalks = [
 export const demoWalkReports = [
   {
     walk_id: 'demo-walk-1',
+    potty_pee: true,
+    potty_pee_count: 2,
+    potty_poo: true,
+    potty_poo_count: 1,
     walker_message: 'Mochi and Theo had a great walk together. Mochi was energetic early, and Theo settled into a calm pace after the first block.',
     behavior_notes: 'Mochi watched scooters closely but redirected well. Theo stayed loose-leash throughout.',
     health_notes: 'Both drank water right away. No limping, coughing, or heat concerns observed.',
@@ -273,6 +277,10 @@ export const demoWalkReports = [
   },
   {
     walk_id: 'demo-walk-2',
+    potty_pee: true,
+    potty_pee_count: 1,
+    potty_poo: false,
+    potty_poo_count: 0,
     walker_message: 'Smooth evening walk with a relaxed pace and a full potty break.',
     behavior_notes: 'Stayed focused even with neighborhood foot traffic.',
     health_notes: 'No concerns noted.',
