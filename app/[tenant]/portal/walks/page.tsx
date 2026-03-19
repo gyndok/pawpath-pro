@@ -151,13 +151,21 @@ function WalkDetailList({ deliveredWalks }: { deliveredWalks: DeliveredWalk[] })
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Pee count</p>
                 <p className="mt-2 font-medium text-stone-900">
-                  {walk.report?.potty_pee ? (walk.report.potty_pee_count ?? 'Recorded') : 'No'}
+                  {walk.report?.potty_pee_count !== null && walk.report?.potty_pee_count !== undefined
+                    ? walk.report.potty_pee_count
+                    : walk.report?.potty_pee
+                      ? 'Recorded'
+                      : 'No'}
                 </p>
               </div>
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Poo count</p>
                 <p className="mt-2 font-medium text-stone-900">
-                  {walk.report?.potty_poo ? (walk.report.potty_poo_count ?? 'Recorded') : 'No'}
+                  {walk.report?.potty_poo_count !== null && walk.report?.potty_poo_count !== undefined
+                    ? walk.report.potty_poo_count
+                    : walk.report?.potty_poo
+                      ? 'Recorded'
+                      : 'No'}
                 </p>
               </div>
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">

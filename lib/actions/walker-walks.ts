@@ -93,10 +93,10 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
   const behaviorNotes = value(formData, 'behavior_notes') || null
   const healthNotes = value(formData, 'health_notes') || null
   const walkerMessage = value(formData, 'walker_message') || null
-  const pottyPee = checkbox(formData, 'potty_pee')
-  const pottyPoo = checkbox(formData, 'potty_poo')
   const pottyPeeCount = parseOptionalCount(value(formData, 'potty_pee_count'))
   const pottyPooCount = parseOptionalCount(value(formData, 'potty_poo_count'))
+  const pottyPee = checkbox(formData, 'potty_pee') || pottyPeeCount !== null
+  const pottyPoo = checkbox(formData, 'potty_poo') || pottyPooCount !== null
   const waterProvided = checkbox(formData, 'water_provided')
 
   if (!bookingId) return
