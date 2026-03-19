@@ -44,17 +44,20 @@ export function PortalScheduleHome({
   const params = useParams<{ tenant: string }>()
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Schedule a Walk</h1>
-        <p className="text-sm text-stone-500">Send a booking request for approval.</p>
+    <div className="kinetic-shell mx-auto max-w-7xl px-4 py-10">
+      <div className="kinetic-card mb-6 rounded-[2rem] p-8">
+        <Badge className="kinetic-pill mb-4 px-4 py-2 shadow-none">Scheduling</Badge>
+        <h1 className="section-title text-4xl">Schedule a walk.</h1>
+        <p className="editorial-subtitle mt-5 max-w-2xl">
+          Choose from open times only. The walker&apos;s availability, travel buffers, and service area rules are already reflected here.
+        </p>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_0.9fr]">
-        <Card className="border-stone-200">
-          <CardHeader>
-            <CardTitle>New booking request</CardTitle>
-            <CardDescription>Only currently open slots are shown. The walker will approve or decline this request.</CardDescription>
+      <div className="grid gap-6 xl:grid-cols-[1fr_0.92fr]">
+        <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">New booking request</CardTitle>
+            <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Only currently open slots are shown. The walker will approve or decline this request.</CardDescription>
           </CardHeader>
           <CardContent>
             <BookingRequestForm
@@ -67,20 +70,23 @@ export function PortalScheduleHome({
           </CardContent>
         </Card>
 
-        <Card className="border-stone-200">
-          <CardHeader>
-            <CardTitle>Recent requests</CardTitle>
+        <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Recent requests</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             {!bookings.length ? (
-              <p className="text-sm text-stone-500">No requests submitted yet.</p>
+              <div className="kinetic-card-soft rounded-[1.35rem] border border-dashed border-[rgba(115,118,134,0.22)] p-5">
+                <p className="text-sm font-semibold text-stone-900">No requests submitted yet.</p>
+                <p className="mt-2 text-sm leading-6 text-stone-500">Once you request a walk, status updates will appear here.</p>
+              </div>
             ) : (
               bookings.map((booking) => (
-                <div key={booking.id} className="rounded-xl border border-stone-200 p-4 text-sm text-stone-600">
+                <div key={booking.id} className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5 text-sm text-stone-600">
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-medium text-stone-900">{booking.service_name}</p>
-                      <p>{new Date(booking.scheduled_at).toLocaleString()}</p>
+                      <p className="mt-1">{new Date(booking.scheduled_at).toLocaleString()}</p>
                     </div>
                     <Badge variant="secondary" className="capitalize">{booking.status}</Badge>
                   </div>

@@ -61,28 +61,33 @@ export function ClientPortalHome({
   geofenceMessage?: string | null
 }) {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-12">
-      <div className="mb-8 grid gap-6 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-        <div>
-          <Badge variant="secondary" className="mb-4">Client dashboard</Badge>
-          <div className="mb-4 flex items-center gap-4">
-            <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+    <div className="kinetic-shell mx-auto max-w-7xl px-4 py-10">
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr] xl:items-center">
+        <section className="kinetic-card rounded-[2rem] p-8">
+          <Badge className="kinetic-pill mb-4 px-4 py-2 shadow-none">Client dashboard</Badge>
+          <div className="flex items-center gap-4">
+            <div className="overflow-hidden rounded-[1.6rem] border border-[rgba(115,118,134,0.15)] bg-white shadow-sm">
               <ProfilePhoto
                 src={clientPhotoUrl}
                 alt={`${clientName} profile photo`}
                 name={clientName}
                 className="h-[72px] w-[72px]"
                 fallbackClassName="text-lg"
-                fallback={<UserRound className="h-7 w-7 text-[#b45a21]" />}
+                fallback={<UserRound className="h-7 w-7 text-[#003fb1]" />}
               />
             </div>
+            <div>
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#9d4300]">Owner account</p>
+              <p className="mt-1 text-sm text-stone-500">Bookings, waivers, pet notes, and payments all in one place.</p>
+            </div>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight">Welcome back, {clientName}.</h1>
-          <p className="mt-3 max-w-2xl text-stone-600">
-            Your pet profile, waiver status, and booking requests all live here. This is the first step toward a full client portal workflow.
+          <h1 className="section-title mt-6 text-4xl">Welcome back, {clientName}.</h1>
+          <p className="editorial-subtitle mt-5 max-w-2xl">
+            Your pack, your paperwork, and your upcoming walks live here. This portal keeps the owner side clear, polished, and easy to trust.
           </p>
-        </div>
-        <Card className="overflow-hidden border-stone-200">
+        </section>
+
+        <Card className="kinetic-card overflow-hidden rounded-[2rem] border-stone-200 shadow-none">
           <Image
             src={pets.length === 0 ? '/assets/portal/empty-state-no-pets.png' : '/assets/brand/mascot-dog.png'}
             alt="Portal overview illustration"
@@ -94,11 +99,11 @@ export function ClientPortalHome({
         </Card>
       </div>
 
-      <div className="mb-8 grid gap-4 md:grid-cols-3">
+      <div className="mb-8 mt-6 grid gap-4 md:grid-cols-3">
         <Link href={`/${tenantSlug}/portal/pets`} prefetch={false}>
-          <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
+          <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
-            <PawPrint className="h-10 w-10 rounded-xl bg-white p-2 text-[#c66a2b]" />
+            <PawPrint className="h-10 w-10 rounded-xl bg-white p-2 text-[#9d4300]" />
             <div>
               <p className="text-sm font-medium text-stone-900">Pets on file</p>
               <p className="text-xs text-stone-500">{pets.length} profile{pets.length === 1 ? '' : 's'} saved</p>
@@ -107,7 +112,7 @@ export function ClientPortalHome({
           </Card>
         </Link>
         <Link href={`/${tenantSlug}/portal/waiver`} prefetch={false}>
-          <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
+          <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             {hasSignedWaiver ? (
               <CheckCircle2 className="h-10 w-10 rounded-xl bg-white p-2 text-green-600" />
@@ -122,7 +127,7 @@ export function ClientPortalHome({
           </Card>
         </Link>
         <Link href={`/${tenantSlug}/portal/schedule`} prefetch={false}>
-          <Card className="border-stone-200 bg-[#fcfaf7] transition-shadow hover:shadow-md">
+          <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
             <CalendarDays className="h-10 w-10 rounded-xl bg-white p-2 text-sky-600" />
             <div>
@@ -134,26 +139,26 @@ export function ClientPortalHome({
         </Link>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card className="border-stone-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
               <PawPrint className="h-5 w-5 text-[#c66a2b]" />
               Pet profile
             </CardTitle>
-            <CardDescription>Your pet information sheet is stored here for the walker.</CardDescription>
+            <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Your pet information sheet is stored here for the walker.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {pets.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-stone-200 p-4 text-sm text-stone-500">
+              <div className="kinetic-card-soft rounded-[1.35rem] border border-dashed border-[rgba(115,118,134,0.22)] p-5 text-sm text-stone-500">
                 No pet profile found yet.
               </div>
             ) : (
               pets.map((pet) => (
-                <div key={pet.id} className="rounded-xl border border-stone-200 p-4">
+                <div key={pet.id} className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
                   <div className="flex items-center justify-between gap-3">
                     <div className="flex items-center gap-4">
-                      <div className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm">
+                      <div className="overflow-hidden rounded-2xl border border-[rgba(115,118,134,0.15)] bg-white shadow-sm">
                         <ProfilePhoto
                           src={pet.photo_url}
                           alt={`${pet.name} photo`}
@@ -173,15 +178,15 @@ export function ClientPortalHome({
                   <div className="mt-4 grid gap-3 text-sm text-stone-600">
                     <div>
                       <p className="font-medium text-stone-800">Behavior notes</p>
-                      <p>{pet.behavior_notes || 'No behavior notes provided yet.'}</p>
+                      <p className="mt-1 leading-6">{pet.behavior_notes || 'No behavior notes provided yet.'}</p>
                     </div>
                     <div>
                       <p className="font-medium text-stone-800">Allergies / health</p>
-                      <p>{pet.allergies || 'No allergies listed.'}</p>
+                      <p className="mt-1 leading-6">{pet.allergies || 'No allergies listed.'}</p>
                     </div>
                     <div>
                       <p className="font-medium text-stone-800">Handling notes</p>
-                      <p>{pet.special_notes || 'No additional handling notes yet.'}</p>
+                      <p className="mt-1 leading-6">{pet.special_notes || 'No additional handling notes yet.'}</p>
                     </div>
                   </div>
                 </div>
@@ -191,17 +196,17 @@ export function ClientPortalHome({
         </Card>
 
         <div className="space-y-6">
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
                 <FileText className="h-5 w-5 text-[#c66a2b]" />
                 Waiver and service agreement
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-600">
+              <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5 text-sm text-stone-600">
                 <p className="font-medium text-stone-900">{activeWaiverTitle || 'Service agreement and liability waiver'}</p>
-                <p className="mt-2">
+                <p className="mt-3 leading-6">
                   {hasSignedWaiver
                     ? 'Your signed acknowledgment is on file.'
                     : 'Your account exists, but the active waiver is not yet signed. Booking should remain limited until this is completed.'}
@@ -215,13 +220,13 @@ export function ClientPortalHome({
             </CardContent>
           </Card>
 
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
                 <CalendarDays className="h-5 w-5 text-[#c66a2b]" />
                 Request a walk
               </CardTitle>
-              <CardDescription>Select from currently open dates and times based on the walker&apos;s published schedule.</CardDescription>
+              <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Select from currently open dates and times based on the walker&apos;s published schedule.</CardDescription>
             </CardHeader>
             <CardContent>
               <BookingRequestForm
@@ -234,26 +239,26 @@ export function ClientPortalHome({
             </CardContent>
           </Card>
 
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
                 <CreditCard className="h-5 w-5 text-[#c66a2b]" />
                 Booking activity
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {bookings.length === 0 ? (
-                <p className="text-sm text-stone-500">No requests submitted yet.</p>
-              ) : (
-                bookings.map((booking) => (
-                  <div key={booking.id} className="rounded-xl border border-stone-200 p-4 text-sm text-stone-600">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-stone-900">{booking.service_name}</p>
-                        <p>{new Date(booking.scheduled_at).toLocaleString()}</p>
-                      </div>
-                      <Badge variant="secondary" className="capitalize">{booking.status}</Badge>
+            {bookings.length === 0 ? (
+              <p className="text-sm text-stone-500">No requests submitted yet.</p>
+            ) : (
+              bookings.map((booking) => (
+                <div key={booking.id} className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5 text-sm text-stone-600">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-medium text-stone-900">{booking.service_name}</p>
+                      <p className="mt-1">{new Date(booking.scheduled_at).toLocaleString()}</p>
                     </div>
+                    <Badge variant="secondary" className="capitalize">{booking.status}</Badge>
+                  </div>
                   </div>
                 ))
               )}

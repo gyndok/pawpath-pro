@@ -28,10 +28,11 @@ export default async function PortalBillingPage({
         : null
 
     return (
-      <div className="mx-auto max-w-5xl px-4 py-10">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold">Billing</h1>
-          <p className="text-sm text-stone-500">Invoices, payment status, and your saved payment method.</p>
+      <div className="kinetic-shell mx-auto max-w-7xl px-4 py-10">
+        <div className="kinetic-card mb-6 rounded-[2rem] bg-[#003fb1] p-8 text-white">
+          <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#dbe1ff]">Billing and payments</p>
+          <h1 className="mt-3 font-[var(--font-display)] text-4xl font-extrabold tracking-tight">Keep billing clear and easy to trust.</h1>
+          <p className="mt-4 max-w-2xl text-sm leading-7 text-[#d4dcff]">Saved cards, autopay, and invoice history all live here so owners always know what is due and what has already been handled.</p>
         </div>
 
         {paymentMessage && (
@@ -45,7 +46,7 @@ export default async function PortalBillingPage({
         )}
 
         <div className="mb-6 grid gap-4 md:grid-cols-3">
-          <Card className="border-stone-200">
+          <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] shadow-none">
             <CardHeader className="pb-2">
               <CardDescription>Payment method</CardDescription>
               <CardTitle>{demoPaymentMethod.brand} ending in {demoPaymentMethod.last4}</CardTitle>
@@ -57,7 +58,7 @@ export default async function PortalBillingPage({
               </Button>
             </CardContent>
           </Card>
-          <Card className="border-stone-200">
+          <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] shadow-none">
             <CardHeader className="pb-2">
               <CardDescription>Autopay</CardDescription>
               <CardTitle>{demoPaymentMethod.autopay ? 'Enabled' : 'Off'}</CardTitle>
@@ -73,7 +74,7 @@ export default async function PortalBillingPage({
               </Button>
             </CardContent>
           </Card>
-          <Card className="border-stone-200">
+          <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] shadow-none">
             <CardHeader className="pb-2">
               <CardDescription>Open balance</CardDescription>
               <CardTitle>${invoices.filter((invoice) => invoice.status !== 'paid').reduce((sum, invoice) => sum + invoice.amount, 0).toFixed(2)}</CardTitle>
@@ -86,7 +87,7 @@ export default async function PortalBillingPage({
 
         <div className="space-y-4">
           {invoices.map((invoice) => (
-            <Card key={invoice.id} className="border-stone-200">
+            <Card key={invoice.id} className="kinetic-card rounded-[1.6rem] border-stone-200 shadow-none">
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -169,10 +170,11 @@ export default async function PortalBillingPage({
     .order('created_at', { ascending: false })
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-10">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Billing</h1>
-        <p className="text-sm text-stone-500">Invoices, payment status, and your saved payment method.</p>
+    <div className="kinetic-shell mx-auto max-w-7xl px-4 py-10">
+      <div className="kinetic-card mb-6 rounded-[2rem] bg-[#003fb1] p-8 text-white">
+        <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#dbe1ff]">Billing and payments</p>
+        <h1 className="mt-3 font-[var(--font-display)] text-4xl font-extrabold tracking-tight">A billing view that feels as polished as the service.</h1>
+        <p className="mt-4 max-w-2xl text-sm leading-7 text-[#d4dcff]">Store a card, enable autopay, and review invoices without digging through messages or attachments.</p>
       </div>
 
       {(setupMessage || autopayMessage || paymentMessage) && (
@@ -186,7 +188,7 @@ export default async function PortalBillingPage({
       )}
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
-        <Card className="border-stone-200">
+        <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] shadow-none">
           <CardHeader className="pb-2">
             <CardDescription>Payment method</CardDescription>
             <CardTitle>
@@ -208,7 +210,7 @@ export default async function PortalBillingPage({
             </form>
           </CardContent>
         </Card>
-        <Card className="border-stone-200">
+        <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] shadow-none">
           <CardHeader className="pb-2">
             <CardDescription>Autopay</CardDescription>
             <CardTitle>{refreshedClientProfile?.autopay_enabled ? 'Enabled' : 'Off'}</CardTitle>
@@ -228,7 +230,7 @@ export default async function PortalBillingPage({
             </form>
           </CardContent>
         </Card>
-        <Card className="border-stone-200">
+        <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] shadow-none">
           <CardHeader className="pb-2">
             <CardDescription>Open balance</CardDescription>
             <CardTitle>${(invoices ?? []).filter((invoice) => invoice.status !== 'paid').reduce((sum, invoice) => sum + Number(invoice.amount), 0).toFixed(2)}</CardTitle>
@@ -240,7 +242,7 @@ export default async function PortalBillingPage({
       </div>
 
       {!invoices?.length ? (
-        <Card className="border-stone-200">
+        <Card className="kinetic-card rounded-[1.6rem] border-stone-200 shadow-none">
           <CardContent className="p-6 text-sm text-stone-500">
             No invoices yet. Charges will appear here once walks are completed and billed.
           </CardContent>
@@ -248,7 +250,7 @@ export default async function PortalBillingPage({
       ) : (
         <div className="space-y-4">
           {invoices.map((invoice) => (
-            <Card key={invoice.id} className="border-stone-200">
+            <Card key={invoice.id} className="kinetic-card rounded-[1.6rem] border-stone-200 shadow-none">
               <CardHeader>
                 <div className="flex items-center justify-between gap-3">
                   <div>
