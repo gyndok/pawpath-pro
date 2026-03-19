@@ -24,14 +24,14 @@ export function WalkerProfileCard({
   )
 
   return (
-    <Card className="border-stone-200">
-      <CardHeader>
-        <CardTitle>Walker profile photo</CardTitle>
-        <CardDescription>Set the photo that appears in the dashboard and owner-facing portal.</CardDescription>
+    <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+      <CardHeader className="pb-4">
+        <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Walker profile photo</CardTitle>
+        <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Set the photo that appears in the dashboard and owner-facing portal.</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={formAction} className="grid gap-5 md:grid-cols-[120px_1fr]">
-          <div className="overflow-hidden rounded-3xl border border-stone-200 bg-white shadow-sm">
+          <div className="overflow-hidden rounded-[1.6rem] border border-[rgba(115,118,134,0.15)] bg-white shadow-sm">
             <ProfilePhoto
               src={photoUrl}
               alt={`${businessName} walker photo`}

@@ -84,23 +84,23 @@ export function SubscriptionCard({
   }
 
   return (
-    <Card className="border-stone-200">
-      <CardHeader>
+    <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+      <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="flex items-center gap-3">
-              <CreditCard className="h-5 w-5 text-stone-400" />
+            <CardTitle className="flex items-center gap-3 font-[var(--font-display)] text-2xl tracking-tight">
+              <CreditCard className="h-5 w-5 text-[#003fb1]" />
               Subscription & Billing
             </CardTitle>
-            <CardDescription>Manage your PawPath Pro plan and payment method.</CardDescription>
+            <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Manage your PawPath Pro plan and payment method.</CardDescription>
           </div>
           <Badge
             className={
               !isActive
                 ? 'bg-red-100 text-red-700'
                 : trialActive
-                  ? 'bg-blue-100 text-blue-700'
-                  : 'bg-green-100 text-green-700'
+                  ? 'bg-[#dbe1ff] text-[#003fb1]'
+                  : 'bg-[#d7f6f1] text-[#00544c]'
             }
           >
             {!isActive ? 'Inactive' : trialActive ? `Trial (${daysLeft}d left)` : 'Active'}
@@ -121,13 +121,13 @@ export function SubscriptionCard({
         )}
 
         {/* Current plan summary */}
-        <div className="rounded-xl border border-stone-200 p-4">
+        <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
           <div className="flex items-center justify-between">
             <div>
               <p className="font-semibold text-stone-900">{plan.name} Plan</p>
-              <p className="text-sm text-stone-500">{plan.desc}</p>
+              <p className="mt-1 text-sm text-stone-500">{plan.desc}</p>
             </div>
-            <p className="text-lg font-bold text-violet-600">{plan.price}</p>
+            <p className="font-[var(--font-display)] text-2xl font-bold tracking-tight text-[#003fb1]">{plan.price}</p>
           </div>
         </div>
 
@@ -156,7 +156,7 @@ export function SubscriptionCard({
                   onClick={() => handleCheckout(tier)}
                   disabled={loading !== null}
                   variant={tier === planTier ? 'default' : 'outline'}
-                  className={tier === planTier ? 'bg-violet-600 hover:bg-violet-700' : ''}
+                  className={tier === planTier ? 'bg-[#003fb1] text-white hover:bg-[#1a56db]' : 'border-stone-300 bg-white'}
                 >
                   {loading === tier ? (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />

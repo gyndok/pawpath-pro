@@ -37,13 +37,13 @@ type BlockedDateSummary = {
 }
 
 const WEEK_DAYS = [
-  { day: 0, label: 'Sunday' },
-  { day: 1, label: 'Monday' },
-  { day: 2, label: 'Tuesday' },
-  { day: 3, label: 'Wednesday' },
-  { day: 4, label: 'Thursday' },
-  { day: 5, label: 'Friday' },
-  { day: 6, label: 'Saturday' },
+  { day: 0, label: 'Sunday', short: 'S' },
+  { day: 1, label: 'Monday', short: 'M' },
+  { day: 2, label: 'Tuesday', short: 'T' },
+  { day: 3, label: 'Wednesday', short: 'W' },
+  { day: 4, label: 'Thursday', short: 'T' },
+  { day: 5, label: 'Friday', short: 'F' },
+  { day: 6, label: 'Saturday', short: 'S' },
 ]
 
 export function WalkerSettingsHome({
@@ -69,19 +69,70 @@ export function WalkerSettingsHome({
   const [bookingState, bookingAction, bookingPending] = useActionState(saveBookingSettingsAction.bind(null, params.tenant), {})
   const [blockedDateState, blockedDateAction, blockedDatePending] = useActionState(addBlockedDateAction.bind(null, params.tenant), {})
   const availabilityByDay = new Map(availability.map((row) => [row.day_of_week, row]))
+  const activeAvailabilityDays = availability.filter((row) => row.is_active).length
 
   return (
-    <div className="max-w-6xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-stone-500">Configure services, booking rules, service area, and when clients can request walks.</p>
+    <div className="kinetic-shell max-w-7xl p-6 lg:p-8">
+      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
+        <section className="kinetic-card rounded-[2rem] p-8">
+          <Badge className="kinetic-pill mb-4 px-4 py-2 shadow-none">
+            Availability and booking controls
+          </Badge>
+          <h1 className="section-title text-4xl">
+            Shape the calendar clients are actually allowed to book.
+          </h1>
+          <p className="editorial-subtitle mt-5 max-w-2xl">
+            {businessName} can publish services, define weekly flow, add blackout dates, and control service territory from one operating surface.
+          </p>
+
+          <div className="mt-8 grid gap-4 sm:grid-cols-3">
+            <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#9d4300]">Services</p>
+              <p className="mt-3 text-4xl font-black tracking-tight text-stone-950">{services.length}</p>
+              <p className="mt-2 text-sm leading-6 text-stone-500">Active walk types clients can request.</p>
+            </div>
+            <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#9d4300]">Weekly flow</p>
+              <p className="mt-3 text-4xl font-black tracking-tight text-stone-950">{activeAvailabilityDays}</p>
+              <p className="mt-2 text-sm leading-6 text-stone-500">Active days currently published to clients.</p>
+            </div>
+            <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#9d4300]">Service area</p>
+              <p className="mt-3 text-2xl font-black tracking-tight text-stone-950">
+                {bookingSettings.service_area_zip_codes.length ? `${bookingSettings.service_area_zip_codes.length} ZIPs` : 'Open'}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-stone-500">Booking territory, windows, and same-day policy live here.</p>
+            </div>
+          </div>
+        </section>
+
+        <div className="space-y-6">
+          <WalkerProfileCard
+            tenantSlug={params.tenant}
+            businessName={businessName}
+            photoUrl={walkerPhotoUrl}
+          />
+
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Waiver template</CardTitle>
+              <CardDescription className="mt-2 text-sm leading-6 text-stone-600">The current agreement owners will review and sign before requesting services.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5 text-sm text-stone-600">
+                <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#9d4300]">Active waiver</p>
+                <p className="mt-3 font-semibold text-stone-900">{activeWaiverTitle || 'No active waiver configured'}</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
-        <Card className="border-stone-200">
-          <CardHeader>
-            <CardTitle>Add a service</CardTitle>
-            <CardDescription>Create the walk types that appear in the client portal booking flow.</CardDescription>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Add a service</CardTitle>
+            <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Create the walk types that appear in the client portal booking flow.</CardDescription>
           </CardHeader>
           <CardContent>
             <form action={serviceAction} className="space-y-4">
@@ -107,48 +158,93 @@ export function WalkerSettingsHome({
               {serviceState.error && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{serviceState.error}</div>}
               {serviceState.success && <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">Service added successfully.</div>}
 
-              <Button type="submit" className="bg-[#c66a2b] hover:bg-[#ad5821]" disabled={servicePending}>
+              <Button type="submit" className="rounded-xl bg-[#003fb1] text-white hover:bg-[#1a56db]" disabled={servicePending}>
                 {servicePending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : 'Add service'}
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <div className="space-y-6">
-          <WalkerProfileCard
-            tenantSlug={params.tenant}
-            businessName={businessName}
-            photoUrl={walkerPhotoUrl}
-          />
-
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle>Active services</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {!services.length ? (
-                <p className="text-sm text-stone-500">No services configured yet.</p>
-              ) : (
-                services.map((service) => (
-                  <div key={service.id} className="rounded-xl border border-stone-200 p-4 text-sm text-stone-600">
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-stone-900">{service.name}</p>
-                        <p>{service.duration_minutes} minutes · ${service.base_price.toFixed(2)}</p>
-                      </div>
-                      <Badge variant="secondary">{service.is_active ? 'Active' : 'Inactive'}</Badge>
+        <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Active services</CardTitle>
+            <CardDescription className="mt-2 text-sm leading-6 text-stone-600">This is what owners will see when they open your booking flow.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {!services.length ? (
+              <div className="kinetic-card-soft rounded-[1.35rem] border border-dashed border-[rgba(115,118,134,0.22)] p-5">
+                <p className="text-sm font-semibold text-stone-900">No services configured yet.</p>
+                <p className="mt-2 text-sm leading-6 text-stone-500">Add your first walk type to unlock the client booking flow.</p>
+              </div>
+            ) : (
+              services.map((service) => (
+                <div key={service.id} className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5 text-sm text-stone-600">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-stone-900">{service.name}</p>
+                      <p className="mt-1">{service.duration_minutes} minutes · ${service.base_price.toFixed(2)}</p>
                     </div>
-                    {service.description && <p className="mt-2">{service.description}</p>}
+                    <Badge variant="secondary">{service.is_active ? 'Active' : 'Inactive'}</Badge>
                   </div>
-                ))
-              )}
-            </CardContent>
-          </Card>
+                  {service.description && <p className="mt-3 leading-6">{service.description}</p>}
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle>Booking settings</CardTitle>
-              <CardDescription>Set travel buffers, booking window, same-day rules, and your service area.</CardDescription>
+      <div className="mt-6 grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+        <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+          <CardHeader className="pb-4">
+            <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Weekly flow</CardTitle>
+            <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Publish the days and times clients can request. Travel buffers are applied automatically when slots are generated.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <form action={availabilityAction} className="space-y-4">
+              <div className="space-y-3">
+                {WEEK_DAYS.map(({ day, label, short }) => {
+                  const row = availabilityByDay.get(day)
+                  const isActive = row?.is_active ?? false
+                  return (
+                    <div key={day} className={`rounded-[1.35rem] border p-4 transition-colors ${isActive ? 'border-[rgba(26,86,219,0.24)] bg-[#eef3ff]' : 'border-stone-200 bg-white'}`}>
+                      <div className="grid gap-3 md:grid-cols-[1fr_160px_160px] md:items-center">
+                        <label className="flex items-center gap-3 text-sm font-medium text-stone-800">
+                          <input type="checkbox" name={`day_${day}_active`} defaultChecked={isActive} />
+                          <span className={`flex h-10 w-10 items-center justify-center rounded-full text-xs font-bold ${isActive ? 'bg-[#003fb1] text-white' : 'bg-stone-100 text-stone-500'}`}>
+                            {short}
+                          </span>
+                          <span className="font-semibold">{label}</span>
+                        </label>
+                        <div className="space-y-1.5">
+                          <Label htmlFor={`day_${day}_start`}>Start</Label>
+                          <Input id={`day_${day}_start`} name={`day_${day}_start`} type="time" defaultValue={row?.start_time?.slice(0, 5) ?? '09:00'} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <Label htmlFor={`day_${day}_end`}>End</Label>
+                          <Input id={`day_${day}_end`} name={`day_${day}_end`} type="time" defaultValue={row?.end_time?.slice(0, 5) ?? '17:00'} />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {availabilityState.error && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{availabilityState.error}</div>}
+              {availabilityState.success && <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">Availability updated.</div>}
+
+              <Button type="submit" variant="outline" className="border-stone-300 bg-white" disabled={availabilityPending}>
+                {availabilityPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : 'Save availability'}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+
+        <div className="space-y-6">
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Booking settings</CardTitle>
+              <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Set travel buffers, booking window, same-day rules, and your service area.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={bookingAction} className="space-y-4">
@@ -179,60 +275,17 @@ export function WalkerSettingsHome({
                 {bookingState.error && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{bookingState.error}</div>}
                 {bookingState.success && <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">Booking settings updated.</div>}
 
-                <Button type="submit" variant="outline" disabled={bookingPending}>
+                <Button type="submit" variant="outline" className="border-stone-300 bg-white" disabled={bookingPending}>
                   {bookingPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : 'Save booking settings'}
                 </Button>
               </form>
             </CardContent>
           </Card>
-        </div>
-      </div>
 
-      <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="border-stone-200">
-          <CardHeader>
-            <CardTitle>Weekly availability</CardTitle>
-            <CardDescription>Publish the days and times clients can request. Travel buffers are applied automatically when slots are generated.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={availabilityAction} className="space-y-4">
-              <div className="space-y-3">
-                {WEEK_DAYS.map(({ day, label }) => {
-                  const row = availabilityByDay.get(day)
-                  return (
-                    <div key={day} className="grid gap-3 rounded-xl border border-stone-200 p-4 md:grid-cols-[1fr_160px_160px] md:items-center">
-                      <label className="flex items-center gap-3 text-sm font-medium text-stone-800">
-                        <input type="checkbox" name={`day_${day}_active`} defaultChecked={row?.is_active ?? false} />
-                        <span>{label}</span>
-                      </label>
-                      <div className="space-y-1.5">
-                        <Label htmlFor={`day_${day}_start`}>Start</Label>
-                        <Input id={`day_${day}_start`} name={`day_${day}_start`} type="time" defaultValue={row?.start_time?.slice(0, 5) ?? '09:00'} />
-                      </div>
-                      <div className="space-y-1.5">
-                        <Label htmlFor={`day_${day}_end`}>End</Label>
-                        <Input id={`day_${day}_end`} name={`day_${day}_end`} type="time" defaultValue={row?.end_time?.slice(0, 5) ?? '17:00'} />
-                      </div>
-                    </div>
-                  )
-                })}
-              </div>
-
-              {availabilityState.error && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{availabilityState.error}</div>}
-              {availabilityState.success && <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">Availability updated.</div>}
-
-              <Button type="submit" variant="outline" disabled={availabilityPending}>
-                {availabilityPending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : 'Save availability'}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle>Blocked dates</CardTitle>
-              <CardDescription>Mark vacations, blackout days, or temporary periods when no client should be able to request a walk.</CardDescription>
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Blocked dates</CardTitle>
+              <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Mark vacations, blackout days, or temporary periods when no client should be able to request a walk.</CardDescription>
             </CardHeader>
             <CardContent>
               <form action={blockedDateAction} className="space-y-4">
@@ -254,40 +307,33 @@ export function WalkerSettingsHome({
                 {blockedDateState.error && <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">{blockedDateState.error}</div>}
                 {blockedDateState.success && <div className="rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">Blocked date added.</div>}
 
-                <Button type="submit" variant="outline" disabled={blockedDatePending}>
+                <Button type="submit" variant="outline" className="border-stone-300 bg-white" disabled={blockedDatePending}>
                   {blockedDatePending ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</> : 'Add blocked date'}
                 </Button>
               </form>
             </CardContent>
           </Card>
 
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle>Upcoming blackout periods</CardTitle>
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Upcoming blackout periods</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               {!blockedDates.length ? (
-                <p className="text-sm text-stone-500">No blocked dates on file.</p>
+                <div className="kinetic-card-soft rounded-[1.35rem] border border-dashed border-[rgba(115,118,134,0.22)] p-5">
+                  <p className="text-sm font-semibold text-stone-900">No blocked dates on file.</p>
+                  <p className="mt-2 text-sm leading-6 text-stone-500">Vacation and blackout periods will show here once they are added.</p>
+                </div>
               ) : (
                 blockedDates.map((item) => (
-                  <div key={item.id} className="rounded-xl border border-stone-200 p-4 text-sm text-stone-600">
-                    <p className="font-medium text-stone-900">
+                  <div key={item.id} className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5 text-sm text-stone-600">
+                    <p className="font-semibold text-stone-900">
                       {item.start_date} → {item.end_date}
                     </p>
-                    <p className="mt-1">{item.reason || 'Unavailable'}</p>
+                    <p className="mt-2 leading-6">{item.reason || 'Unavailable'}</p>
                   </div>
                 ))
               )}
-            </CardContent>
-          </Card>
-
-          <Card className="border-stone-200">
-            <CardHeader>
-              <CardTitle>Waiver template</CardTitle>
-            </CardHeader>
-            <CardContent className="text-sm text-stone-600">
-              <p>Current active waiver:</p>
-              <p className="mt-2 font-medium text-stone-900">{activeWaiverTitle || 'No active waiver configured'}</p>
             </CardContent>
           </Card>
         </div>
