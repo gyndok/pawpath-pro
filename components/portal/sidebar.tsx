@@ -24,22 +24,22 @@ export function PortalSidebar() {
   const isDemo = tenant.slug === 'demo'
 
   return (
-    <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col border-r border-stone-200 bg-[#f8f2e9]">
-      <div className="border-b border-stone-200 p-5">
+    <aside className="sticky top-0 flex h-screen w-72 shrink-0 flex-col border-r border-[#d6e4ec] bg-[linear-gradient(180deg,#ecf5fa_0%,#dbeaf3_100%)]">
+      <div className="border-b border-[#d6e4ec] p-5">
         <Link href={`/${tenant.slug}/portal`} className="flex items-center gap-3">
-          <div className="overflow-hidden rounded-2xl bg-white shadow-sm">
+          <div className="overflow-hidden rounded-2xl border border-[rgba(47,111,143,0.14)] bg-white shadow-[0_16px_34px_rgba(20,48,66,0.08)]">
             <ProfilePhoto
               src={clientProfile?.photo_url || tenant.logo_url}
               alt={`${clientProfile?.full_name || tenant.business_name} photo`}
               name={clientProfile?.full_name || tenant.business_name}
               className="h-14 w-14"
               fallbackClassName="text-base"
-              fallback={<UserRound className="h-6 w-6 text-[#b45a21]" />}
+              fallback={<UserRound className="h-6 w-6 text-[#2f6f8f]" />}
             />
           </div>
           <div>
-            <div className="text-sm font-bold leading-tight text-stone-900">{clientProfile?.full_name || tenant.business_name}</div>
-            <div className="text-xs text-stone-500">{clientProfile ? 'Client portal' : tenant.business_name}</div>
+            <div className="text-sm font-bold leading-tight text-[#143042]">{clientProfile?.full_name || tenant.business_name}</div>
+            <div className="text-xs text-[#5d7a89]">{clientProfile ? 'Client portal' : tenant.business_name}</div>
           </div>
         </Link>
       </div>
@@ -57,20 +57,20 @@ export function PortalSidebar() {
               className={cn(
                 'group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all',
                 isActive
-                  ? 'bg-white text-[#9b4d1c] shadow-[0_12px_30px_-18px_rgba(180,90,33,0.65)]'
-                  : 'text-stone-600 hover:bg-white hover:text-stone-900'
+                  ? 'bg-white text-[#143042] shadow-[0_18px_40px_-22px_rgba(20,48,66,0.45)]'
+                  : 'text-[#55717f] hover:bg-white/85 hover:text-[#143042]'
               )}
             >
               <span
                 className={cn(
                   'absolute left-0 top-2 bottom-2 w-1 rounded-r-full transition-colors',
-                  isActive ? 'bg-[#c66a2b]' : 'bg-transparent group-hover:bg-stone-200'
+                  isActive ? 'bg-[#2f6f8f]' : 'bg-transparent group-hover:bg-[#bdd4df]'
                 )}
               />
               <span
                 className={cn(
                   'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-colors',
-                  isActive ? 'bg-[#fff4e8] text-[#b45a21]' : 'bg-transparent text-stone-500 group-hover:bg-stone-100 group-hover:text-stone-800'
+                  isActive ? 'bg-[#edf6fb] text-[#2f6f8f]' : 'bg-transparent text-[#63808f] group-hover:bg-[#eef5f9] group-hover:text-[#143042]'
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
@@ -81,22 +81,22 @@ export function PortalSidebar() {
         })}
       </nav>
 
-      <div className="border-t border-stone-200 p-3">
+      <div className="border-t border-[#d6e4ec] p-3">
         {isDemo && (
-          <div className="mb-3 rounded-2xl border border-[#e7c6a8] bg-[#fff6ed] p-3">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Demo Navigation</p>
+          <div className="mb-3 rounded-2xl border border-[#c9dde8] bg-[rgba(255,255,255,0.78)] p-3 shadow-sm">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#6a8594]">Demo Navigation</p>
             <div className="space-y-2">
               <Link
                 href={`/${tenant.slug}`}
                 prefetch={false}
-                className="block rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
+                className="block rounded-xl border border-[#d6e4ec] bg-white px-3 py-2 text-sm font-medium text-[#143042] transition-colors hover:bg-[#f5fbfe]"
               >
                 Demo Hub
               </Link>
               <Link
                 href={`/${tenant.slug}/dashboard`}
                 prefetch={false}
-                className="block rounded-md border border-stone-300 bg-white px-3 py-2 text-sm font-medium text-stone-700 transition-colors hover:bg-stone-50"
+                className="block rounded-xl border border-[#d6e4ec] bg-white px-3 py-2 text-sm font-medium text-[#143042] transition-colors hover:bg-[#f5fbfe]"
               >
                 Walker Side
               </Link>
@@ -104,7 +104,7 @@ export function PortalSidebar() {
           </div>
         )}
 
-        <div className="mb-3 overflow-hidden rounded-2xl border border-stone-200 bg-white">
+        <div className="mb-3 overflow-hidden rounded-2xl border border-[#d6e4ec] bg-white shadow-[0_16px_34px_rgba(20,48,66,0.08)]">
           <Image
             src="/assets/portal/empty-state-no-walks.png"
             alt="Client portal artwork"
@@ -117,7 +117,7 @@ export function PortalSidebar() {
         <form action={logoutClientAction.bind(null, tenant.slug)}>
           <button
             type="submit"
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-stone-500 transition-colors hover:bg-white hover:text-stone-900"
+            className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium text-[#55717f] transition-colors hover:bg-white/85 hover:text-[#143042]"
           >
             <LogOut className="h-4 w-4 shrink-0" />
             Sign Out

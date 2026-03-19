@@ -75,20 +75,20 @@ export function WalkerShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-gray-50">
       <WalkerSidebar />
-      <main ref={contentRef} className="flex-1 overflow-auto bg-[radial-gradient(circle_at_top_left,_rgba(226,196,154,0.18),_transparent_24%),linear-gradient(180deg,_#fcfaf7_0%,_#f7f4ee_100%)]">
-        <div className="sticky top-0 z-10 border-b border-stone-200/70 bg-[#fcfaf7]/90 backdrop-blur">
+      <main ref={contentRef} className="flex-1 overflow-auto bg-[radial-gradient(circle_at_top_left,_rgba(47,111,143,0.14),_transparent_24%),linear-gradient(180deg,_#f8fbfd_0%,_#eff5f8_100%)]">
+        <div className="sticky top-0 z-10 border-b border-[#d6e4ec]/80 bg-[#f8fbfd]/90 backdrop-blur">
           <div className="flex items-center justify-between gap-4 px-6 py-4">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-stone-500">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#6a8594]">
                 {tenant.business_name}
               </p>
               <div className="mt-1 flex items-center gap-3">
-                <h1 className="text-xl font-semibold text-stone-950">{routeMeta?.title}</h1>
-                <span className="hidden text-sm text-stone-500 lg:inline">{routeMeta?.detail}</span>
+                <h1 className="text-xl font-semibold text-[#143042]">{routeMeta?.title}</h1>
+                <span className="hidden text-sm text-[#5d7a89] lg:inline">{routeMeta?.detail}</span>
               </div>
             </div>
-            <div className="hidden items-center gap-2 rounded-full border border-stone-200 bg-white/80 px-3 py-2 text-sm text-stone-600 md:flex">
-              <CalendarDays className="h-4 w-4 text-[#b45a21]" />
+            <div className="hidden items-center gap-2 rounded-full border border-[#d6e4ec] bg-white/85 px-3 py-2 text-sm text-[#5d7a89] shadow-sm md:flex">
+              <CalendarDays className="h-4 w-4 text-[#2f6f8f]" />
               {new Date().toLocaleDateString('en-US', {
                 weekday: 'long',
                 month: 'long',

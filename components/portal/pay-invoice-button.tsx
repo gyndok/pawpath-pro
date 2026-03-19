@@ -43,7 +43,7 @@ export function PayInvoiceButton({
       onClick={handlePay}
       disabled={loading}
       size="sm"
-      className="bg-[#c66a2b] hover:bg-[#ad5821]"
+      className="rounded-full bg-[#2f6f8f] px-4 text-white shadow-[0_14px_28px_rgba(47,111,143,0.2)] hover:bg-[#245a75]"
     >
       {loading ? (
         <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing…</>

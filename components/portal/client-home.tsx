@@ -103,7 +103,7 @@ export function ClientPortalHome({
         <Link href={`/${tenantSlug}/portal/pets`} prefetch={false}>
           <Card className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] transition-shadow hover:shadow-md">
           <CardContent className="flex items-center gap-3 p-4">
-            <PawPrint className="h-10 w-10 rounded-xl bg-white p-2 text-[#9d4300]" />
+            <PawPrint className="h-10 w-10 rounded-xl bg-white p-2 text-[#2f6f8f]" />
             <div>
               <p className="text-sm font-medium text-stone-900">Pets on file</p>
               <p className="text-xs text-stone-500">{pets.length} profile{pets.length === 1 ? '' : 's'} saved</p>
@@ -143,7 +143,7 @@ export function ClientPortalHome({
         <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
           <CardHeader className="pb-4">
             <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
-              <PawPrint className="h-5 w-5 text-[#c66a2b]" />
+              <PawPrint className="h-5 w-5 text-[#2f6f8f]" />
               Pet profile
             </CardTitle>
             <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Your pet information sheet is stored here for the walker.</CardDescription>
@@ -165,7 +165,7 @@ export function ClientPortalHome({
                           name={pet.name}
                           className="h-14 w-14"
                           fallbackClassName="text-base"
-                          fallback={<PawPrint className="h-5 w-5 text-[#b45a21]" />}
+                          fallback={<PawPrint className="h-5 w-5 text-[#2f6f8f]" />}
                         />
                       </div>
                       <div>
@@ -199,7 +199,7 @@ export function ClientPortalHome({
           <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
-                <FileText className="h-5 w-5 text-[#c66a2b]" />
+                <FileText className="h-5 w-5 text-[#2f6f8f]" />
                 Waiver and service agreement
               </CardTitle>
             </CardHeader>
@@ -213,7 +213,7 @@ export function ClientPortalHome({
                 </p>
                 <div className="mt-4">
                   <Link href={`/${tenantSlug}/portal/waiver`} prefetch={false}>
-                    <Button variant="outline" size="sm">{hasSignedWaiver ? 'Review waiver' : 'Review and sign waiver'}</Button>
+                    <Button variant="outline" size="sm" className="rounded-full border-[#c9dde8] text-[#143042] hover:bg-[#f5fbfe]">{hasSignedWaiver ? 'Review waiver' : 'Review and sign waiver'}</Button>
                   </Link>
                 </div>
               </div>
@@ -223,7 +223,7 @@ export function ClientPortalHome({
           <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
-                <CalendarDays className="h-5 w-5 text-[#c66a2b]" />
+                <CalendarDays className="h-5 w-5 text-[#2f6f8f]" />
                 Request a walk
               </CardTitle>
               <CardDescription className="mt-2 text-sm leading-6 text-stone-600">Select from currently open dates and times based on the walker&apos;s published schedule.</CardDescription>
@@ -242,7 +242,7 @@ export function ClientPortalHome({
           <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-2 font-[var(--font-display)] text-2xl tracking-tight">
-                <CreditCard className="h-5 w-5 text-[#c66a2b]" />
+                <CreditCard className="h-5 w-5 text-[#2f6f8f]" />
                 Booking activity
               </CardTitle>
             </CardHeader>
@@ -265,10 +265,10 @@ export function ClientPortalHome({
               <div className="pt-2">
                 <div className="flex flex-wrap gap-2">
                   <Link href={`/${tenantSlug}/portal/walks`} prefetch={false}>
-                    <Button variant="outline" size="sm">View walk reports</Button>
+                    <Button variant="outline" size="sm" className="rounded-full border-[#c9dde8] text-[#143042] hover:bg-[#f5fbfe]">View walk reports</Button>
                   </Link>
                   <Link href={`/${tenantSlug}/portal/billing`} prefetch={false}>
-                    <Button variant="outline" size="sm">View billing</Button>
+                    <Button variant="outline" size="sm" className="rounded-full border-[#c9dde8] text-[#143042] hover:bg-[#f5fbfe]">View billing</Button>
                   </Link>
                 </div>
               </div>
