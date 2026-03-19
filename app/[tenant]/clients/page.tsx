@@ -1,5 +1,6 @@
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { CalendarClock, ClipboardCheck, HeartPulse, MapPinned, PawPrint, ShieldCheck, Sparkles, Wallet } from 'lucide-react'
 import {
   demoBookingPets,
   demoBookings,
@@ -142,42 +143,107 @@ export default async function WalkerClientsPage({
 
   const serviceById = new Map(services.map((service) => [service.id, service.name]))
   const petById = new Map(pets.map((pet) => [pet.id, pet]))
+  const openInvoiceCount = invoices.filter((invoice) => !['paid', 'voided'].includes(invoice.status)).length
+
+  const summary = [
+    {
+      label: 'Active clients',
+      value: clients.length,
+      detail: `${businessName} currently has ${pets.length} pets on file`,
+      icon: ShieldCheck,
+      tint: 'text-blue-700',
+    },
+    {
+      label: 'Signed waivers',
+      value: signedClientIds.size,
+      detail: `${Math.max(clients.length - signedClientIds.size, 0)} still need review or signature`,
+      icon: ClipboardCheck,
+      tint: 'text-emerald-700',
+    },
+    {
+      label: 'Open balances',
+      value: openInvoiceCount,
+      detail: openInvoiceCount ? 'Collections follow-up needed' : 'All client accounts are current',
+      icon: Wallet,
+      tint: 'text-amber-700',
+    },
+  ]
 
   return (
-    <div className="max-w-6xl p-6">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Clients</h1>
-        <p className="text-sm text-stone-500">Client directory, waiver verification, pet logistics, and account status for {businessName}.</p>
+    <div className="kinetic-shell max-w-7xl p-6 lg:p-8">
+      <div className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
+        <section className="kinetic-card rounded-[2rem] p-8">
+          <Badge className="kinetic-pill mb-4 px-4 py-2 shadow-none">
+            Client relationships
+          </Badge>
+          <h1 className="section-title text-4xl">
+            Keep every household, pet profile, waiver, and next visit organized in one operator view.
+          </h1>
+          <p className="editorial-subtitle mt-5 max-w-2xl">
+            This is the working directory for {businessName}: client readiness, emergency context, pet handling notes, and billing health all side by side.
+          </p>
+
+          <div className="mt-8 grid gap-4 md:grid-cols-3">
+            {summary.map((item) => (
+              <div key={item.label} className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-stone-600">{item.label}</p>
+                  <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-white shadow-sm">
+                    <item.icon className={`h-4 w-4 ${item.tint}`} />
+                  </div>
+                </div>
+                <div className="mt-5 text-4xl font-black tracking-tight text-stone-950">{item.value}</div>
+                <p className="mt-2 text-sm leading-6 text-stone-500">{item.detail}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section className="kinetic-card rounded-[2rem] bg-[#003fb1] p-7 text-white">
+          <div className="flex items-center gap-3">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/14">
+              <Sparkles className="h-5 w-5" />
+            </div>
+            <div>
+              <p className="text-[0.72rem] font-bold uppercase tracking-[0.24em] text-[#dbe1ff]">Directory health</p>
+              <h2 className="font-[var(--font-display)] text-2xl font-bold tracking-tight">
+                {clients.length ? 'You have live client records ready for scheduling and care.' : 'Client records will appear here as owners onboard.'}
+              </h2>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-[1.6rem] border border-white/12 bg-white/8 p-5">
+            <p className="font-[var(--font-display)] text-2xl font-bold tracking-tight text-white">
+              {clients[0]?.full_name || 'No client yet'}
+            </p>
+            <p className="mt-2 text-sm text-[#dbe1ff]">
+              {clients[0]?.address || 'Address will appear once the first client profile is on file.'}
+            </p>
+            <p className="mt-4 text-sm leading-6 text-[#dbe1ff]">
+              Use this page to confirm waiver status, pet handling notes, emergency contacts, and upcoming visit logistics before you step out the door.
+            </p>
+          </div>
+
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            <div className="rounded-[1.2rem] bg-white/8 p-4">
+              <p className="text-sm text-[#dbe1ff]">Pets on file</p>
+              <p className="mt-2 flex items-center gap-2 text-lg font-black tracking-tight text-white">
+                <PawPrint className="h-4 w-4" />
+                {pets.length} total
+              </p>
+            </div>
+            <div className="rounded-[1.2rem] bg-white/8 p-4">
+              <p className="text-sm text-[#dbe1ff]">Upcoming visits</p>
+              <p className="mt-2 flex items-center gap-2 text-lg font-black tracking-tight text-white">
+                <CalendarClock className="h-4 w-4" />
+                {bookings.filter((booking) => ['pending', 'approved'].includes(booking.status)).length} queued
+              </p>
+            </div>
+          </div>
+        </section>
       </div>
 
-      <div className="mb-6 grid gap-4 md:grid-cols-4">
-        <Card className="border-stone-200">
-          <CardHeader className="pb-2">
-            <CardDescription>Active clients</CardDescription>
-            <CardTitle>{clients.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="border-stone-200">
-          <CardHeader className="pb-2">
-            <CardDescription>Pets on file</CardDescription>
-            <CardTitle>{pets.length}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="border-stone-200">
-          <CardHeader className="pb-2">
-            <CardDescription>Signed waivers</CardDescription>
-            <CardTitle>{signedClientIds.size}</CardTitle>
-          </CardHeader>
-        </Card>
-        <Card className="border-stone-200">
-          <CardHeader className="pb-2">
-            <CardDescription>Open balances</CardDescription>
-            <CardTitle>{invoices.filter((invoice) => !['paid', 'voided'].includes(invoice.status)).length}</CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
-
-      <div className="space-y-4">
+      <div className="mt-6 space-y-5">
         {clients.map((client) => {
           const clientPets = pets.filter((pet) => pet.client_id === client.id)
           const clientBookings = bookings.filter((booking) => booking.client_id === client.id)
@@ -188,12 +254,12 @@ export default async function WalkerClientsPage({
           const openInvoices = clientInvoices.filter((invoice) => !['paid', 'voided'].includes(invoice.status))
 
           return (
-            <Card key={client.id} className="border-stone-200">
-              <CardHeader>
-                <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <Card key={client.id} className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+              <CardHeader className="pb-4">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <CardTitle>{client.full_name}</CardTitle>
-                    <CardDescription>
+                    <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">{client.full_name}</CardTitle>
+                    <CardDescription className="mt-2 text-sm leading-6 text-stone-600">
                       {client.phone || 'No phone on file'} · {client.address || 'No address on file'}
                     </CardDescription>
                   </div>
@@ -207,21 +273,29 @@ export default async function WalkerClientsPage({
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+              <CardContent className="grid gap-5 xl:grid-cols-[0.92fr_1.08fr]">
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-stone-200 p-4">
-                    <p className="text-sm font-medium text-stone-900">Emergency contact</p>
-                    <p className="mt-1 text-sm text-stone-600">{client.emergency_contact_name || 'No emergency contact'} · {client.emergency_contact_phone || 'No phone on file'}</p>
+                  <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-stone-500">
+                      <HeartPulse className="h-3.5 w-3.5 text-red-600" />
+                      Emergency contact
+                    </p>
+                    <p className="mt-3 text-sm font-semibold text-stone-900">{client.emergency_contact_name || 'No emergency contact'}</p>
+                    <p className="mt-1 text-sm text-stone-600">{client.emergency_contact_phone || 'No phone on file'}</p>
                   </div>
-                  <div className="rounded-xl border border-stone-200 p-4">
-                    <p className="text-sm font-medium text-stone-900">Pets and handling notes</p>
-                    <div className="mt-3 space-y-3 text-sm text-stone-600">
+
+                  <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-stone-500">
+                      <PawPrint className="h-3.5 w-3.5 text-blue-700" />
+                      Pets and handling notes
+                    </p>
+                    <div className="mt-4 space-y-3">
                       {clientPets.map((pet) => (
-                        <div key={pet.id} className="rounded-lg bg-stone-50 p-3">
-                          <p className="font-medium text-stone-900">{pet.name} · {pet.breed || pet.species}</p>
-                          <p>Behavior: {pet.behavior_notes || 'No behavior notes provided.'}</p>
-                          <p>Allergies: {pet.allergies || 'None listed'}</p>
-                          <p>Vet: {pet.vet_name || 'No vet on file'} {pet.vet_phone ? `· ${pet.vet_phone}` : ''}</p>
+                        <div key={pet.id} className="rounded-[1rem] bg-white p-4 shadow-sm">
+                          <p className="font-semibold text-stone-900">{pet.name} · {pet.breed || pet.species}</p>
+                          <p className="mt-2 text-sm leading-6 text-stone-600">Behavior: {pet.behavior_notes || 'No behavior notes provided.'}</p>
+                          <p className="text-sm leading-6 text-stone-600">Allergies: {pet.allergies || 'None listed'}</p>
+                          <p className="text-sm leading-6 text-stone-600">Vet: {pet.vet_name || 'No vet on file'}{pet.vet_phone ? ` · ${pet.vet_phone}` : ''}</p>
                         </div>
                       ))}
                     </div>
@@ -229,35 +303,51 @@ export default async function WalkerClientsPage({
                 </div>
 
                 <div className="space-y-4">
-                  <div className="rounded-xl border border-stone-200 p-4">
-                    <p className="text-sm font-medium text-stone-900">Upcoming logistics</p>
+                  <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-stone-500">
+                      <MapPinned className="h-3.5 w-3.5 text-[#9d4300]" />
+                      Upcoming logistics
+                    </p>
                     {nextVisit ? (
-                      <div className="mt-2 text-sm text-stone-600">
-                        <p>{serviceById.get(nextVisit.service_id) || 'Walk service'} · {new Date(nextVisit.scheduled_at).toLocaleString()}</p>
-                        <p className="mt-1">Status: <span className="capitalize">{nextVisit.status}</span></p>
-                        <p className="mt-1">
-                          Pets: {bookingPets
-                            .filter((bookingPet) => bookingPet.booking_id === nextVisit.id)
-                            .map((bookingPet) => petById.get(bookingPet.pet_id)?.name)
-                            .filter(Boolean)
-                            .join(', ') || clientPets.map((pet) => pet.name).join(', ')}
-                        </p>
-                        {nextVisit.notes && <p className="mt-1">Notes: {nextVisit.notes}</p>}
+                      <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-[1rem] bg-white p-4 shadow-sm sm:col-span-2">
+                          <p className="text-sm font-semibold text-stone-900">{serviceById.get(nextVisit.service_id) || 'Walk service'}</p>
+                          <p className="mt-2 text-sm text-stone-600">{new Date(nextVisit.scheduled_at).toLocaleString()}</p>
+                          <p className="mt-2 text-sm text-stone-600">Status: <span className="capitalize">{nextVisit.status}</span></p>
+                          {nextVisit.notes && <p className="mt-2 text-sm leading-6 text-stone-600">Notes: {nextVisit.notes}</p>}
+                        </div>
+                        <div className="rounded-[1rem] bg-white p-4 shadow-sm">
+                          <p className="text-sm font-semibold text-stone-900">Pets on visit</p>
+                          <p className="mt-2 text-sm leading-6 text-stone-600">
+                            {bookingPets
+                              .filter((bookingPet) => bookingPet.booking_id === nextVisit.id)
+                              .map((bookingPet) => petById.get(bookingPet.pet_id)?.name)
+                              .filter(Boolean)
+                              .join(', ') || clientPets.map((pet) => pet.name).join(', ')}
+                          </p>
+                        </div>
                       </div>
                     ) : (
-                      <p className="mt-2 text-sm text-stone-500">No pending or approved visits right now.</p>
+                      <p className="mt-4 text-sm leading-6 text-stone-500">No pending or approved visits right now.</p>
                     )}
                   </div>
-                  <div className="rounded-xl border border-stone-200 p-4">
-                    <p className="text-sm font-medium text-stone-900">Accounting snapshot</p>
-                    <div className="mt-2 space-y-2 text-sm text-stone-600">
+
+                  <div className="kinetic-card-soft rounded-[1.35rem] border border-[rgba(115,118,134,0.15)] p-5">
+                    <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.2em] text-stone-500">
+                      <Wallet className="h-3.5 w-3.5 text-emerald-700" />
+                      Accounting snapshot
+                    </p>
+                    <div className="mt-4 space-y-3">
                       {clientInvoices.length ? clientInvoices.slice(0, 3).map((invoice) => (
-                        <div key={invoice.id} className="flex items-center justify-between rounded-lg bg-stone-50 px-3 py-2">
-                          <span>${Number(invoice.amount).toFixed(2)}</span>
+                        <div key={invoice.id} className="flex items-center justify-between rounded-[1rem] bg-white px-4 py-3 shadow-sm">
+                          <div>
+                            <p className="text-sm font-semibold text-stone-900">${Number(invoice.amount).toFixed(2)}</p>
+                            <p className="text-xs text-stone-500">{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'No due date'}</p>
+                          </div>
                           <Badge variant="secondary" className="capitalize">{invoice.status}</Badge>
                         </div>
                       )) : (
-                        <p className="text-stone-500">No invoices yet.</p>
+                        <div className="rounded-[1rem] bg-white px-4 py-3 shadow-sm text-sm text-stone-500">No invoices yet.</div>
                       )}
                     </div>
                   </div>
