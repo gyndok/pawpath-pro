@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { DEFAULT_TIME_ZONE, zonedDateTimeToUtc } from '@/lib/datetime'
 import { isDemoTenantSlug } from '@/lib/demo'
 import { attemptInvoiceAutopay } from '@/lib/payments'
 import { requireTenantWalker } from '@/lib/tenant-session'
@@ -89,6 +90,10 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
   const bookingId = value(formData, 'booking_id')
   const startedAtInput = value(formData, 'started_at')
   const endedAtInput = value(formData, 'ended_at')
+  const startedAtDate = value(formData, 'started_at_date')
+  const startedAtTime = value(formData, 'started_at_time')
+  const endedAtDate = value(formData, 'ended_at_date')
+  const endedAtTime = value(formData, 'ended_at_time')
   const mood = value(formData, 'mood') || null
   const behaviorNotes = value(formData, 'behavior_notes') || null
   const healthNotes = value(formData, 'health_notes') || null
@@ -138,8 +143,17 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
 
   if (!clientProfile) return
 
-  const startedAt = startedAtInput ? new Date(startedAtInput).toISOString() : booking.scheduled_at
-  const endedAt = endedAtInput ? new Date(endedAtInput).toISOString() : new Date().toISOString()
+  const bookingTimeZone = tenant.time_zone ?? DEFAULT_TIME_ZONE
+  const startedAt = startedAtDate && startedAtTime
+    ? zonedDateTimeToUtc(startedAtDate, startedAtTime, bookingTimeZone).toISOString()
+    : startedAtInput
+      ? new Date(startedAtInput).toISOString()
+      : booking.scheduled_at
+  const endedAt = endedAtDate && endedAtTime
+    ? zonedDateTimeToUtc(endedAtDate, endedAtTime, bookingTimeZone).toISOString()
+    : endedAtInput
+      ? new Date(endedAtInput).toISOString()
+      : new Date().toISOString()
 
   const { data: existingWalk } = await supabase
     .from('walks')

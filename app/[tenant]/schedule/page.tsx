@@ -5,7 +5,12 @@ import { Calendar, Camera, CheckCircle2, Clock3, ClipboardList, Droplets, MapPin
 import { updateBookingStatusAction } from '@/lib/actions/walker-bookings'
 import { completeWalkAction, generateInvoiceAction } from '@/lib/actions/walker-walks'
 import { demoBookings, demoClients, demoInvoices, demoServices, demoWalkReports, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
-import { DEFAULT_TIME_ZONE, formatDateTimeInTimeZone, toDateTimeLocalInTimeZone } from '@/lib/datetime'
+import {
+  DEFAULT_TIME_ZONE,
+  formatDateTimeInTimeZone,
+  toDateInputInTimeZone,
+  toTimeInputInTimeZone,
+} from '@/lib/datetime'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 export default async function WalkerSchedulePage({
@@ -358,11 +363,14 @@ export default async function WalkerSchedulePage({
               approvedBookings.map((booking) => {
                 const client = clientById.get(booking.client_id)
                 const service = serviceById.get(booking.service_id)
-                const defaultStart = toDateTimeLocalInTimeZone(booking.scheduled_at, timeZone)
-                const defaultEnd = toDateTimeLocalInTimeZone(
-                  new Date(new Date(booking.scheduled_at).getTime() + ((service?.duration_minutes || 30) * 60000)).toISOString(),
-                  timeZone
-                )
+                const defaultStartAt = booking.scheduled_at
+                const defaultEndAt = new Date(
+                  new Date(booking.scheduled_at).getTime() + ((service?.duration_minutes || 30) * 60000)
+                ).toISOString()
+                const defaultStartDate = toDateInputInTimeZone(defaultStartAt, timeZone)
+                const defaultStartTime = toTimeInputInTimeZone(defaultStartAt, timeZone)
+                const defaultEndDate = toDateInputInTimeZone(defaultEndAt, timeZone)
+                const defaultEndTime = toTimeInputInTimeZone(defaultEndAt, timeZone)
 
                 return (
                   <form key={booking.id} action={completeWalkAction.bind(null, tenantSlug)} className="kinetic-card-soft rounded-[1.55rem] border border-[rgba(115,118,134,0.15)] p-6">
@@ -389,32 +397,50 @@ export default async function WalkerSchedulePage({
                         </div>
 
                         <div className="grid gap-4 xl:grid-cols-2">
-                          <label className="min-w-0 space-y-2 text-sm">
+                          <div className="space-y-2 text-sm">
                             <span className="flex items-center gap-2 font-semibold text-stone-800">
                               <Clock3 className="h-4 w-4 text-blue-700" />
                               Started at
                             </span>
-                            <input
-                              type="datetime-local"
-                              name="started_at"
-                              defaultValue={defaultStart}
-                              className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-[13px] shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                              required
-                            />
-                          </label>
-                          <label className="min-w-0 space-y-2 text-sm">
+                            <div className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+                              <input
+                                type="date"
+                                name="started_at_date"
+                                defaultValue={defaultStartDate}
+                                className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                required
+                              />
+                              <input
+                                type="time"
+                                name="started_at_time"
+                                defaultValue={defaultStartTime}
+                                className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                required
+                              />
+                            </div>
+                          </div>
+                          <div className="space-y-2 text-sm">
                             <span className="flex items-center gap-2 font-semibold text-stone-800">
                               <Calendar className="h-4 w-4 text-blue-700" />
                               Ended at
                             </span>
-                            <input
-                              type="datetime-local"
-                              name="ended_at"
-                              defaultValue={defaultEnd}
-                              className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-[13px] shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
-                              required
-                            />
-                          </label>
+                            <div className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+                              <input
+                                type="date"
+                                name="ended_at_date"
+                                defaultValue={defaultEndDate}
+                                className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                required
+                              />
+                              <input
+                                type="time"
+                                name="ended_at_time"
+                                defaultValue={defaultEndTime}
+                                className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                                required
+                              />
+                            </div>
+                          </div>
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">

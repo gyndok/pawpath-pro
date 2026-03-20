@@ -98,6 +98,16 @@ export function toDateTimeLocalInTimeZone(value: DateInput, timeZone: string | n
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`
 }
 
+export function toDateInputInTimeZone(value: DateInput, timeZone: string | null | undefined) {
+  const parts = formatParts(new Date(value), normalizeTimeZone(timeZone))
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
+
+export function toTimeInputInTimeZone(value: DateInput, timeZone: string | null | undefined) {
+  const parts = formatParts(new Date(value), normalizeTimeZone(timeZone))
+  return `${parts.hour}:${parts.minute}`
+}
+
 export function getTodayDateKeyInTimeZone(timeZone: string | null | undefined, now = new Date()) {
   return formatDateKeyInTimeZone(now, timeZone)
 }
