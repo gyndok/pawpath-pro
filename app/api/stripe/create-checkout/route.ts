@@ -86,7 +86,7 @@ export async function POST(req: NextRequest) {
         .eq('id', tenant.id)
     }
 
-    const baseUrl = getAppBaseUrl()
+    const baseUrl = req.nextUrl.origin || getAppBaseUrl()
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

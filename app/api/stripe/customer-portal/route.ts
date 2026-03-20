@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = getStripe()
-    const baseUrl = getAppBaseUrl()
+    const baseUrl = req.nextUrl.origin || getAppBaseUrl()
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: tenant.stripe_customer_id,

@@ -7,11 +7,13 @@ export function isStripePaymentsReady() {
 }
 
 export function getAppBaseUrl() {
-  if (APP_DOMAIN.startsWith('http://') || APP_DOMAIN.startsWith('https://')) {
-    return APP_DOMAIN.replace(/\/+$/, '')
+  const normalizedDomain = APP_DOMAIN.trim()
+
+  if (normalizedDomain.startsWith('http://') || normalizedDomain.startsWith('https://')) {
+    return normalizedDomain.replace(/\/+$/, '')
   }
 
-  return `https://${APP_DOMAIN}`
+  return `https://${normalizedDomain}`
 }
 
 export async function ensureClientStripeCustomer(params: {
