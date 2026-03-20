@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { WalkerProfileCard } from '@/components/walker/walker-profile-card'
 import { createServiceAction } from '@/lib/actions/walker-services'
 import { addBlockedDateAction, saveAvailabilityAction, saveBookingSettingsAction } from '@/lib/actions/walker-scheduling'
+import { COMMON_TIME_ZONES } from '@/lib/datetime'
 import type { BookingSettings } from '@/lib/scheduling'
 
 type ServiceSummary = {
@@ -48,6 +49,7 @@ const WEEK_DAYS = [
 
 export function WalkerSettingsHome({
   businessName,
+  timeZone,
   services,
   activeWaiverTitle,
   walkerPhotoUrl,
@@ -56,6 +58,7 @@ export function WalkerSettingsHome({
   bookingSettings,
 }: {
   businessName: string
+  timeZone: string
   services: ServiceSummary[]
   activeWaiverTitle: string | null
   walkerPhotoUrl: string | null
@@ -261,6 +264,22 @@ export function WalkerSettingsHome({
                     <Label htmlFor="advance_window_days">Advance window (days)</Label>
                     <Input id="advance_window_days" name="advance_window_days" type="number" min="1" max="120" defaultValue={bookingSettings.advance_window_days} />
                   </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="time_zone">Walker time zone</Label>
+                  <select
+                    id="time_zone"
+                    name="time_zone"
+                    defaultValue={timeZone}
+                    className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                  >
+                    {COMMON_TIME_ZONES.map((zone) => (
+                      <option key={zone} value={zone}>
+                        {zone}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-stone-500">All booking times, reports, and billing timestamps will follow this timezone.</p>
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="service_area_zip_codes">Service area ZIP codes</Label>

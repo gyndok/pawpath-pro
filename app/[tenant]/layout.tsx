@@ -4,6 +4,7 @@ import { WalkerShell } from '@/components/walker/shell'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { getTenantBySlug } from '@/lib/tenant'
 import { TenantProvider } from '@/lib/context/tenant-context'
+import { DEFAULT_TIME_ZONE } from '@/lib/datetime'
 
 export default async function TenantLayout({
   children,
@@ -26,6 +27,7 @@ export default async function TenantLayout({
       slug:                   headersList.get('x-tenant-slug') || slug,
       business_name:          headersList.get('x-tenant-business-name') || 'PawPath Pro',
       plan_tier:              (headersList.get('x-tenant-plan') || 'starter') as 'starter' | 'pro' | 'agency',
+      time_zone:              headersList.get('x-tenant-time-zone') || DEFAULT_TIME_ZONE,
       branding_primary_color: headersList.get('x-tenant-branding-color') || '#7c3aed',
       logo_url:               headersList.get('x-tenant-logo-url') || null,
       owner_user_id:          null,

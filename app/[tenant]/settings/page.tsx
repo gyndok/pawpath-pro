@@ -32,6 +32,7 @@ export default async function WalkerSettingsPage({
         </div>
         <WalkerSettingsHome
           businessName={demoTenant.business_name}
+          timeZone={demoTenant.time_zone}
           services={demoServices}
           activeWaiverTitle={demoWaiver.title}
           walkerPhotoUrl={demoWalker.photo_url}
@@ -102,6 +103,7 @@ export default async function WalkerSettingsPage({
       </div>
       <WalkerSettingsHome
         businessName={tenant.business_name}
+        timeZone={tenant.time_zone}
         services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
         activeWaiverTitle={activeWaiver?.title ?? null}
         walkerPhotoUrl={walker.photo_url ?? null}

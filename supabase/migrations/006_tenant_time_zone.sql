@@ -1,0 +1,2 @@
+ALTER TABLE tenants
+ADD COLUMN IF NOT EXISTS time_zone TEXT NOT NULL DEFAULT 'America/Chicago';

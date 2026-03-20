@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BellRing, DollarSign, ReceiptText, ShieldCheck, Wallet } from 'lucide-react'
 import { demoBookings, demoClients, demoInvoices, demoServices, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { DEFAULT_TIME_ZONE, formatDateInTimeZone, formatDateTimeInTimeZone } from '@/lib/datetime'
 import { sendInvoiceReminderAction, updateInvoiceStatusAction } from '@/lib/actions/walker-invoices'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
@@ -45,6 +46,7 @@ export default async function WalkerBillingPage({
   let walks: WalkRow[] = demoWalks.map((walk) => ({ id: walk.id, booking_id: walk.booking_id }))
   let bookings: BookingRow[] = demoBookings.map((booking) => ({ id: booking.id, service_id: booking.service_id, scheduled_at: booking.scheduled_at }))
   let services: ServiceRow[] = demoServices.map((service) => ({ id: service.id, name: service.name }))
+  let timeZone = DEFAULT_TIME_ZONE
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('walker', tenantSlug)
@@ -52,6 +54,7 @@ export default async function WalkerBillingPage({
   } else {
     const { tenant, supabase } = await requireTenantWalker(tenantSlug)
     businessName = tenant.business_name
+    timeZone = tenant.time_zone
 
     const results = await Promise.all([
       supabase
@@ -170,7 +173,7 @@ export default async function WalkerBillingPage({
                   {currency(Number(latestInvoice.amount))}
                 </p>
                 <p className="mt-2 text-sm text-[#dbe1ff]">
-                  {clientById.get(latestInvoice.client_id) || 'Client'} · issued {new Date(latestInvoice.created_at).toLocaleDateString()}
+                  {clientById.get(latestInvoice.client_id) || 'Client'} · issued {formatDateInTimeZone(latestInvoice.created_at, timeZone)}
                 </p>
                 <p className="mt-3 text-sm text-[#dbe1ff]">
                   Current status: <span className="font-semibold capitalize text-white">{latestInvoice.status}</span>
@@ -235,11 +238,11 @@ export default async function WalkerBillingPage({
                       <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-[1rem] bg-white p-4 shadow-sm">
                           <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Issued</p>
-                          <p className="mt-2 text-sm font-semibold text-stone-900">{new Date(invoice.created_at).toLocaleDateString()}</p>
+                          <p className="mt-2 text-sm font-semibold text-stone-900">{formatDateInTimeZone(invoice.created_at, timeZone)}</p>
                         </div>
                         <div className="rounded-[1rem] bg-white p-4 shadow-sm">
                           <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Due</p>
-                          <p className="mt-2 text-sm font-semibold text-stone-900">{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}</p>
+                          <p className="mt-2 text-sm font-semibold text-stone-900">{invoice.due_date ? formatDateInTimeZone(invoice.due_date, timeZone) : 'Not set'}</p>
                         </div>
                         <div className="rounded-[1rem] bg-white p-4 shadow-sm">
                           <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Service</p>
@@ -247,7 +250,7 @@ export default async function WalkerBillingPage({
                         </div>
                         <div className="rounded-[1rem] bg-white p-4 shadow-sm">
                           <p className="text-xs font-bold uppercase tracking-[0.2em] text-stone-500">Paid at</p>
-                          <p className="mt-2 text-sm font-semibold text-stone-900">{invoice.paid_at ? new Date(invoice.paid_at).toLocaleString() : 'Not yet paid'}</p>
+                          <p className="mt-2 text-sm font-semibold text-stone-900">{invoice.paid_at ? formatDateTimeInTimeZone(invoice.paid_at, timeZone) : 'Not yet paid'}</p>
                         </div>
                       </div>
                       {invoice.notes && (

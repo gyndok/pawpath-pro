@@ -3,6 +3,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CalendarClock, HeartPulse, MessageSquareQuote, Sparkles } from 'lucide-react'
 import { demoBookings, demoClientProfile, demoWalkReports, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { DEFAULT_TIME_ZONE, formatDateTimeInTimeZone } from '@/lib/datetime'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 type DeliveredWalk = {
@@ -101,7 +102,13 @@ function WalksHero({
   )
 }
 
-function WalkDetailList({ deliveredWalks }: { deliveredWalks: DeliveredWalk[] }) {
+function WalkDetailList({
+  deliveredWalks,
+  timeZone,
+}: {
+  deliveredWalks: DeliveredWalk[]
+  timeZone: string
+}) {
   if (!deliveredWalks.length) {
     return <WalksEmptyState />
   }
@@ -114,7 +121,7 @@ function WalkDetailList({ deliveredWalks }: { deliveredWalks: DeliveredWalk[] })
             <div className="flex items-center justify-between gap-3">
               <div>
                 <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">
-                  {new Date(walk.scheduledAt).toLocaleString()}
+                  {formatDateTimeInTimeZone(walk.scheduledAt, timeZone)}
                 </CardTitle>
                 <CardDescription>Completed visit detail</CardDescription>
               </div>
@@ -125,24 +132,24 @@ function WalkDetailList({ deliveredWalks }: { deliveredWalks: DeliveredWalk[] })
             <div className="grid gap-4 lg:grid-cols-4">
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Scheduled</p>
-                <p className="mt-2 font-medium text-stone-900">{new Date(walk.scheduledAt).toLocaleString()}</p>
+                <p className="mt-2 font-medium text-stone-900">{formatDateTimeInTimeZone(walk.scheduledAt, timeZone)}</p>
               </div>
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Started</p>
                 <p className="mt-2 font-medium text-stone-900">
-                  {walk.startedAt ? new Date(walk.startedAt).toLocaleString() : 'Not recorded'}
+                  {walk.startedAt ? formatDateTimeInTimeZone(walk.startedAt, timeZone) : 'Not recorded'}
                 </p>
               </div>
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Finished</p>
                 <p className="mt-2 font-medium text-stone-900">
-                  {walk.endedAt ? new Date(walk.endedAt).toLocaleString() : 'Not recorded'}
+                  {walk.endedAt ? formatDateTimeInTimeZone(walk.endedAt, timeZone) : 'Not recorded'}
                 </p>
               </div>
               <div className="kinetic-card-soft rounded-[1.2rem] border border-[rgba(115,118,134,0.15)] p-4">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Report delivered</p>
                 <p className="mt-2 font-medium text-stone-900">
-                  {walk.report?.delivered_at ? new Date(walk.report.delivered_at).toLocaleString() : 'Available now'}
+                  {walk.report?.delivered_at ? formatDateTimeInTimeZone(walk.report.delivered_at, timeZone) : 'Available now'}
                 </p>
               </div>
             </div>
@@ -206,6 +213,7 @@ export default async function PortalWalksPage({
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('client', tenantSlug)
+    const timeZone = DEFAULT_TIME_ZONE
 
     const deliveredWalks: DeliveredWalk[] = demoBookings
       .filter((booking) => booking.client_id === demoClientProfile.id)
@@ -228,7 +236,7 @@ export default async function PortalWalksPage({
           titleDetail="Review delivered notes, timing, and care observations after each completed walk. Each card below is the detailed recap for one finished visit."
           deliveredWalkCount={deliveredWalks.length}
         />
-        <WalkDetailList deliveredWalks={deliveredWalks} />
+        <WalkDetailList deliveredWalks={deliveredWalks} timeZone={timeZone} />
       </div>
     )
   }
@@ -260,7 +268,7 @@ export default async function PortalWalksPage({
         titleDetail={`Completed visits and delivered walk notes for ${tenant.business_name}. Each card below is a full visit recap with timing and walker notes.`}
         deliveredWalkCount={deliveredWalks.length}
       />
-      <WalkDetailList deliveredWalks={deliveredWalks} />
+      <WalkDetailList deliveredWalks={deliveredWalks} timeZone={tenant.time_zone} />
     </div>
   )
 }

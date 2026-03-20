@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { signActiveWaiverAction } from '@/lib/actions/client-waiver'
+import { formatDateTimeInTimeZone } from '@/lib/datetime'
 
 export function WaiverSignCard({
   waiverTitle,
@@ -15,12 +16,14 @@ export function WaiverSignCard({
   isSigned,
   signatureName,
   signedAt,
+  timeZone,
 }: {
   waiverTitle: string
   waiverBody: string
   isSigned: boolean
   signatureName: string
   signedAt: string | null
+  timeZone: string
 }) {
   const params = useParams<{ tenant: string }>()
   const [state, formAction, isPending] = useActionState(signActiveWaiverAction.bind(null, params.tenant), {})
@@ -36,7 +39,7 @@ export function WaiverSignCard({
             </div>
             <CardTitle className="text-2xl text-[#143042]">{waiverTitle}</CardTitle>
             <CardDescription className="mt-1 text-sm leading-6 text-[#4f6b7a]">
-              {isSigned && signedAt ? `Signed on ${new Date(signedAt).toLocaleString()}` : 'Please review and sign before your first scheduled service.'}
+              {isSigned && signedAt ? `Signed on ${formatDateTimeInTimeZone(signedAt, timeZone)}` : 'Please review and sign before your first scheduled service.'}
             </CardDescription>
           </div>
           <Badge className={isSigned ? 'rounded-full bg-[#e7f2ee] px-3 py-1 text-[#1e6150] hover:bg-[#e7f2ee]' : 'rounded-full bg-[#fff1e6] px-3 py-1 text-[#9a5a22] hover:bg-[#fff1e6]'}>

@@ -15,7 +15,7 @@ export async function requireTenantClient(tenantSlug: string) {
 
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('id, slug, business_name, branding_primary_color, owner_user_id')
+    .select('id, slug, business_name, branding_primary_color, owner_user_id, time_zone')
     .eq('slug', tenantSlug)
     .single()
 
@@ -68,7 +68,7 @@ export async function requireTenantWalker(tenantSlug: string) {
 
   const { data: tenant, error: tenantError } = await supabase
     .from('tenants')
-    .select('id, slug, business_name, branding_primary_color, plan_tier, owner_user_id, stripe_customer_id, stripe_subscription_id, trial_ends_at, is_active')
+    .select('id, slug, business_name, branding_primary_color, plan_tier, owner_user_id, time_zone, stripe_customer_id, stripe_subscription_id, trial_ends_at, is_active')
     .eq('slug', tenantSlug)
     .single()
 

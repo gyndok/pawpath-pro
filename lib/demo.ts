@@ -13,6 +13,7 @@ export const demoTenant: Tenant = {
   business_name: 'Maple & Main Dog Walking',
   owner_user_id: 'demo-walker-user',
   plan_tier: 'pro',
+  time_zone: 'America/Chicago',
   stripe_customer_id: 'cus_demo_walker',
   stripe_subscription_id: 'sub_demo_active',
   custom_domain: null,

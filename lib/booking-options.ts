@@ -18,8 +18,9 @@ export async function loadPortalBookingOptions(params: {
   tenantId: string
   walkerId: string | null
   clientAddress: string | null
+  tenantTimeZone?: string | null
 }) {
-  const { supabase, tenantId, walkerId, clientAddress } = params
+  const { supabase, tenantId, walkerId, clientAddress, tenantTimeZone } = params
 
   const [{ data: services }, bookingSettingsResult] = await Promise.all([
     supabase
@@ -108,7 +109,11 @@ export async function loadPortalBookingOptions(params: {
       availability: availability ?? [],
       blockedDates: blockedDates ?? [],
       bookings: normalizedBookings,
-      settings: bookingSettings,
+      settings: {
+        ...bookingSettings,
+        time_zone: tenantTimeZone ?? bookingSettings.time_zone ?? DEFAULT_BOOKING_SETTINGS.time_zone,
+      },
+      now: new Date(),
     }),
     geofenceMessage: null,
     bookingSettings,

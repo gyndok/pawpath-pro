@@ -5,13 +5,8 @@ import { Calendar, Camera, CheckCircle2, Clock3, ClipboardList, Droplets, MapPin
 import { updateBookingStatusAction } from '@/lib/actions/walker-bookings'
 import { completeWalkAction, generateInvoiceAction } from '@/lib/actions/walker-walks'
 import { demoBookings, demoClients, demoInvoices, demoServices, demoWalkReports, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { DEFAULT_TIME_ZONE, formatDateTimeInTimeZone, toDateTimeLocalInTimeZone } from '@/lib/datetime'
 import { requireTenantWalker } from '@/lib/tenant-session'
-
-function toDateTimeLocal(value: string) {
-  const date = new Date(value)
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
 
 export default async function WalkerSchedulePage({
   params,
@@ -44,11 +39,13 @@ export default async function WalkerSchedulePage({
     amount: invoice.amount,
     status: invoice.status,
   }))
+  let timeZone = DEFAULT_TIME_ZONE
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('walker', tenantSlug)
   } else {
     const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+    timeZone = tenant.time_zone
 
     const results = await Promise.all([
       supabase
@@ -172,7 +169,7 @@ export default async function WalkerSchedulePage({
                   {serviceById.get(nextApprovedWalk.service_id)?.name || 'Walk service'}
                 </p>
                 <p className="mt-2 text-sm text-[#dbe1ff]">
-                  {clientById.get(nextApprovedWalk.client_id)?.full_name || 'Client'} · {new Date(nextApprovedWalk.scheduled_at).toLocaleString()}
+                  {clientById.get(nextApprovedWalk.client_id)?.full_name || 'Client'} · {formatDateTimeInTimeZone(nextApprovedWalk.scheduled_at, timeZone)}
                 </p>
                 {nextApprovedWalk.notes && (
                   <p className="mt-4 text-sm leading-6 text-[#dbe1ff]">{nextApprovedWalk.notes}</p>
@@ -235,7 +232,7 @@ export default async function WalkerSchedulePage({
                             {service?.name || 'Walk service'}
                           </p>
                           <p className="mt-2 text-sm text-stone-500">
-                            {client?.full_name || 'Client'} · {new Date(booking.scheduled_at).toLocaleString()}
+                            {client?.full_name || 'Client'} · {formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}
                           </p>
                           {booking.notes && <p className="mt-3 text-sm leading-6 text-stone-600">{booking.notes}</p>}
                         </div>
@@ -294,7 +291,7 @@ export default async function WalkerSchedulePage({
                             {service?.name || 'Walk service'}
                           </p>
                           <p className="mt-2 text-sm text-stone-500">
-                            {client?.full_name || 'Client'} · {new Date(booking.scheduled_at).toLocaleString()}
+                            {client?.full_name || 'Client'} · {formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}
                           </p>
                         </div>
                         <Badge variant="secondary" className="bg-[#eef3ff] text-[#003fb1]">Completed</Badge>
@@ -361,8 +358,11 @@ export default async function WalkerSchedulePage({
               approvedBookings.map((booking) => {
                 const client = clientById.get(booking.client_id)
                 const service = serviceById.get(booking.service_id)
-                const defaultStart = toDateTimeLocal(booking.scheduled_at)
-                const defaultEnd = toDateTimeLocal(new Date(new Date(booking.scheduled_at).getTime() + ((service?.duration_minutes || 30) * 60000)).toISOString())
+                const defaultStart = toDateTimeLocalInTimeZone(booking.scheduled_at, timeZone)
+                const defaultEnd = toDateTimeLocalInTimeZone(
+                  new Date(new Date(booking.scheduled_at).getTime() + ((service?.duration_minutes || 30) * 60000)).toISOString(),
+                  timeZone
+                )
 
                 return (
                   <form key={booking.id} action={completeWalkAction.bind(null, tenantSlug)} className="kinetic-card-soft rounded-[1.55rem] border border-[rgba(115,118,134,0.15)] p-6">
@@ -378,7 +378,7 @@ export default async function WalkerSchedulePage({
                                 {service?.name || 'Walk service'}
                               </p>
                               <p className="mt-2 text-sm text-[#dbe1ff]">
-                                {client?.full_name || 'Client'} · {new Date(booking.scheduled_at).toLocaleString()}
+                                {client?.full_name || 'Client'} · {formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}
                               </p>
                             </div>
                             <div className="rounded-2xl bg-white/12 p-3">

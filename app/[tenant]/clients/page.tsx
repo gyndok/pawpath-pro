@@ -12,6 +12,7 @@ import {
   isDemoTenantSlug,
   requireDemoRole,
 } from '@/lib/demo'
+import { DEFAULT_TIME_ZONE, formatDateInTimeZone, formatDateTimeInTimeZone } from '@/lib/datetime'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function clientStatusTone(openInvoices: number) {
@@ -92,6 +93,7 @@ export default async function WalkerClientsPage({
   let bookingPets: BookingPetRow[] = demoBookingPets
   let services: ServiceRow[] = demoServices.map((service) => ({ id: service.id, name: service.name }))
   let signedClientIds = new Set<string>([demoClientProfile.id])
+  let timeZone = DEFAULT_TIME_ZONE
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('walker', tenantSlug)
@@ -99,6 +101,7 @@ export default async function WalkerClientsPage({
   } else {
     const { tenant, supabase } = await requireTenantWalker(tenantSlug)
     businessName = tenant.business_name
+    timeZone = tenant.time_zone
 
     const [
       clientsResult,
@@ -312,7 +315,7 @@ export default async function WalkerClientsPage({
                       <div className="mt-4 grid gap-3 sm:grid-cols-3">
                         <div className="rounded-[1rem] bg-white p-4 shadow-sm sm:col-span-2">
                           <p className="text-sm font-semibold text-stone-900">{serviceById.get(nextVisit.service_id) || 'Walk service'}</p>
-                          <p className="mt-2 text-sm text-stone-600">{new Date(nextVisit.scheduled_at).toLocaleString()}</p>
+                          <p className="mt-2 text-sm text-stone-600">{formatDateTimeInTimeZone(nextVisit.scheduled_at, timeZone)}</p>
                           <p className="mt-2 text-sm text-stone-600">Status: <span className="capitalize">{nextVisit.status}</span></p>
                           {nextVisit.notes && <p className="mt-2 text-sm leading-6 text-stone-600">Notes: {nextVisit.notes}</p>}
                         </div>
@@ -342,7 +345,7 @@ export default async function WalkerClientsPage({
                         <div key={invoice.id} className="flex items-center justify-between rounded-[1rem] bg-white px-4 py-3 shadow-sm">
                           <div>
                             <p className="text-sm font-semibold text-stone-900">${Number(invoice.amount).toFixed(2)}</p>
-                            <p className="text-xs text-stone-500">{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'No due date'}</p>
+                            <p className="text-xs text-stone-500">{invoice.due_date ? formatDateInTimeZone(invoice.due_date, timeZone) : 'No due date'}</p>
                           </div>
                           <Badge variant="secondary" className="capitalize">{invoice.status}</Badge>
                         </div>

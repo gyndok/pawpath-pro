@@ -1,6 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
+import { zonedDateTimeToUtc } from '@/lib/datetime'
 import { buildAvailableDatesByService, DEFAULT_BOOKING_SETTINGS, isClientInServiceArea } from '@/lib/scheduling'
 import { isDemoTenantSlug } from '@/lib/demo'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
@@ -48,7 +49,7 @@ export async function requestBookingAction(
 
   const { data: tenant, error: tenantError } = await supabase
     .from('tenants')
-    .select('id, owner_user_id')
+    .select('id, owner_user_id, time_zone')
     .eq('slug', tenantSlug)
     .single()
 
@@ -164,6 +165,7 @@ export async function requestBookingAction(
         ...DEFAULT_BOOKING_SETTINGS,
         ...bookingSettingsResult.data,
         service_area_zip_codes: bookingSettingsResult.data?.service_area_zip_codes ?? DEFAULT_BOOKING_SETTINGS.service_area_zip_codes,
+        time_zone: tenant.time_zone,
       }
 
   const geofence = isClientInServiceArea(clientProfile.address, bookingSettings.service_area_zip_codes)
@@ -171,7 +173,7 @@ export async function requestBookingAction(
     return { error: geofence.clientZip ? `Your ZIP code (${geofence.clientZip}) is outside this walker's service area.` : 'Add a valid 5-digit ZIP code to your address before booking.' }
   }
 
-  const scheduledAt = new Date(`${date}T${time}:00`)
+  const scheduledAt = zonedDateTimeToUtc(date, time, tenant.time_zone)
   if (Number.isNaN(scheduledAt.getTime())) {
     return { error: 'Choose a valid date and time.' }
   }

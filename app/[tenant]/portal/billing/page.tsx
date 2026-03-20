@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PayInvoiceButton } from '@/components/portal/pay-invoice-button'
 import { demoClientProfile, demoInvoices, demoPaymentMethod, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { DEFAULT_TIME_ZONE, formatDateInTimeZone, formatDateTimeInTimeZone } from '@/lib/datetime'
 import { createServiceClient } from '@/lib/supabase/server'
 import { requireTenantClient } from '@/lib/tenant-session'
 
@@ -20,6 +21,7 @@ export default async function PortalBillingPage({
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('client', tenantSlug)
+    const timeZone = DEFAULT_TIME_ZONE
     const invoices = demoInvoices.filter((invoice) => invoice.client_id === demoClientProfile.id)
     const paymentParam = typeof query.payment === 'string' ? query.payment : ''
     const paymentMessage = paymentParam === 'success'
@@ -93,14 +95,14 @@ export default async function PortalBillingPage({
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <CardTitle>${Number(invoice.amount).toFixed(2)}</CardTitle>
-                    <CardDescription>Issued {new Date(invoice.created_at).toLocaleDateString()}</CardDescription>
+                    <CardDescription>Issued {formatDateInTimeZone(invoice.created_at, timeZone)}</CardDescription>
                   </div>
                   <Badge variant="secondary" className="capitalize">{invoice.status}</Badge>
                 </div>
               </CardHeader>
               <CardContent className="text-sm text-stone-600">
-                <p>Due date: {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}</p>
-                <p>Paid at: {invoice.paid_at ? new Date(invoice.paid_at).toLocaleString() : 'Not yet paid'}</p>
+                <p>Due date: {invoice.due_date ? formatDateInTimeZone(invoice.due_date, timeZone) : 'Not set'}</p>
+                <p>Paid at: {invoice.paid_at ? formatDateTimeInTimeZone(invoice.paid_at, timeZone) : 'Not yet paid'}</p>
                 {invoice.notes && <p>Notes: {invoice.notes}</p>}
                 {invoice.status !== 'paid' && invoice.status !== 'voided' && (
                   <div className="mt-3">
@@ -118,6 +120,7 @@ export default async function PortalBillingPage({
   }
 
   const { tenant, clientProfile, supabase } = await requireTenantClient(tenantSlug)
+  const timeZone = tenant.time_zone
 
   const setupParam = typeof query.setup === 'string' ? query.setup : ''
   const sessionId = typeof query.session_id === 'string' ? query.session_id : ''
@@ -273,14 +276,14 @@ export default async function PortalBillingPage({
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <CardTitle>${Number(invoice.amount).toFixed(2)}</CardTitle>
-                    <CardDescription>Issued {new Date(invoice.created_at).toLocaleDateString()}</CardDescription>
+                    <CardDescription>Issued {formatDateInTimeZone(invoice.created_at, timeZone)}</CardDescription>
                   </div>
                   <Badge variant="secondary" className="capitalize">{invoice.status}</Badge>
                 </div>
               </CardHeader>
               <CardContent className="text-sm text-stone-600">
-                <p>Due date: {invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : 'Not set'}</p>
-                <p>Paid at: {invoice.paid_at ? new Date(invoice.paid_at).toLocaleString() : 'Not yet paid'}</p>
+                <p>Due date: {invoice.due_date ? formatDateInTimeZone(invoice.due_date, timeZone) : 'Not set'}</p>
+                <p>Paid at: {invoice.paid_at ? formatDateTimeInTimeZone(invoice.paid_at, timeZone) : 'Not yet paid'}</p>
                 {invoice.notes && <p>Notes: {invoice.notes}</p>}
                 {invoice.status !== 'paid' && invoice.status !== 'voided' && (
                   <div className="mt-3">

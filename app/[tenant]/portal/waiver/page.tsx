@@ -54,6 +54,7 @@ export default async function PortalWaiverPage({
           isSigned
           signatureName={demoClientProfile.full_name}
           signedAt={demoWaiver.signed_at}
+          timeZone="America/Chicago"
         />
         </div>
       </div>
@@ -123,6 +124,7 @@ export default async function PortalWaiverPage({
         isSigned={!!signature}
         signatureName={signature?.signature_name || clientProfile.full_name}
         signedAt={signature?.signed_at || null}
+        timeZone={tenant.time_zone}
       />
       </div>
     </div>

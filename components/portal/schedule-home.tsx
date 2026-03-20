@@ -4,6 +4,7 @@ import { useParams } from 'next/navigation'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookingRequestForm } from '@/components/portal/booking-request-form'
+import { formatDateTimeInTimeZone } from '@/lib/datetime'
 
 type PetOption = {
   id: string
@@ -30,6 +31,7 @@ export function PortalScheduleHome({
   bookings,
   availableDatesByService,
   geofenceMessage,
+  timeZone,
 }: {
   pets: PetOption[]
   services: ServiceOption[]
@@ -40,6 +42,7 @@ export function PortalScheduleHome({
     slots: Array<{ iso: string; date: string; time: string; label: string }>
   }>>
   geofenceMessage?: string | null
+  timeZone: string
 }) {
   const params = useParams<{ tenant: string }>()
 
@@ -86,7 +89,7 @@ export function PortalScheduleHome({
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-medium text-stone-900">{booking.service_name}</p>
-                      <p className="mt-1">{new Date(booking.scheduled_at).toLocaleString()}</p>
+                      <p className="mt-1">{formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}</p>
                     </div>
                     <Badge variant="secondary" className="capitalize">{booking.status}</Badge>
                   </div>

@@ -2,13 +2,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { ArrowUpRight, Calendar, Clock, Dog, DollarSign, PawPrint, ShieldCheck, Sparkles, Wallet } from 'lucide-react'
 import { demoBookings, demoClients, demoInvoices, demoServices, demoWaiver, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { DEFAULT_TIME_ZONE, formatDateInTimeZone, formatDateKeyInTimeZone, formatDateTimeInTimeZone } from '@/lib/datetime'
 import { requireTenantWalker } from '@/lib/tenant-session'
-
-function isSameDay(date: Date, other: Date) {
-  return date.getFullYear() === other.getFullYear()
-    && date.getMonth() === other.getMonth()
-    && date.getDate() === other.getDate()
-}
 
 export default async function DashboardPage({
   params,
@@ -22,10 +17,12 @@ export default async function DashboardPage({
   let clients: Array<{ id: string; full_name: string }> = []
   let invoices: Array<{ id: string; amount: number; status: string; due_date: string | null }> = []
   let waiverSignedCount = 1
+  let timeZone = DEFAULT_TIME_ZONE
 
   if (isDemoTenantSlug(tenantSlug)) {
     await requireDemoRole('walker', tenantSlug)
     tenantName = 'Maple & Main Dog Walking'
+    timeZone = DEFAULT_TIME_ZONE
     bookings = demoBookings
     services = demoServices.map((service) => ({ id: service.id, name: service.name }))
     clients = demoClients.map((client) => ({ id: client.id, full_name: client.full_name }))
@@ -38,6 +35,7 @@ export default async function DashboardPage({
   } else {
     const { tenant, supabase } = await requireTenantWalker(tenantSlug)
     tenantName = tenant.business_name
+    timeZone = tenant.time_zone
 
     const results = await Promise.all([
       supabase
@@ -87,12 +85,13 @@ export default async function DashboardPage({
   }
 
   const now = new Date()
+  const todayKey = formatDateKeyInTimeZone(now, timeZone)
 
   const serviceById = new Map(services.map((service) => [service.id, service.name]))
   const clientById = new Map(clients.map((client) => [client.id, client.full_name]))
   const bookingList = bookings
 
-  const todaysWalks = bookingList.filter((booking) => isSameDay(new Date(booking.scheduled_at), now))
+  const todaysWalks = bookingList.filter((booking) => formatDateKeyInTimeZone(booking.scheduled_at, timeZone) === todayKey)
   const upcomingWalks = bookingList.filter((booking) => new Date(booking.scheduled_at) >= now && booking.status === 'approved')
   const pendingBookings = bookingList.filter((booking) => booking.status === 'pending')
   const unpaidInvoices = invoices.filter((invoice) => !['paid', 'voided'].includes(invoice.status))
@@ -113,7 +112,7 @@ export default async function DashboardPage({
     { label: 'Unpaid Invoices', value: String(unpaidInvoices.length), sub: overdueInvoices.length ? `${overdueInvoices.length} overdue` : 'All current invoices tracked', icon: DollarSign, color: 'text-green-600' },
   ]
 
-  const today = new Date().toLocaleDateString('en-US', {
+  const today = formatDateInTimeZone(new Date(), timeZone, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -181,7 +180,7 @@ export default async function DashboardPage({
                   {serviceById.get(nextWalk.service_id) || 'Walk service'}
                 </p>
                 <p className="mt-2 text-sm text-[#dbe1ff]">
-                  {clientById.get(nextWalk.client_id) || 'Client'} · {new Date(nextWalk.scheduled_at).toLocaleString()}
+                  {clientById.get(nextWalk.client_id) || 'Client'} · {formatDateTimeInTimeZone(nextWalk.scheduled_at, timeZone)}
                 </p>
                 {nextWalk.notes && (
                   <p className="mt-4 text-sm leading-6 text-[#dbe1ff]">{nextWalk.notes}</p>
@@ -247,7 +246,7 @@ export default async function DashboardPage({
                         {serviceById.get(booking.service_id) || 'Walk service'}
                       </p>
                       <p className="mt-2 text-sm text-stone-500">
-                        {clientById.get(booking.client_id) || 'Client'} · {new Date(booking.scheduled_at).toLocaleString()}
+                        {clientById.get(booking.client_id) || 'Client'} · {formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}
                       </p>
                       {booking.notes && <p className="mt-3 text-sm leading-6 text-stone-600">{booking.notes}</p>}
                     </div>
@@ -283,7 +282,7 @@ export default async function DashboardPage({
                         {serviceById.get(booking.service_id) || 'Walk service'}
                       </p>
                       <p className="mt-2 text-sm text-stone-500">
-                        {clientById.get(booking.client_id) || 'Client'} · {new Date(booking.scheduled_at).toLocaleString()}
+                        {clientById.get(booking.client_id) || 'Client'} · {formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}
                       </p>
                     </div>
                     <Badge variant="secondary">pending</Badge>

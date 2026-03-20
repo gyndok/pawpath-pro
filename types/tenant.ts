@@ -6,6 +6,7 @@ export interface Tenant {
   business_name: string
   owner_user_id: string | null
   plan_tier: PlanTier
+  time_zone: string
   stripe_customer_id: string | null
   stripe_subscription_id: string | null
   custom_domain: string | null

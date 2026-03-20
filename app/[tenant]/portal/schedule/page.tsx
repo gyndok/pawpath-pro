@@ -1,6 +1,6 @@
 import { PortalScheduleHome } from '@/components/portal/schedule-home'
 import { loadPortalBookingOptions } from '@/lib/booking-options'
-import { demoBookings, demoClientProfile, demoPets, demoServices, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { demoBookings, demoClientProfile, demoPets, demoServices, demoTenant, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 export default async function PortalSchedulePage({
@@ -16,6 +16,7 @@ export default async function PortalSchedulePage({
 
     return (
       <PortalScheduleHome
+        timeZone={demoTenant.time_zone}
         pets={demoPets.filter((pet) => pet.client_id === demoClientProfile.id).map((pet) => ({ id: pet.id, name: pet.name }))}
         services={demoServices}
         bookings={demoBookings
@@ -95,6 +96,7 @@ export default async function PortalSchedulePage({
       tenantId: tenant.id,
       walkerId,
       clientAddress: clientProfile.address,
+      tenantTimeZone: tenant.time_zone,
     }),
   ])
 
@@ -102,6 +104,7 @@ export default async function PortalSchedulePage({
 
   return (
     <PortalScheduleHome
+      timeZone={tenant.time_zone}
       pets={pets ?? []}
       services={bookingOptions.services}
       bookings={(bookings ?? []).map((booking) => ({

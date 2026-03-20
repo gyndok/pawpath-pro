@@ -1,3 +1,13 @@
+import {
+  addDaysToDateKey,
+  formatDateInTimeZone,
+  formatTimeInTimeZone,
+  getTodayDateKeyInTimeZone,
+  getWeekdayFromDateKey,
+  normalizeTimeZone,
+  zonedDateTimeToUtc,
+} from '@/lib/datetime'
+
 export type AvailabilityRow = {
   day_of_week: number
   start_time: string
@@ -30,6 +40,7 @@ export type BookingSettings = {
   advance_window_days: number
   allow_same_day_booking: boolean
   service_area_zip_codes: string[]
+  time_zone?: string
 }
 
 export type AvailableSlot = {
@@ -54,45 +65,6 @@ export const DEFAULT_BOOKING_SETTINGS: BookingSettings = {
 }
 
 const DAY_LABELS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-
-function startOfDay(date: Date) {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate())
-}
-
-function formatDateKey(date: Date) {
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  return `${year}-${month}-${day}`
-}
-
-function combineDateAndTime(date: Date, time: string) {
-  const [hours, minutes] = time.split(':').map(Number)
-  return new Date(
-    date.getFullYear(),
-    date.getMonth(),
-    date.getDate(),
-    Number.isFinite(hours) ? hours : 0,
-    Number.isFinite(minutes) ? minutes : 0,
-    0,
-    0
-  )
-}
-
-function formatTimeLabel(date: Date) {
-  return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-  }).format(date)
-}
-
-function formatDateLabel(date: Date) {
-  return new Intl.DateTimeFormat('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  }).format(date)
-}
 
 function extractZipCode(address: string | null | undefined) {
   if (!address) return null
@@ -130,17 +102,13 @@ export function buildAvailableDatesByService(params: {
     ...params.settings,
     service_area_zip_codes: params.settings?.service_area_zip_codes ?? DEFAULT_BOOKING_SETTINGS.service_area_zip_codes,
   }
+  const timeZone = normalizeTimeZone(params.settings?.time_zone)
 
   const activeAvailability = new Map(
     params.availability
       .filter((row) => row.is_active)
       .map((row) => [row.day_of_week, row])
   )
-
-  const blockedRanges = params.blockedDates.map((row) => ({
-    start: startOfDay(new Date(`${row.start_date}T00:00:00`)),
-    end: startOfDay(new Date(`${row.end_date}T00:00:00`)),
-  }))
 
   const futureBookings = params.bookings
     .filter((booking) => booking.status === 'pending' || booking.status === 'approved')
@@ -151,34 +119,37 @@ export function buildAvailableDatesByService(params: {
     })
 
   const results: Record<string, AvailableDateGroup[]> = {}
-  const startCursor = startOfDay(now)
+  const todayDateKey = getTodayDateKeyInTimeZone(timeZone, now)
   const firstBookableDayOffset = settings.allow_same_day_booking ? 0 : 1
 
   for (const service of params.services) {
     const serviceGroups: AvailableDateGroup[] = []
 
     for (let offset = firstBookableDayOffset; offset <= settings.advance_window_days; offset += 1) {
-      const day = new Date(startCursor)
-      day.setDate(startCursor.getDate() + offset)
-
-      const availability = activeAvailability.get(day.getDay())
+      const dateKey = addDaysToDateKey(todayDateKey, offset)
+      const weekday = getWeekdayFromDateKey(dateKey)
+      const availability = activeAvailability.get(weekday)
       if (!availability) continue
 
-      const isBlocked = blockedRanges.some((range) => day >= range.start && day <= range.end)
+      const isBlocked = params.blockedDates.some((range) => dateKey >= range.start_date && dateKey <= range.end_date)
       if (isBlocked) continue
 
-      const dayStart = combineDateAndTime(day, availability.start_time)
-      const dayEnd = combineDateAndTime(day, availability.end_time)
-      const slotStep = settings.slot_interval_minutes * 60 * 1000
       const serviceMs = service.duration_minutes * 60 * 1000
       const bufferMs = settings.travel_buffer_minutes * 60 * 1000
       const slots: AvailableSlot[] = []
+      const [startHour, startMinute] = availability.start_time.split(':').map(Number)
+      const [endHour, endMinute] = availability.end_time.split(':').map(Number)
+      const startMinutes = ((Number.isFinite(startHour) ? startHour : 0) * 60) + (Number.isFinite(startMinute) ? startMinute : 0)
+      const endMinutes = ((Number.isFinite(endHour) ? endHour : 0) * 60) + (Number.isFinite(endMinute) ? endMinute : 0)
+      const durationMinutes = service.duration_minutes
 
-      for (let cursor = new Date(dayStart); cursor < dayEnd; cursor = new Date(cursor.getTime() + slotStep)) {
-        const slotStart = new Date(cursor)
+      for (let cursorMinutes = startMinutes; cursorMinutes + durationMinutes <= endMinutes; cursorMinutes += settings.slot_interval_minutes) {
+        const hour = Math.floor(cursorMinutes / 60)
+        const minute = cursorMinutes % 60
+        const timeKey = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`
+        const slotStart = zonedDateTimeToUtc(dateKey, timeKey, timeZone)
         const slotEnd = new Date(slotStart.getTime() + serviceMs)
 
-        if (slotEnd > dayEnd) break
         if (slotStart <= now) continue
 
         const overlaps = futureBookings.some((booking) => {
@@ -191,16 +162,17 @@ export function buildAvailableDatesByService(params: {
 
         slots.push({
           iso: slotStart.toISOString(),
-          date: formatDateKey(slotStart),
-          time: `${String(slotStart.getHours()).padStart(2, '0')}:${String(slotStart.getMinutes()).padStart(2, '0')}`,
-          label: formatTimeLabel(slotStart),
+          date: dateKey,
+          time: timeKey,
+          label: formatTimeInTimeZone(slotStart, timeZone),
         })
       }
 
       if (slots.length) {
+        const midday = zonedDateTimeToUtc(dateKey, '12:00', timeZone)
         serviceGroups.push({
-          date: formatDateKey(day),
-          label: `${DAY_LABELS[day.getDay()]} · ${formatDateLabel(day)}`,
+          date: dateKey,
+          label: `${DAY_LABELS[weekday]} · ${formatDateInTimeZone(midday, timeZone, { weekday: 'short', month: 'short', day: 'numeric' })}`,
           slots,
         })
       }

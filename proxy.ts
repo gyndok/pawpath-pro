@@ -46,6 +46,7 @@ export async function proxy(request: NextRequest) {
   requestHeaders.set('x-tenant-slug', tenant.slug)
   requestHeaders.set('x-tenant-business-name', tenant.business_name)
   requestHeaders.set('x-tenant-plan', tenant.plan_tier)
+  requestHeaders.set('x-tenant-time-zone', tenant.time_zone)
   requestHeaders.set('x-tenant-branding-color', tenant.branding_primary_color)
   if (tenant.logo_url) {
     requestHeaders.set('x-tenant-logo-url', tenant.logo_url)

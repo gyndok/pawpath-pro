@@ -1,4 +1,4 @@
-import { getDemoRole, isDemoTenantSlug, demoClientProfile, demoPets, demoServices, demoWaiver, demoBookings } from '@/lib/demo'
+import { getDemoRole, isDemoTenantSlug, demoClientProfile, demoPets, demoServices, demoTenant, demoWaiver, demoBookings } from '@/lib/demo'
 import { loadPortalBookingOptions } from '@/lib/booking-options'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import { PortalPublicHome } from '@/components/portal/public-home'
@@ -23,6 +23,7 @@ export default async function PortalHomePage({
     return (
       <ClientPortalHome
         tenantSlug={tenantSlug}
+        timeZone={demoTenant.time_zone}
         clientName={demoClientProfile.full_name}
         clientPhotoUrl={demoClientProfile.photo_url}
         pets={demoPets.filter((pet) => pet.client_id === demoClientProfile.id)}
@@ -82,7 +83,7 @@ export default async function PortalHomePage({
 
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('id, owner_user_id')
+    .select('id, owner_user_id, time_zone')
     .eq('slug', tenantSlug)
     .maybeSingle()
 
@@ -153,6 +154,7 @@ export default async function PortalHomePage({
       tenantId: tenant.id,
       walkerId,
       clientAddress: clientProfile.address,
+      tenantTimeZone: tenant.time_zone,
     }),
   ])
 
@@ -161,6 +163,7 @@ export default async function PortalHomePage({
   return (
     <ClientPortalHome
       tenantSlug={tenantSlug}
+      timeZone={tenant.time_zone}
       clientName={clientProfile.full_name}
       clientPhotoUrl={clientProfile.photo_url ?? null}
       pets={pets ?? []}

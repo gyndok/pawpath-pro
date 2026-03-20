@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { BookingRequestForm } from '@/components/portal/booking-request-form'
 import { ProfilePhoto } from '@/components/shared/profile-photo'
+import { formatDateTimeInTimeZone } from '@/lib/datetime'
 
 type PetSummary = {
   id: string
@@ -44,6 +45,7 @@ export function ClientPortalHome({
   bookings,
   availableDatesByService,
   geofenceMessage,
+  timeZone,
 }: {
   tenantSlug: string
   clientName: string
@@ -59,6 +61,7 @@ export function ClientPortalHome({
     slots: Array<{ iso: string; date: string; time: string; label: string }>
   }>>
   geofenceMessage?: string | null
+  timeZone: string
 }) {
   const completedBookings = bookings.filter((booking) => booking.status === 'completed')
 
@@ -271,7 +274,7 @@ export function ClientPortalHome({
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="font-medium text-stone-900">{booking.service_name}</p>
-                      <p className="mt-1">{new Date(booking.scheduled_at).toLocaleString()}</p>
+                      <p className="mt-1">{formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}</p>
                     </div>
                     <Badge variant="secondary" className="capitalize">{booking.status}</Badge>
                   </div>

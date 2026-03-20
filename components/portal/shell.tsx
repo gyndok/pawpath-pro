@@ -5,6 +5,7 @@ import { CalendarDays } from 'lucide-react'
 import { PortalHeader } from '@/components/portal/header'
 import { PortalSidebar } from '@/components/portal/sidebar'
 import { useTenant } from '@/lib/context/tenant-context'
+import { formatDateInTimeZone } from '@/lib/datetime'
 
 const AUTHED_PORTAL_SEGMENTS = new Set(['', 'pets', 'waiver', 'schedule', 'walks', 'billing'])
 
@@ -83,7 +84,7 @@ export function PortalShell({
             </div>
             <div className="hidden items-center gap-2 rounded-full border border-[#d6e4ec] bg-white/85 px-3 py-2 text-sm text-[#5d7a89] shadow-sm md:flex">
               <CalendarDays className="h-4 w-4 text-[#2f6f8f]" />
-              {new Date().toLocaleDateString('en-US', {
+              {formatDateInTimeZone(new Date(), tenant.time_zone, {
                 weekday: 'long',
                 month: 'long',
                 day: 'numeric',

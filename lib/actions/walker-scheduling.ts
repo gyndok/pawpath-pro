@@ -69,6 +69,7 @@ export async function saveBookingSettingsAction(
   const slotIntervalMinutes = Number(value(formData, 'slot_interval_minutes') || '15')
   const advanceWindowDays = Number(value(formData, 'advance_window_days') || '30')
   const allowSameDayBooking = checked(formData, 'allow_same_day_booking')
+  const timeZone = value(formData, 'time_zone')
   const serviceAreaZipCodes = value(formData, 'service_area_zip_codes')
     .split(',')
     .map((zip) => zip.trim())
@@ -90,7 +91,13 @@ export async function saveBookingSettingsAction(
     return { error: 'Service area ZIP codes must be 5-digit ZIP codes separated by commas.' }
   }
 
-  const { error } = await supabase.from('tenant_booking_settings').upsert({
+  try {
+    Intl.DateTimeFormat('en-US', { timeZone }).format(new Date())
+  } catch {
+    return { error: 'Choose a valid time zone.' }
+  }
+
+  const { error: settingsError } = await supabase.from('tenant_booking_settings').upsert({
     tenant_id: tenant.id,
     travel_buffer_minutes: travelBufferMinutes,
     slot_interval_minutes: slotIntervalMinutes,
@@ -101,8 +108,17 @@ export async function saveBookingSettingsAction(
     onConflict: 'tenant_id',
   })
 
-  if (error) {
-    return { error: error.message }
+  if (settingsError) {
+    return { error: settingsError.message }
+  }
+
+  const { error: tenantError } = await supabase
+    .from('tenants')
+    .update({ time_zone: timeZone })
+    .eq('id', tenant.id)
+
+  if (tenantError) {
+    return { error: tenantError.message }
   }
 
   revalidatePath(`/${tenantSlug}/settings`)
