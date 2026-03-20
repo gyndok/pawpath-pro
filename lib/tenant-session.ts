@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { unstable_noStore as noStore } from 'next/cache'
+import { DEFAULT_TIME_ZONE } from '@/lib/datetime'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 export async function requireTenantClient(tenantSlug: string) {
@@ -15,7 +16,7 @@ export async function requireTenantClient(tenantSlug: string) {
 
   const { data: tenant } = await supabase
     .from('tenants')
-    .select('id, slug, business_name, branding_primary_color, owner_user_id, time_zone')
+    .select('*')
     .eq('slug', tenantSlug)
     .single()
 
@@ -38,7 +39,10 @@ export async function requireTenantClient(tenantSlug: string) {
   }
 
   return {
-    tenant,
+    tenant: {
+      ...tenant,
+      time_zone: tenant.time_zone ?? DEFAULT_TIME_ZONE,
+    },
     user,
     clientProfile: {
       ...clientProfile,
@@ -68,7 +72,7 @@ export async function requireTenantWalker(tenantSlug: string) {
 
   const { data: tenant, error: tenantError } = await supabase
     .from('tenants')
-    .select('id, slug, business_name, branding_primary_color, plan_tier, owner_user_id, time_zone, stripe_customer_id, stripe_subscription_id, trial_ends_at, is_active')
+    .select('*')
     .eq('slug', tenantSlug)
     .single()
 
@@ -92,7 +96,10 @@ export async function requireTenantWalker(tenantSlug: string) {
   }
 
   return {
-    tenant,
+    tenant: {
+      ...tenant,
+      time_zone: tenant.time_zone ?? DEFAULT_TIME_ZONE,
+    },
     user,
     walker: {
       ...walker,
