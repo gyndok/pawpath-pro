@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PayInvoiceButton } from '@/components/portal/pay-invoice-button'
 import { demoClientProfile, demoInvoices, demoPaymentMethod, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { createServiceClient } from '@/lib/supabase/server'
 import { requireTenantClient } from '@/lib/tenant-session'
 
 export default async function PortalBillingPage({
@@ -143,6 +144,23 @@ export default async function PortalBillingPage({
   }
 
   const paymentParam = typeof query.payment === 'string' ? query.payment : ''
+  const paymentInvoiceId = typeof query.invoice_id === 'string' ? query.invoice_id : ''
+
+  if (paymentParam === 'success' && paymentInvoiceId) {
+    const serviceClient = createServiceClient()
+    await serviceClient
+      .from('invoices')
+      .update({
+        status: 'paid',
+        paid_at: new Date().toISOString(),
+        notes: 'Paid via Stripe Checkout.',
+      })
+      .eq('tenant_id', tenant.id)
+      .eq('client_id', clientProfile.id)
+      .eq('id', paymentInvoiceId)
+      .neq('status', 'paid')
+  }
+
   const paymentMessage = paymentParam === 'success'
     ? 'Payment received! Your invoice has been marked as paid.'
     : paymentParam === 'cancelled'
