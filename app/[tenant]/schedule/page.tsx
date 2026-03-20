@@ -388,8 +388,8 @@ export default async function WalkerSchedulePage({
                           {booking.notes && <p className="mt-4 text-sm leading-6 text-[#dbe1ff]">{booking.notes}</p>}
                         </div>
 
-                        <div className="grid gap-4 sm:grid-cols-2">
-                          <label className="space-y-2 text-sm">
+                        <div className="grid gap-4 xl:grid-cols-2">
+                          <label className="min-w-0 space-y-2 text-sm">
                             <span className="flex items-center gap-2 font-semibold text-stone-800">
                               <Clock3 className="h-4 w-4 text-blue-700" />
                               Started at
@@ -398,11 +398,11 @@ export default async function WalkerSchedulePage({
                               type="datetime-local"
                               name="started_at"
                               defaultValue={defaultStart}
-                              className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                              className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-[13px] shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                               required
                             />
                           </label>
-                          <label className="space-y-2 text-sm">
+                          <label className="min-w-0 space-y-2 text-sm">
                             <span className="flex items-center gap-2 font-semibold text-stone-800">
                               <Calendar className="h-4 w-4 text-blue-700" />
                               Ended at
@@ -411,7 +411,7 @@ export default async function WalkerSchedulePage({
                               type="datetime-local"
                               name="ended_at"
                               defaultValue={defaultEnd}
-                              className="flex h-11 w-full rounded-xl border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                              className="flex h-11 w-full min-w-0 rounded-xl border border-input bg-white px-3 py-2 text-[13px] shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
                               required
                             />
                           </label>
