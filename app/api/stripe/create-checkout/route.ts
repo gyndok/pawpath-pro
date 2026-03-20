@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe, STRIPE_PRICES } from '@/lib/stripe'
+import { getAppBaseUrl } from '@/lib/payments'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 import type { PlanTier } from '@/types/tenant'
 
@@ -85,8 +86,7 @@ export async function POST(req: NextRequest) {
         .eq('id', tenant.id)
     }
 
-    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'
-    const baseUrl = `https://${appDomain}`
+    const baseUrl = getAppBaseUrl()
 
     const session = await stripe.checkout.sessions.create({
       mode: 'subscription',

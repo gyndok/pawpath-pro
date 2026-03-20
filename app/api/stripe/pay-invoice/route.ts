@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
-import { ensureClientStripeCustomer } from '@/lib/payments'
+import { ensureClientStripeCustomer, getAppBaseUrl } from '@/lib/payments'
 
 /**
  * POST /api/stripe/pay-invoice
@@ -110,8 +110,7 @@ export async function POST(req: NextRequest) {
     })
 
     const stripe = getStripe()
-    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'
-    const baseUrl = `https://${appDomain}`
+    const baseUrl = getAppBaseUrl()
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',

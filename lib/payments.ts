@@ -7,6 +7,10 @@ export function isStripePaymentsReady() {
 }
 
 export function getAppBaseUrl() {
+  if (APP_DOMAIN.startsWith('http://') || APP_DOMAIN.startsWith('https://')) {
+    return APP_DOMAIN.replace(/\/+$/, '')
+  }
+
   return `https://${APP_DOMAIN}`
 }
 

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getStripe } from '@/lib/stripe'
+import { getAppBaseUrl } from '@/lib/payments'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
 
 /**
@@ -61,11 +62,11 @@ export async function POST(req: NextRequest) {
     }
 
     const stripe = getStripe()
-    const appDomain = process.env.NEXT_PUBLIC_APP_DOMAIN || 'pawpathpro.com'
+    const baseUrl = getAppBaseUrl()
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: tenant.stripe_customer_id,
-      return_url: `https://${appDomain}/${tenant.slug}/settings`,
+      return_url: `${baseUrl}/${tenant.slug}/settings`,
     })
 
     return NextResponse.json({ url: portalSession.url })
