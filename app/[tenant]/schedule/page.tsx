@@ -396,13 +396,13 @@ export default async function WalkerSchedulePage({
                           {booking.notes && <p className="mt-4 text-sm leading-6 text-[#dbe1ff]">{booking.notes}</p>}
                         </div>
 
-                        <div className="grid gap-4 xl:grid-cols-2">
+                        <div className="space-y-4">
                           <div className="space-y-2 text-sm">
                             <span className="flex items-center gap-2 font-semibold text-stone-800">
                               <Clock3 className="h-4 w-4 text-blue-700" />
                               Started at
                             </span>
-                            <div className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+                            <div className="grid gap-3">
                               <input
                                 type="date"
                                 name="started_at_date"
@@ -424,7 +424,7 @@ export default async function WalkerSchedulePage({
                               <Calendar className="h-4 w-4 text-blue-700" />
                               Ended at
                             </span>
-                            <div className="grid gap-3 sm:grid-cols-[1.2fr_0.8fr]">
+                            <div className="grid gap-3">
                               <input
                                 type="date"
                                 name="ended_at_date"
