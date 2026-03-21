@@ -7,7 +7,9 @@ import { completeWalkAction, generateInvoiceAction } from '@/lib/actions/walker-
 import { demoBookings, demoClients, demoInvoices, demoServices, demoWalkReports, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import {
   DEFAULT_TIME_ZONE,
+  formatDateInTimeZone,
   formatDateTimeInTimeZone,
+  formatTimeInTimeZone,
   toDateInputInTimeZone,
   toTimeInputInTimeZone,
 } from '@/lib/datetime'
@@ -173,9 +175,16 @@ export default async function WalkerSchedulePage({
                 <p className="font-[var(--font-display)] text-2xl font-bold tracking-tight text-white">
                   {serviceById.get(nextApprovedWalk.service_id)?.name || 'Walk service'}
                 </p>
-                <p className="mt-2 text-sm text-[#dbe1ff]">
-                  {clientById.get(nextApprovedWalk.client_id)?.full_name || 'Client'} · {formatDateTimeInTimeZone(nextApprovedWalk.scheduled_at, timeZone)}
-                </p>
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#dbe1ff]">
+                  <span>{clientById.get(nextApprovedWalk.client_id)?.full_name || 'Client'}</span>
+                  <span className="opacity-70">·</span>
+                  <span className="rounded-full bg-white/10 px-2.5 py-1">
+                    {formatDateInTimeZone(nextApprovedWalk.scheduled_at, timeZone)}
+                  </span>
+                  <span className="rounded-full bg-white/10 px-2.5 py-1">
+                    {formatTimeInTimeZone(nextApprovedWalk.scheduled_at, timeZone)}
+                  </span>
+                </div>
                 {nextApprovedWalk.notes && (
                   <p className="mt-4 text-sm leading-6 text-[#dbe1ff]">{nextApprovedWalk.notes}</p>
                 )}
@@ -385,9 +394,16 @@ export default async function WalkerSchedulePage({
                               <p className="mt-3 font-[var(--font-display)] text-3xl font-bold tracking-tight">
                                 {service?.name || 'Walk service'}
                               </p>
-                              <p className="mt-2 text-sm text-[#dbe1ff]">
-                                {client?.full_name || 'Client'} · {formatDateTimeInTimeZone(booking.scheduled_at, timeZone)}
-                              </p>
+                              <div className="mt-3 flex flex-wrap items-center gap-2 text-sm text-[#dbe1ff]">
+                                <span>{client?.full_name || 'Client'}</span>
+                                <span className="opacity-70">·</span>
+                                <span className="rounded-full bg-white/10 px-2.5 py-1">
+                                  {formatDateInTimeZone(booking.scheduled_at, timeZone)}
+                                </span>
+                                <span className="rounded-full bg-white/10 px-2.5 py-1">
+                                  {formatTimeInTimeZone(booking.scheduled_at, timeZone)}
+                                </span>
+                              </div>
                             </div>
                             <div className="rounded-2xl bg-white/12 p-3">
                               <MapPinned className="h-5 w-5" />
