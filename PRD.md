@@ -89,6 +89,12 @@ Each tenant is an independent dog walking business with:
 6. Walker completes onboarding wizard: services, pricing, availability, branding colors/logo
 7. Shareable client portal link generated: `[slug].pawpathpro.com`
 
+Important implementation note:
+
+- The current product supports walker signup, subscription checkout, and core business setup
+- The product does **not yet** include a full payout onboarding wizard for how walkers receive client-payment funds
+- Before launch on Stripe Connect architecture, the onboarding flow should add a guided payout setup step covering connected-account creation, bank-account linking, payout schedule, and payout-readiness confirmation
+
 ### Enrollment & Acquisition Model
 
 PawPath Pro should support two distinct enrollment funnels:
@@ -197,6 +203,12 @@ Initial implementation guidance:
 - Use the platform account for PawPath subscription billing and early payment-flow development
 - Add full Connect onboarding before multi-walker or public-scale launch
 - Treat any temporary single-account client-payment collection as development-only, not the intended end-state architecture
+
+Walker payout onboarding requirement:
+
+- PawPath Pro needs a dedicated walker onboarding wizard for payout setup, separate from the subscription checkout flow
+- That wizard should guide the walker through business identity collection, Stripe Connect account creation/linking, bank-account setup, payout schedule explanation, and a final "ready to receive payments" state
+- Subscription activation alone should not be treated as payment-readiness for launch architecture
 
 Operational implication:
 
