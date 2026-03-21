@@ -9,6 +9,7 @@ import { formatDateTimeInTimeZone } from '@/lib/datetime'
 type PetOption = {
   id: string
   name: string
+  meet_and_greet_completed_at?: string | null
 }
 
 type ServiceOption = {
@@ -16,6 +17,7 @@ type ServiceOption = {
   name: string
   duration_minutes: number
   base_price: number
+  service_kind?: string | null
 }
 
 type BookingSummary = {

@@ -78,6 +78,7 @@ CREATE TABLE pets (
   allergies     TEXT,
   behavior_notes TEXT,
   special_notes TEXT,
+  meet_and_greet_completed_at TIMESTAMPTZ,
   photo_url     TEXT,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -100,6 +101,7 @@ CREATE TABLE services (
   tenant_id        UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
   name             TEXT NOT NULL,
   description      TEXT,
+  service_kind     TEXT NOT NULL DEFAULT 'standard' CHECK (service_kind IN ('standard', 'meet_and_greet')),
   duration_minutes INT NOT NULL,
   base_price       DECIMAL(8,2) NOT NULL,
   is_active        BOOLEAN NOT NULL DEFAULT true,

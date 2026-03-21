@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { DEFAULT_TIME_ZONE, zonedDateTimeToUtc } from '@/lib/datetime'
 import { isDemoTenantSlug } from '@/lib/demo'
 import { attemptInvoiceAutopay } from '@/lib/payments'
+import { normalizeServiceKind } from '@/lib/service-eligibility'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 function value(formData: FormData, key: string) {
@@ -127,7 +128,7 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
 
   const { data: service } = await supabase
     .from('services')
-    .select('name, base_price')
+    .select('name, base_price, service_kind')
     .eq('tenant_id', tenant.id)
     .eq('id', booking.service_id)
     .single()
@@ -239,6 +240,31 @@ export async function completeWalkAction(tenantSlug: string, formData: FormData)
 
   if (bookingUpdateError) {
     throw new Error(bookingUpdateError.message)
+  }
+
+  if (normalizeServiceKind(service.service_kind) === 'meet_and_greet') {
+    const { data: bookingPets, error: bookingPetsError } = await supabase
+      .from('booking_pets')
+      .select('pet_id')
+      .eq('tenant_id', tenant.id)
+      .eq('booking_id', booking.id)
+
+    if (bookingPetsError) {
+      throw new Error(bookingPetsError.message)
+    }
+
+    const petIds = (bookingPets ?? []).map((entry) => entry.pet_id).filter(Boolean)
+    if (petIds.length) {
+      const { error: petUpdateError } = await supabase
+        .from('pets')
+        .update({ meet_and_greet_completed_at: new Date().toISOString() })
+        .eq('tenant_id', tenant.id)
+        .in('id', petIds)
+
+      if (petUpdateError) {
+        throw new Error(petUpdateError.message)
+      }
+    }
   }
 
   const invoiceId = await ensureInvoiceForWalk({

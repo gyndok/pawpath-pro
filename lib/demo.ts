@@ -85,6 +85,7 @@ export const demoPets = [
     vet_phone: '(713) 555-0171',
     microchip: '981020004567891',
     weight_lbs: 28,
+    meet_and_greet_completed_at: '2026-02-12T16:00:00.000Z',
   },
   {
     id: 'demo-pet-2',
@@ -101,6 +102,7 @@ export const demoPets = [
     vet_phone: '(713) 555-0171',
     microchip: '981020004567892',
     weight_lbs: 19,
+    meet_and_greet_completed_at: null,
   },
   {
     id: 'demo-pet-3',
@@ -117,10 +119,20 @@ export const demoPets = [
     vet_phone: '(713) 555-0201',
     microchip: '981020004567893',
     weight_lbs: 42,
+    meet_and_greet_completed_at: '2026-01-18T15:00:00.000Z',
   },
 ]
 
 export const demoServices = [
+  {
+    id: 'demo-service-0',
+    name: 'Meet & Greet',
+    description: 'First visit for a new pet to review handling notes, home access, routines, and temperament before regular services begin.',
+    duration_minutes: 30,
+    base_price: 20,
+    is_active: true,
+    service_kind: 'meet_and_greet' as const,
+  },
   {
     id: 'demo-service-1',
     name: '30-minute neighborhood walk',
@@ -128,6 +140,7 @@ export const demoServices = [
     duration_minutes: 30,
     base_price: 26,
     is_active: true,
+    service_kind: 'standard' as const,
   },
   {
     id: 'demo-service-2',
@@ -136,6 +149,7 @@ export const demoServices = [
     duration_minutes: 60,
     base_price: 42,
     is_active: true,
+    service_kind: 'standard' as const,
   },
   {
     id: 'demo-service-3',
@@ -144,6 +158,7 @@ export const demoServices = [
     duration_minutes: 20,
     base_price: 24,
     is_active: true,
+    service_kind: 'standard' as const,
   },
 ]
 

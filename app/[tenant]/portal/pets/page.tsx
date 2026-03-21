@@ -88,7 +88,7 @@ export default async function PortalPetsPage({
 
   const { data: pets } = await supabase
     .from('pets')
-    .select('id, name, photo_url, breed, species, medications, allergies, behavior_notes, special_notes, vet_name, vet_phone, microchip, weight_lbs')
+    .select('id, name, photo_url, meet_and_greet_completed_at, breed, species, medications, allergies, behavior_notes, special_notes, vet_name, vet_phone, microchip, weight_lbs')
     .eq('tenant_id', tenant.id)
     .eq('client_id', clientProfile.id)
     .order('created_at', { ascending: true })

@@ -2,9 +2,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Calendar, Camera, CheckCircle2, Clock3, ClipboardList, Droplets, MapPinned, ReceiptText, Route, Sparkles, TimerReset } from 'lucide-react'
+import { CreateBookingForm } from '@/components/walker/create-booking-form'
 import { updateBookingStatusAction } from '@/lib/actions/walker-bookings'
 import { completeWalkAction, generateInvoiceAction } from '@/lib/actions/walker-walks'
-import { demoBookings, demoClients, demoInvoices, demoServices, demoWalkReports, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
+import { demoBookings, demoClients, demoInvoices, demoPets, demoServices, demoWalkReports, demoWalks, isDemoTenantSlug, requireDemoRole } from '@/lib/demo'
 import {
   DEFAULT_TIME_ZONE,
   formatDateInTimeZone,
@@ -22,8 +23,9 @@ export default async function WalkerSchedulePage({
 }) {
   const { tenant: tenantSlug } = await params
   type BookingRow = { id: string; client_id: string; service_id: string; scheduled_at: string; status: string; notes: string | null }
-  type ServiceRow = { id: string; name: string; base_price: number; duration_minutes: number }
+  type ServiceRow = { id: string; name: string; base_price: number; duration_minutes: number; service_kind?: string | null }
   type ClientRow = { id: string; full_name: string }
+  type PetRow = { id: string; client_id: string; name: string; meet_and_greet_completed_at: string | null }
   type WalkRow = { id: string; booking_id: string; status: string; started_at: string | null; ended_at: string | null }
   type ReportRow = { walk_id: string; walker_message: string | null; mood: string | null; delivered_at: string | null }
   type InvoiceRow = { id: string; walk_id: string | null; amount: number; status: string }
@@ -38,6 +40,12 @@ export default async function WalkerSchedulePage({
   }))
   let services: ServiceRow[] = demoServices
   let clients: ClientRow[] = demoClients.map((client) => ({ id: client.id, full_name: client.full_name }))
+  let pets: PetRow[] = demoPets.map((pet) => ({
+    id: pet.id,
+    client_id: pet.client_id,
+    name: pet.name,
+    meet_and_greet_completed_at: pet.meet_and_greet_completed_at,
+  }))
   let walks: WalkRow[] = demoWalks
   let reports: ReportRow[] = demoWalkReports
   let invoices: InvoiceRow[] = demoInvoices.map((invoice) => ({
@@ -62,12 +70,17 @@ export default async function WalkerSchedulePage({
         .order('scheduled_at', { ascending: true }),
       supabase
         .from('services')
-        .select('id, name, base_price, duration_minutes')
+        .select('id, name, base_price, duration_minutes, service_kind')
         .eq('tenant_id', tenant.id),
       supabase
         .from('client_profiles')
         .select('id, full_name')
         .eq('tenant_id', tenant.id),
+      supabase
+        .from('pets')
+        .select('id, client_id, name, meet_and_greet_completed_at')
+        .eq('tenant_id', tenant.id)
+        .order('created_at', { ascending: true }),
       supabase
         .from('walks')
         .select('id, booking_id, status, started_at, ended_at')
@@ -83,11 +96,16 @@ export default async function WalkerSchedulePage({
     ])
 
     bookings = results[0].data ?? []
-    services = (results[1].data ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))
+    services = (results[1].data ?? []).map((service) => ({
+      ...service,
+      base_price: Number(service.base_price),
+      service_kind: service.service_kind ?? 'standard',
+    }))
     clients = results[2].data ?? []
-    walks = results[3].data ?? []
-    reports = results[4].data ?? []
-    invoices = (results[5].data ?? []).map((invoice) => ({ ...invoice, amount: Number(invoice.amount) }))
+    pets = results[3].data ?? []
+    walks = results[4].data ?? []
+    reports = results[5].data ?? []
+    invoices = (results[6].data ?? []).map((invoice) => ({ ...invoice, amount: Number(invoice.amount) }))
   }
 
   const serviceById = new Map(services.map((service) => [service.id, service]))
@@ -99,6 +117,17 @@ export default async function WalkerSchedulePage({
   const pendingBookings = bookings.filter((booking) => booking.status === 'pending')
   const approvedBookings = bookings.filter((booking) => booking.status === 'approved')
   const completedBookings = bookings.filter((booking) => booking.status === 'completed')
+  const clientsForBooking = clients.map((client) => ({
+    id: client.id,
+    full_name: client.full_name,
+    pets: pets
+      .filter((pet) => pet.client_id === client.id)
+      .map((pet) => ({
+        id: pet.id,
+        name: pet.name,
+        meet_and_greet_completed_at: pet.meet_and_greet_completed_at,
+      })),
+  }))
 
   const metrics = [
     {
@@ -220,6 +249,22 @@ export default async function WalkerSchedulePage({
 
       <div className="mt-6 grid gap-6 xl:grid-cols-[0.82fr_1.18fr]">
         <div className="space-y-6">
+          <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
+            <CardHeader className="pb-4">
+              <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Create a booking for an offline client</CardTitle>
+              <CardDescription className="mt-2 text-sm leading-6 text-stone-600">
+                Use this when a client books by phone, text, or in person. Pet eligibility and service rules still apply here.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <CreateBookingForm
+                tenantSlug={tenantSlug}
+                clients={clientsForBooking}
+                services={services}
+              />
+            </CardContent>
+          </Card>
+
           <Card className="kinetic-card rounded-[1.8rem] border-stone-200 shadow-none">
             <CardHeader className="pb-4">
               <CardTitle className="font-[var(--font-display)] text-2xl tracking-tight">Pending booking requests</CardTitle>

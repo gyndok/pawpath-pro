@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { isDemoTenantSlug } from '@/lib/demo'
+import { normalizeServiceKind } from '@/lib/service-eligibility'
 import { requireTenantWalker } from '@/lib/tenant-session'
 
 export type WalkerServiceState = {
@@ -21,6 +22,7 @@ export async function createServiceAction(
 ): Promise<WalkerServiceState> {
   const name = value(formData, 'name')
   const description = value(formData, 'description')
+  const serviceKind = normalizeServiceKind(value(formData, 'service_kind'))
   const duration = value(formData, 'duration_minutes')
   const price = value(formData, 'base_price')
 
@@ -45,6 +47,7 @@ export async function createServiceAction(
     tenant_id: tenant.id,
     name,
     description: description || null,
+    service_kind: serviceKind,
     duration_minutes: durationMinutes,
     base_price: basePrice,
     is_active: true,

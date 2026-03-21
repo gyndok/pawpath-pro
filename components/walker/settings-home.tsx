@@ -12,12 +12,14 @@ import { WalkerProfileCard } from '@/components/walker/walker-profile-card'
 import { createServiceAction } from '@/lib/actions/walker-services'
 import { addBlockedDateAction, saveAvailabilityAction, saveBookingSettingsAction } from '@/lib/actions/walker-scheduling'
 import { COMMON_TIME_ZONES } from '@/lib/datetime'
+import { getServiceKindLabel } from '@/lib/service-eligibility'
 import type { BookingSettings } from '@/lib/scheduling'
 
 type ServiceSummary = {
   id: string
   name: string
   description: string | null
+  service_kind: string
   duration_minutes: number
   base_price: number
   is_active: boolean
@@ -144,6 +146,18 @@ export function WalkerSettingsHome({
                 <Input id="name" name="name" placeholder="30-minute midday walk" required />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="service_kind">Service type</Label>
+                <select
+                  id="service_kind"
+                  name="service_kind"
+                  defaultValue="standard"
+                  className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <option value="standard">Standard service</option>
+                  <option value="meet_and_greet">Meet &amp; Greet</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="description">Description</Label>
                 <textarea id="description" name="description" rows={4} className="flex min-h-24 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50" placeholder="Ideal for lunchtime potty breaks and neighborhood walks." />
               </div>
@@ -187,7 +201,10 @@ export function WalkerSettingsHome({
                       <p className="font-semibold text-stone-900">{service.name}</p>
                       <p className="mt-1">{service.duration_minutes} minutes · ${service.base_price.toFixed(2)}</p>
                     </div>
-                    <Badge variant="secondary">{service.is_active ? 'Active' : 'Inactive'}</Badge>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary">{getServiceKindLabel(service.service_kind)}</Badge>
+                      <Badge variant="secondary">{service.is_active ? 'Active' : 'Inactive'}</Badge>
+                    </div>
                   </div>
                   {service.description && <p className="mt-3 leading-6">{service.description}</p>}
                 </div>

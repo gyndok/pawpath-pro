@@ -12,6 +12,7 @@ type PetRecord = {
   id: string
   name: string
   photo_url: string | null
+  meet_and_greet_completed_at?: string | null
   breed: string | null
   species: string
   medications: string | null
@@ -56,7 +57,14 @@ function PetEditor({
               <CardDescription className="text-sm text-[#4f6b7a]">{pet.breed || 'Breed not provided'} · {pet.species}</CardDescription>
             </div>
           </div>
-          <Badge className="rounded-full bg-[#e7f2ee] px-3 py-1 text-[#1e6150] hover:bg-[#e7f2ee]">On file</Badge>
+          <Badge
+            className={pet.meet_and_greet_completed_at
+              ? 'rounded-full bg-[#e7f2ee] px-3 py-1 text-[#1e6150] hover:bg-[#e7f2ee]'
+              : 'rounded-full bg-[#fff1e6] px-3 py-1 text-[#9a5a22] hover:bg-[#fff1e6]'
+            }
+          >
+            {pet.meet_and_greet_completed_at ? 'Meet & Greet complete' : 'Meet & Greet required'}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>

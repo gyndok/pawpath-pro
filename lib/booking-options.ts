@@ -11,6 +11,7 @@ type ServiceRow = {
   name: string
   duration_minutes: number
   base_price: number | string
+  service_kind?: string | null
 }
 
 export async function loadPortalBookingOptions(params: {
@@ -25,7 +26,7 @@ export async function loadPortalBookingOptions(params: {
   const [{ data: services }, bookingSettingsResult] = await Promise.all([
     supabase
       .from('services')
-      .select('id, name, duration_minutes, base_price')
+      .select('*')
       .eq('tenant_id', tenantId)
       .eq('is_active', true)
       .order('base_price', { ascending: true }),
@@ -39,6 +40,7 @@ export async function loadPortalBookingOptions(params: {
   const normalizedServices = (services ?? []).map((service: ServiceRow) => ({
     ...service,
     base_price: Number(service.base_price),
+    service_kind: service.service_kind ?? 'standard',
   }))
 
   const bookingSettings: BookingSettings = bookingSettingsResult.error

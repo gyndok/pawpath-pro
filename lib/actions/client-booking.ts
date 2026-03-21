@@ -4,115 +4,112 @@ import { revalidatePath } from 'next/cache'
 import { DEFAULT_TIME_ZONE, zonedDateTimeToUtc } from '@/lib/datetime'
 import { buildAvailableDatesByService, DEFAULT_BOOKING_SETTINGS, isClientInServiceArea } from '@/lib/scheduling'
 import { isDemoTenantSlug } from '@/lib/demo'
+import { filterServicesForPets, getPetBookingState, normalizeServiceKind } from '@/lib/service-eligibility'
 import { createServerClient, createServiceClient } from '@/lib/supabase/server'
+import { requireTenantWalker } from '@/lib/tenant-session'
 
 export type ClientBookingState = {
   error?: string
   success?: boolean
 }
 
+export type WalkerBookingState = ClientBookingState
+
 function value(formData: FormData, key: string) {
   const raw = formData.get(key)
   return typeof raw === 'string' ? raw.trim() : ''
 }
 
-export async function requestBookingAction(
-  tenantSlug: string,
-  _prevState: ClientBookingState,
-  formData: FormData
-): Promise<ClientBookingState> {
-  const serviceId = value(formData, 'service_id')
-  const petIds = formData
-    .getAll('pet_ids')
-    .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
-    .filter(Boolean)
-  const date = value(formData, 'date')
-  const time = value(formData, 'time')
-  const notes = value(formData, 'notes')
+async function createBookingRecord(params: {
+  tenantSlug: string
+  supabase: ReturnType<typeof createServiceClient>
+  tenant: { id: string; owner_user_id: string | null }
+  clientProfile: { id: string; address: string | null }
+  serviceId: string
+  petIds: string[]
+  date: string
+  time: string
+  notes: string
+  enforceClientGeofence: boolean
+  enforceWaiver: boolean
+}): Promise<ClientBookingState> {
+  const {
+    tenantSlug,
+    supabase,
+    tenant,
+    clientProfile,
+    serviceId,
+    petIds,
+    date,
+    time,
+    notes,
+    enforceClientGeofence,
+    enforceWaiver,
+  } = params
 
-  if (!serviceId || !petIds.length || !date || !time) {
-    return { error: 'Service, at least one pet, date, and time are required.' }
-  }
-
-  if (isDemoTenantSlug(tenantSlug)) {
-    return { success: true }
-  }
-
-  const authClient = await createServerClient()
-  const { data: { user } } = await authClient.auth.getUser()
-
-  if (!user) {
-    return { error: 'You must be signed in to request a booking.' }
-  }
-
-  const supabase = createServiceClient()
-
-  const { data: tenant, error: tenantError } = await supabase
-    .from('tenants')
-    .select('id, owner_user_id')
-    .eq('slug', tenantSlug)
-    .single()
-
-  if (tenantError || !tenant) {
-    return { error: 'Business not found.' }
-  }
-
-  const { data: clientProfile, error: profileError } = await supabase
-    .from('client_profiles')
-    .select('id, address')
-    .eq('tenant_id', tenant.id)
-    .eq('user_id', user.id)
-    .single()
-
-  if (profileError || !clientProfile) {
-    return { error: 'Client profile not found for this business.' }
-  }
-
-  const { data: activeWaiver } = await supabase
-    .from('waivers')
-    .select('id')
-    .eq('tenant_id', tenant.id)
-    .eq('is_active', true)
-    .order('version', { ascending: false })
-    .limit(1)
-    .maybeSingle()
-
-  if (activeWaiver) {
-    const { data: waiverSignature } = await supabase
-      .from('waiver_signatures')
+  if (enforceWaiver) {
+    const { data: activeWaiver } = await supabase
+      .from('waivers')
       .select('id')
       .eq('tenant_id', tenant.id)
-      .eq('client_id', clientProfile.id)
-      .eq('waiver_id', activeWaiver.id)
+      .eq('is_active', true)
+      .order('version', { ascending: false })
+      .limit(1)
       .maybeSingle()
 
-    if (!waiverSignature) {
-      return { error: 'You must review and sign the current waiver before requesting a booking.' }
+    if (activeWaiver) {
+      const { data: waiverSignature } = await supabase
+        .from('waiver_signatures')
+        .select('id')
+        .eq('tenant_id', tenant.id)
+        .eq('client_id', clientProfile.id)
+        .eq('waiver_id', activeWaiver.id)
+        .maybeSingle()
+
+      if (!waiverSignature) {
+        return { error: 'You must review and sign the current waiver before requesting a booking.' }
+      }
     }
   }
 
-  const { data: pets, error: petError } = await supabase
-    .from('pets')
-    .select('id')
-    .in('id', petIds)
-    .eq('tenant_id', tenant.id)
-    .eq('client_id', clientProfile.id)
-    
+  const [{ data: pets, error: petError }, { data: service, error: serviceError }] = await Promise.all([
+    supabase
+      .from('pets')
+      .select('*')
+      .in('id', petIds)
+      .eq('tenant_id', tenant.id)
+      .eq('client_id', clientProfile.id),
+    supabase
+      .from('services')
+      .select('*')
+      .eq('id', serviceId)
+      .eq('tenant_id', tenant.id)
+      .eq('is_active', true)
+      .single(),
+  ])
 
   if (petError || !pets || pets.length !== petIds.length) {
     return { error: 'One or more selected pets could not be found.' }
   }
 
-  const { data: service, error: serviceError } = await supabase
-    .from('services')
-    .select('id, name, duration_minutes, base_price')
-    .eq('id', serviceId)
-    .eq('tenant_id', tenant.id)
-    .eq('is_active', true)
-    .single()
-
   if (serviceError || !service) {
     return { error: 'Selected service is not available.' }
+  }
+
+  const eligibleService = filterServicesForPets([service], pets)[0]
+  if (!eligibleService) {
+    const petState = getPetBookingState(pets)
+    const serviceKind = normalizeServiceKind(service.service_kind)
+
+    if (petState.isMixedSelection) {
+      return { error: 'Pets that still need a Meet & Greet must be booked separately from pets that are already cleared.' }
+    }
+
+    if (serviceKind === 'meet_and_greet') {
+      return { error: 'Meet & Greet is only available for pets that have not completed one yet.' }
+    }
+
+    return { error: 'Selected pet must complete a Meet & Greet before regular walk services can be booked.' }
   }
 
   let walkerId = tenant.owner_user_id
@@ -168,9 +165,15 @@ export async function requestBookingAction(
         time_zone: DEFAULT_TIME_ZONE,
       }
 
-  const geofence = isClientInServiceArea(clientProfile.address, bookingSettings.service_area_zip_codes)
-  if (!geofence.allowed) {
-    return { error: geofence.clientZip ? `Your ZIP code (${geofence.clientZip}) is outside this walker's service area.` : 'Add a valid 5-digit ZIP code to your address before booking.' }
+  if (enforceClientGeofence) {
+    const geofence = isClientInServiceArea(clientProfile.address, bookingSettings.service_area_zip_codes)
+    if (!geofence.allowed) {
+      return {
+        error: geofence.clientZip
+          ? `Your ZIP code (${geofence.clientZip}) is outside this walker's service area.`
+          : 'Add a valid 5-digit ZIP code to your address before booking.',
+      }
+    }
   }
 
   const scheduledAt = zonedDateTimeToUtc(date, time, DEFAULT_TIME_ZONE)
@@ -191,7 +194,12 @@ export async function requestBookingAction(
   }))
 
   const availableDates = buildAvailableDatesByService({
-    services: [{ ...service, base_price: Number(service.base_price) }],
+    services: [{
+      id: service.id,
+      name: service.name,
+      duration_minutes: service.duration_minutes,
+      base_price: Number(service.base_price),
+    }],
     availability: availabilityResult.data ?? [],
     blockedDates: blockedDatesResult.data ?? [],
     bookings: normalizedBookings,
@@ -243,4 +251,122 @@ export async function requestBookingAction(
   revalidatePath(`/${tenantSlug}/schedule`)
 
   return { success: true }
+}
+
+export async function requestBookingAction(
+  tenantSlug: string,
+  _prevState: ClientBookingState,
+  formData: FormData
+): Promise<ClientBookingState> {
+  const serviceId = value(formData, 'service_id')
+  const petIds = formData
+    .getAll('pet_ids')
+    .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+    .filter(Boolean)
+  const date = value(formData, 'date')
+  const time = value(formData, 'time')
+  const notes = value(formData, 'notes')
+
+  if (!serviceId || !petIds.length || !date || !time) {
+    return { error: 'Service, at least one pet, date, and time are required.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    return { success: true }
+  }
+
+  const authClient = await createServerClient()
+  const { data: { user } } = await authClient.auth.getUser()
+
+  if (!user) {
+    return { error: 'You must be signed in to request a booking.' }
+  }
+
+  const supabase = createServiceClient()
+
+  const { data: tenant, error: tenantError } = await supabase
+    .from('tenants')
+    .select('id, owner_user_id')
+    .eq('slug', tenantSlug)
+    .single()
+
+  if (tenantError || !tenant) {
+    return { error: 'Business not found.' }
+  }
+
+  const { data: clientProfile, error: profileError } = await supabase
+    .from('client_profiles')
+    .select('id, address')
+    .eq('tenant_id', tenant.id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (profileError || !clientProfile) {
+    return { error: 'Client profile not found for this business.' }
+  }
+
+  return createBookingRecord({
+    tenantSlug,
+    supabase,
+    tenant,
+    clientProfile,
+    serviceId,
+    petIds,
+    date,
+    time,
+    notes,
+    enforceClientGeofence: true,
+    enforceWaiver: true,
+  })
+}
+
+export async function createWalkerBookingAction(
+  tenantSlug: string,
+  _prevState: WalkerBookingState,
+  formData: FormData
+): Promise<WalkerBookingState> {
+  const clientId = value(formData, 'client_id')
+  const serviceId = value(formData, 'service_id')
+  const petIds = formData
+    .getAll('pet_ids')
+    .map((entry) => (typeof entry === 'string' ? entry.trim() : ''))
+    .filter(Boolean)
+  const date = value(formData, 'date')
+  const time = value(formData, 'time')
+  const notes = value(formData, 'notes')
+
+  if (!clientId || !serviceId || !petIds.length || !date || !time) {
+    return { error: 'Client, service, at least one pet, date, and time are required.' }
+  }
+
+  if (isDemoTenantSlug(tenantSlug)) {
+    return { success: true }
+  }
+
+  const { tenant, supabase } = await requireTenantWalker(tenantSlug)
+
+  const { data: clientProfile, error: clientError } = await supabase
+    .from('client_profiles')
+    .select('id, address')
+    .eq('tenant_id', tenant.id)
+    .eq('id', clientId)
+    .single()
+
+  if (clientError || !clientProfile) {
+    return { error: 'Client profile not found for this business.' }
+  }
+
+  return createBookingRecord({
+    tenantSlug,
+    supabase,
+    tenant,
+    clientProfile,
+    serviceId,
+    petIds,
+    date,
+    time,
+    notes,
+    enforceClientGeofence: false,
+    enforceWaiver: false,
+  })
 }

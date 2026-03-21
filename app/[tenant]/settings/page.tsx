@@ -49,7 +49,7 @@ export default async function WalkerSettingsPage({
   const [{ data: services }, { data: activeWaiver }, { data: availability }, { data: blockedDates }, bookingSettingsResult] = await Promise.all([
     supabase
       .from('services')
-      .select('id, name, description, duration_minutes, base_price, is_active')
+      .select('*')
       .eq('tenant_id', tenant.id)
       .order('created_at', { ascending: true }),
     supabase
@@ -104,7 +104,11 @@ export default async function WalkerSettingsPage({
       <WalkerSettingsHome
         businessName={tenant.business_name}
         timeZone={tenant.time_zone}
-        services={(services ?? []).map((service) => ({ ...service, base_price: Number(service.base_price) }))}
+        services={(services ?? []).map((service) => ({
+          ...service,
+          base_price: Number(service.base_price),
+          service_kind: service.service_kind ?? 'standard',
+        }))}
         activeWaiverTitle={activeWaiver?.title ?? null}
         walkerPhotoUrl={walker.photo_url ?? null}
         availability={availability ?? []}

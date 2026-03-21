@@ -17,7 +17,11 @@ export default async function PortalSchedulePage({
     return (
       <PortalScheduleHome
         timeZone={demoTenant.time_zone}
-        pets={demoPets.filter((pet) => pet.client_id === demoClientProfile.id).map((pet) => ({ id: pet.id, name: pet.name }))}
+        pets={demoPets.filter((pet) => pet.client_id === demoClientProfile.id).map((pet) => ({
+          id: pet.id,
+          name: pet.name,
+          meet_and_greet_completed_at: pet.meet_and_greet_completed_at,
+        }))}
         services={demoServices}
         bookings={demoBookings
           .filter((booking) => booking.client_id === demoClientProfile.id)
@@ -28,6 +32,16 @@ export default async function PortalSchedulePage({
             service_name: serviceNameById.get(booking.service_id) ?? 'Walk service',
           }))}
         availableDatesByService={{
+          'demo-service-0': [
+            {
+              date: '2026-08-17',
+              label: 'Mon · Aug 17',
+              slots: [
+                { iso: '2026-08-17T17:00:00.000Z', date: '2026-08-17', time: '12:00', label: '12:00 PM' },
+                { iso: '2026-08-17T18:00:00.000Z', date: '2026-08-17', time: '13:00', label: '1:00 PM' },
+              ],
+            },
+          ],
           'demo-service-1': [
             {
               date: '2026-08-18',
@@ -80,7 +94,7 @@ export default async function PortalSchedulePage({
   const [{ data: pets }, { data: bookings }, bookingOptions] = await Promise.all([
     supabase
       .from('pets')
-      .select('id, name')
+      .select('id, name, meet_and_greet_completed_at')
       .eq('tenant_id', tenant.id)
       .eq('client_id', clientProfile.id)
       .order('created_at', { ascending: true }),

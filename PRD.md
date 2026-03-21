@@ -258,6 +258,7 @@ This means the initial launch prioritizes:
 - A tenant-branded public page with inquiry capture
 - Client onboarding, waiver completion, and pet profile collection
 - Booking requests and walker approval workflow
+- Pet-level meet-and-greet gating before a newly added pet can access normal walk services
 - Walk completion with photos and client-facing report delivery
 - Invoice creation and online payment collection
 
@@ -307,7 +308,9 @@ The near-term demo is successful when a dog walker can open one Vercel link, exp
 - Pet profiles
 - Digital waiver acceptance
 - Booking request flow
+- Pet-level service eligibility so new pets see Meet & Greet as the only bookable option until cleared
 - Walker schedule / approval dashboard
+- Walker-created bookings for clients who book by phone, text, or in person
 - Walk completion form with photos and notes
 - Walk report delivery
 - Invoice generation and card payment
@@ -370,7 +373,7 @@ The recommended product behavior is:
 - Emergency veterinary authorization in onboarding documents
 - Required disclosure of aggression, reactivity, medications, allergies, and bite history
 - Pet information sheet with vet, emergency contact, and behavioral profile
-- Meet-and-greet step in onboarding or first-booking workflow
+- Meet-and-greet step in onboarding or first-booking workflow, tracked per pet so a new dog under an existing client relationship still goes through its own intro visit
 - Documentation of leash rules, off-limit areas, and special handling instructions
 
 #### Launch Gates
@@ -478,6 +481,7 @@ Features are prioritized using a P0--P3 scale:
   **Pet Information Sheet**      Intake for vet, emergency, meds, allergies, triggers, leash behavior, and handling notes  **P0**
 
   **Walk Scheduling**            Calendar view to request upcoming walks with date, time, service type, and pet selection   **P0**
+  **Pet Service Eligibility**    New pets can only book Meet & Greet until that specific pet has completed one              **P0**
 
   **Walk History**               List of all past walks with date, service, duration, walker notes                          **P0**
 
@@ -508,6 +512,7 @@ Features are prioritized using a P0--P3 scale:
   **Schedule / Calendar View**     Week/month calendar of all booked walks; color-coded by status                         **P0**
 
   **Walk Request Management**      Review, approve, or decline incoming booking requests from clients                     **P0**
+  **Walker-Created Bookings**      Add a walk manually for clients who book by phone, text, or in person                  **P0**
 
   **Walk Execution Mode**          Mobile-optimized \'active walk\' screen: start timer, GPS tracking, photo capture      **P0**
 
@@ -1041,7 +1046,7 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 
 -   Walker Payout Setup: The product needs a clear payout setup flow covering bank-account onboarding, payout schedule, instant-payout eligibility, tax identity collection, and visibility into expected payout timing after client charges clear.
 
--   Tipping Support: Clients should be able to leave an optional tip during checkout or immediately after a completed walk report. The product must define how tips appear on receipts, whether tips can be edited after submission, and how tips flow through payouts and reporting.
+-   Tipping Support: Clients should be able to leave an optional tip tied to a specific completed walk or invoice. The preferred direction is to allow tipping after a completed walk and during manual invoice payment, with support for preset amounts plus a custom amount. The product must define how tips appear on receipts, whether a post-autopay tip prompt is shown after automatic collection, and how tips flow through payouts and reporting.
 
 -   Cancellation / Reschedule Policy Engine: Tenants need configurable notice windows, cancellation fees, no-show rules, weather exceptions, and client-visible policy text at booking time.
 
@@ -1051,7 +1056,9 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 
 -   Client / Walker Relationship Offboarding: Clients need a way to stop using a walker, and walkers need a way to terminate a client relationship. This must cancel future bookings as needed, preserve records, restrict future booking, and settle outstanding balances cleanly.
 
--   Meet-and-Greet Workflow: Many walkers will want a required intro visit before the first paid walk. The product should support mandatory meet-and-greet completion before standard services become bookable.
+-   Meet-and-Greet Workflow: Many walkers will want a required intro visit before the first paid walk. This must be enforced per pet, not per client. A new pet should see Meet & Greet as the only bookable service until that specific pet has a recorded completed meet-and-greet. Once completed, Meet & Greet should disappear for that pet and standard services should unlock. Multi-pet households must still allow already-cleared pets to book normal services even when a newly added pet still needs its own intro visit.
+
+-   Walker-Created Offline Scheduling: Walkers need a manual booking flow for clients who prefer to call, text, or ask in person. The walker should be able to select the client, choose eligible pets, choose a valid service, add a date/time and notes, and place the visit on the schedule without requiring the client to log in first. The booking should still respect service eligibility and scheduling rules, and it should appear in the client portal afterward.
 
 -   Household Access Management: Future versions need secure handling of lockbox codes, key status, alarm notes, gate codes, and lost-key incidents with auditable access instructions.
 
