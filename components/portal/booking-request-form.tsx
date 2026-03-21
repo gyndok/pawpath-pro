@@ -190,13 +190,13 @@ export function BookingRequestForm({
             </div>
           </div>
 
-          <div className="grid gap-3 lg:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {!selectedPets.length ? (
-              <div className="rounded-[22px] border border-dashed border-[#c8d9e2] bg-white/80 p-4 text-sm text-[#6d8796] lg:col-span-3">
+              <div className="rounded-[22px] border border-dashed border-[#c8d9e2] bg-white/80 p-4 text-sm text-[#6d8796] sm:col-span-2">
                 Choose at least one pet to see available services.
               </div>
             ) : !eligibleServices.length ? (
-              <div className="rounded-[22px] border border-dashed border-[#c8d9e2] bg-white/80 p-4 text-sm text-[#6d8796] lg:col-span-3">
+              <div className="rounded-[22px] border border-dashed border-[#c8d9e2] bg-white/80 p-4 text-sm text-[#6d8796] sm:col-span-2">
                 {noEligibleServicesMessage}
               </div>
             ) : (
@@ -207,7 +207,7 @@ export function BookingRequestForm({
                   <label
                     key={service.id}
                     className={cn(
-                      'cursor-pointer rounded-[24px] border bg-white p-4 shadow-sm transition-all',
+                      'cursor-pointer rounded-[24px] border bg-white p-4 shadow-sm transition-all sm:min-h-[172px]',
                       isSelected
                         ? 'border-[#2f6f8f] bg-[#edf6fb] shadow-[0_20px_45px_rgba(18,52,70,0.08)]'
                         : 'border-[#d7e4eb] hover:border-[#8ab8cf] hover:bg-[#f8fbfd]'
@@ -221,8 +221,8 @@ export function BookingRequestForm({
                       className="sr-only"
                       required
                     />
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="space-y-2">
+                    <div className="flex h-full items-start justify-between gap-3">
+                      <div className="flex min-w-0 flex-1 flex-col justify-between space-y-3">
                         <div className="text-base font-semibold text-[#143042]">{service.name}</div>
                         <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[#5b7685]">
                           <span className="rounded-full bg-[#d9eef7] px-2.5 py-1 text-[#1d5671]">
