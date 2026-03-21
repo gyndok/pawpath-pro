@@ -64,6 +64,29 @@ export function getPetEligibilityMessage(pets: PetEligibilityRecord[]) {
   return null
 }
 
+export function getNoEligibleServicesMessage(
+  services: ServiceEligibilityRecord[],
+  pets: PetEligibilityRecord[]
+) {
+  const state = getPetBookingState(pets)
+  const hasMeetAndGreetService = services.some((service) => normalizeServiceKind(service.service_kind) === 'meet_and_greet')
+  const hasStandardService = services.some((service) => normalizeServiceKind(service.service_kind) === 'standard')
+
+  if (state.isMixedSelection) {
+    return 'This pet selection can’t be booked together. New pets need their own Meet & Greet booking.'
+  }
+
+  if (state.hasUnclearedPets && !hasMeetAndGreetService) {
+    return 'This walker has not configured a Meet & Greet service yet. Add one in walker settings before booking a new pet.'
+  }
+
+  if (state.hasClearedPets && !hasStandardService) {
+    return 'No standard walk services are configured yet for this business.'
+  }
+
+  return 'No eligible services are available for this pet selection right now.'
+}
+
 export function getServiceKindLabel(serviceKind: string | null | undefined) {
   return normalizeServiceKind(serviceKind) === 'meet_and_greet' ? 'Meet & Greet' : 'Standard service'
 }

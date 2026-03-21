@@ -4,7 +4,7 @@ import { useActionState, useMemo, useState } from 'react'
 import { CalendarClock, CheckCircle2, Clock3, Loader2, PawPrint, ShieldAlert, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { requestBookingAction, type ClientBookingState } from '@/lib/actions/client-booking'
-import { filterServicesForPets, getPetEligibilityMessage, getServiceKindLabel } from '@/lib/service-eligibility'
+import { filterServicesForPets, getNoEligibleServicesMessage, getPetEligibilityMessage, getServiceKindLabel } from '@/lib/service-eligibility'
 import { cn } from '@/lib/utils'
 
 type PetOption = {
@@ -69,6 +69,11 @@ export function BookingRequestForm({
   const eligibilityMessage = useMemo(
     () => getPetEligibilityMessage(selectedPets),
     [selectedPets]
+  )
+
+  const noEligibleServicesMessage = useMemo(
+    () => getNoEligibleServicesMessage(services, selectedPets),
+    [services, selectedPets]
   )
 
   const effectiveSelectedServiceId = eligibleServices.some((service) => service.id === selectedServiceId)
@@ -192,7 +197,7 @@ export function BookingRequestForm({
               </div>
             ) : !eligibleServices.length ? (
               <div className="rounded-[22px] border border-dashed border-[#c8d9e2] bg-white/80 p-4 text-sm text-[#6d8796] lg:col-span-3">
-                This pet selection can&apos;t be booked together. New pets must be scheduled separately for a Meet &amp; Greet.
+                {noEligibleServicesMessage}
               </div>
             ) : (
               eligibleServices.map((service) => {
