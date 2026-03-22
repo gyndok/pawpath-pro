@@ -1058,11 +1058,11 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 
 -   Walker Payout Setup: The product needs a clear payout setup flow covering bank-account onboarding, payout schedule, instant-payout eligibility, tax identity collection, and visibility into expected payout timing after client charges clear.
 
--   Tipping Support: Clients should be able to leave an optional tip tied to a specific completed walk or invoice. The preferred direction is to allow tipping after a completed walk and during manual invoice payment, with support for preset amounts plus a custom amount. The product must define how tips appear on receipts, whether a post-autopay tip prompt is shown after automatic collection, and how tips flow through payouts and reporting.
+-   Tipping Support: Clients should be able to leave an optional tip tied to a specific completed walk or invoice. The preferred direction is to allow tipping after a completed walk and during manual invoice payment, with support for preset amounts plus a custom amount. Autopay should not try to guess or bundle a tip into the automatic charge; instead, the preferred follow-up is a post-payment tip prompt after the walk has been auto-collected. Tips must appear clearly on client receipts, walker financial reporting, and payout reporting.
 
 -   Cancellation / Reschedule Policy Engine: Tenants need configurable notice windows, cancellation fees, no-show rules, weather exceptions, and client-visible policy text at booking time.
 
--   Service Area Geofencing: Walkers should define service ZIP codes, neighborhoods, radius rules, or map polygons. Out-of-area inquiries and bookings should be blocked or routed to a waitlist/manual review path.
+-   Service Area Geofencing: Walkers should define service territory visually, not only by ZIP code. The preferred direction is a map-based interface where the walker sets a center point and service radius, with optional ZIP or neighborhood overlays later. Out-of-area inquiries and bookings should be blocked or routed to a waitlist/manual review path.
 
 -   Walker Availability Publishing: The walker should have a real scheduling setup flow that publishes client-bookable inventory instead of relying on manual approval for every date/time forever.
 

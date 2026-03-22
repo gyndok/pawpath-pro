@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { WalkerProfileCard } from '@/components/walker/walker-profile-card'
-import { createServiceAction } from '@/lib/actions/walker-services'
+import { createServiceAction, updateServiceTypeAction } from '@/lib/actions/walker-services'
 import { addBlockedDateAction, saveAvailabilityAction, saveBookingSettingsAction } from '@/lib/actions/walker-scheduling'
 import { COMMON_TIME_ZONES } from '@/lib/datetime'
 import { getServiceKindLabel } from '@/lib/service-eligibility'
@@ -70,6 +70,7 @@ export function WalkerSettingsHome({
 }) {
   const params = useParams<{ tenant: string }>()
   const [serviceState, serviceAction, servicePending] = useActionState(createServiceAction.bind(null, params.tenant), {})
+  const [serviceTypeState, serviceTypeAction, serviceTypePending] = useActionState(updateServiceTypeAction.bind(null, params.tenant), {})
   const [availabilityState, availabilityAction, availabilityPending] = useActionState(saveAvailabilityAction.bind(null, params.tenant), {})
   const [bookingState, bookingAction, bookingPending] = useActionState(saveBookingSettingsAction.bind(null, params.tenant), {})
   const [blockedDateState, blockedDateAction, blockedDatePending] = useActionState(addBlockedDateAction.bind(null, params.tenant), {})
@@ -207,6 +208,36 @@ export function WalkerSettingsHome({
                     </div>
                   </div>
                   {service.description && <p className="mt-3 leading-6">{service.description}</p>}
+                  <form action={serviceTypeAction} className="mt-4 flex flex-col gap-3 rounded-[1rem] border border-[rgba(115,118,134,0.12)] bg-white/70 p-4 md:flex-row md:items-end">
+                    <input type="hidden" name="service_id" value={service.id} />
+                    <div className="flex-1 space-y-1.5">
+                      <Label htmlFor={`service_kind_${service.id}`}>Service type</Label>
+                      <select
+                        id={`service_kind_${service.id}`}
+                        name="service_kind"
+                        defaultValue={service.service_kind}
+                        className="flex h-10 w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-xs outline-none transition-[color,box-shadow] focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                      >
+                        <option value="standard">Standard service</option>
+                        <option value="meet_and_greet">Meet &amp; Greet</option>
+                      </select>
+                    </div>
+                    <Button type="submit" variant="outline" className="border-stone-300 bg-white" disabled={serviceTypePending}>
+                      {serviceTypePending && serviceTypeState.updatedServiceId === service.id
+                        ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…</>
+                        : 'Save type'}
+                    </Button>
+                  </form>
+                  {serviceTypeState.error && serviceTypeState.updatedServiceId === service.id && (
+                    <div className="mt-3 rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                      {serviceTypeState.error}
+                    </div>
+                  )}
+                  {serviceTypeState.success && serviceTypeState.updatedServiceId === service.id && (
+                    <div className="mt-3 rounded-md border border-green-200 bg-green-50 p-3 text-sm text-green-700">
+                      Service type updated.
+                    </div>
+                  )}
                 </div>
               ))
             )}
