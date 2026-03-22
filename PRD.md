@@ -1068,15 +1068,17 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
     Preferred tipping flow:
 
     1. A walk is completed and the invoice is generated.
-    2. If the client is paying manually, the payment UI may offer a tip before the invoice is finalized.
-    3. If autopay collects the base invoice automatically, the client should receive a follow-up tip prompt tied to that specific completed walk.
-    4. Tips should remain optional, clearly separated from the base service charge, and attributable to a single walk/invoice pair.
+    2. After payment succeeds, the client receives a payment confirmation.
+    3. That confirmation should include a prompt to tip the walker if desired, tied to that specific completed walk and invoice.
+    4. Email should be the default tip-prompt channel on the web, with an in-portal reminder as a secondary surface and push notifications as a future enhancement for PWA users.
+    5. Tips should remain optional, clearly separated from the base service charge, and attributable to a single walk/invoice pair.
 
     Preferred tip controls:
 
     - Preset quick-tip options such as `$5`, `$10`, `$15`
     - A custom amount option
     - Optional percentage presets later if they do not confuse the fixed-price walk model
+    - Tip request appears after payment confirmation rather than before or during autopay
 
     Reporting / accounting implications:
 
