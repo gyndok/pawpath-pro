@@ -174,6 +174,7 @@ Next.js middleware reads the subdomain from the request host, looks up the tenan
 
 - Walker subscription fees (Stripe Billing, recurring monthly)
 - Platform takes **0% of client payments** — walkers keep 100% (minus Stripe's 2.9%)
+- Platform should support optional client tips on top of walk charges, with tips flowing to the walker rather than being treated as platform revenue
 - This is the core value proposition vs. Rover/Wag
 
 ### Payment Account Model (Decision Required Before Scale)
@@ -503,6 +504,8 @@ Features are prioritized using a P0--P3 scale:
 
   **Online Payment**             Pay outstanding invoices via Stripe (card); show payment history                           **P0**
 
+  **Tipping Prompt**             Allow optional tips after a completed walk and during manual invoice payment                **P1**
+
   **Messaging / Chat**           In-app messaging thread with walker; notifications by email or SMS                         **P1**
 
   **Notification Preferences**   Toggle email, SMS, push notifications for reports, invoices, schedule updates              **P1**
@@ -537,6 +540,8 @@ Features are prioritized using a P0--P3 scale:
   **Invoice Generation**           Auto-generate invoice from completed walk; manual adjustments supported                **P0**
 
   **Payment Tracking**             View all invoices: paid, pending, overdue; send payment reminders                      **P0**
+
+  **Tip Tracking**                 Show tip totals by walk, invoice, client, and reporting period                         **P1**
 
   **Messaging Center**             Unified inbox for all client conversations; quick reply templates                      **P1**
 
@@ -1059,6 +1064,26 @@ Recommendation: Use her actual name for a personal brand if she is the sole walk
 -   Walker Payout Setup: The product needs a clear payout setup flow covering bank-account onboarding, payout schedule, instant-payout eligibility, tax identity collection, and visibility into expected payout timing after client charges clear.
 
 -   Tipping Support: Clients should be able to leave an optional tip tied to a specific completed walk or invoice. The preferred direction is to allow tipping after a completed walk and during manual invoice payment, with support for preset amounts plus a custom amount. Autopay should not try to guess or bundle a tip into the automatic charge; instead, the preferred follow-up is a post-payment tip prompt after the walk has been auto-collected. Tips must appear clearly on client receipts, walker financial reporting, and payout reporting.
+
+    Preferred tipping flow:
+
+    1. A walk is completed and the invoice is generated.
+    2. If the client is paying manually, the payment UI may offer a tip before the invoice is finalized.
+    3. If autopay collects the base invoice automatically, the client should receive a follow-up tip prompt tied to that specific completed walk.
+    4. Tips should remain optional, clearly separated from the base service charge, and attributable to a single walk/invoice pair.
+
+    Preferred tip controls:
+
+    - Preset quick-tip options such as `$5`, `$10`, `$15`
+    - A custom amount option
+    - Optional percentage presets later if they do not confuse the fixed-price walk model
+
+    Reporting / accounting implications:
+
+    - Walker views should show base revenue and tip revenue separately
+    - Client receipts should show walk charge and tip as separate line items
+    - Invoice/payment records should preserve whether a tip was added at payment time or after autopay follow-up
+    - Tip refunds should be explicitly controllable rather than assumed
 
 -   Cancellation / Reschedule Policy Engine: Tenants need configurable notice windows, cancellation fees, no-show rules, weather exceptions, and client-visible policy text at booking time.
 
